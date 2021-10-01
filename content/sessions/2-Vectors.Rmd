@@ -1,0 +1,36 @@
+---
+title: "2 Vectors"
+summary: "This lecture will introduce you to vectors, the most fundamental data type in R."
+author: Merlin Schaeffer
+date: 2021-09-10
+publishdate: 2021-09-05
+---
+
+```{r setup, include = FALSE}
+options(htmltools.dir.version = FALSE, servr.interval = 0.5, width = 115, digits = 2)
+knitr::opts_chunk$set(
+  collapse = TRUE, message = FALSE, 
+  warning = FALSE, cache = FALSE,
+  comment = "#", strip.white = TRUE)
+```
+
+This lecture introduces you to R's most fundamental data type, Vectors:
+```{r}
+# Concatenate the sequence 5 4 3 2 1 to a vector, 
+# assign it to object x1, and print it.
+(x1 <- c(5, 4, 3, 2, 1))
+```
+
+You will learn the differences between numeric, factor, date, character and logical vectors, as well as how to transform, recode, and manipulate them. This lecture might seem rather abstract and technical at times. But you will get hung up quickly if you don't take your time to learn about vectors.
+
+Lecture slides: [**Vectors**](/2-Vectors/2-Vectors.html)
+
+Today's exercise: [**Web Excercise 2**](/exercises/exercise2.html)
+
+## Homework
+1. Finish web exercises 1 and 2.
+2. Take a close look at the codebook of the ESS9 below. Identify all variables that could be taken as indicators of homophobia. Start a new R script for your homework, add the tidyverse to your library, and finally use the `#` operator to note the names of the variables you have identified. For example, `cntry` is the name of the variable identifying the respondents' country of residence.
+2. Read Chapter [6 Workflow: Scripts](http://r4ds.had.co.nz/workflow-scripts.html)
+3. Read Chapter [8 Workflow: Projects](http://r4ds.had.co.nz/workflow-projects.html)
+
+<iframe src="https://www.europeansocialsurvey.org/docs/round9/survey/ESS9_appendix_a7_e03_1.pdf" height='950' frameborder='0' width="100%"></iframe>

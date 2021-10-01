@@ -1,0 +1,210 @@
+---
+title: "Web Exercise 4"
+author: Merlin Schaeffer
+output: webex::webex_default
+date: 2021-02-15
+publishdate: 2021-02-12
+---
+
+```{r setup, include = FALSE}
+options(htmltools.dir.version = FALSE, servr.interval = 0.5, width = 115, digits = 2)
+knitr::opts_chunk$set(
+  collapse = TRUE, message = FALSE, 
+  warning = FALSE, cache = FALSE,
+  comment = "#", strip.white = TRUE)
+
+library(webex)
+```
+
+Some preparation:
+```{r setup2, include = FALSE}
+options(htmltools.dir.version = FALSE, servr.interval = 0.5, width = 115, digits = 2)
+knitr::opts_chunk$set(
+  collapse = TRUE, message = FALSE, fig.align='center',
+  warning = FALSE, cache = FALSE, fig.retina = 1,
+  comment = "#", strip.white = TRUE)
+
+# Add packages to library
+library(tidyverse) # Add the tidyverse package to my current library.
+library(haven) # Handle labelled data.
+library(essurvey) # Add ESS API package to library.
+library(ggplot2) # Allows us to create nice figures.
+library(webex) # Create interactive web pages that students can use in self-guided learning.
+```
+
+```{r include  = FALSE}
+# Import the ESS round 9 data via the API
+ESS <- import_rounds(rounds = 9, ess_email = "merlin.schaeffer@uni-koeln.de", format = "spss")
+```
+
+```{r}
+ESS <- transmute(ESS, # Recode several variables & keep only the recoded ones (i.e., transmute vs mutate). #<<
+                 idno = zap_labels(idno),
+                 # Make the following variables factors:
+                 cntry = as_factor(cntry), 
+                 gndr = as_factor(gndr),
+                 facntr = as_factor(facntr),
+                 mocntr = as_factor(mocntr),
+                 # Make the following variables numeric:
+                 imbgeco = max(imbgeco, na.rm = TRUE) - zap_labels(imbgeco), # Also turn scale around.
+                 imueclt = max(imueclt, na.rm = TRUE) - zap_labels(imueclt), # Also turn scale around.
+                 imwbcnt = max(imwbcnt, na.rm = TRUE) - zap_labels(imwbcnt), # Also turn scale around.
+                 # Homophobia #<<
+                 freehms = as_factor(freehms),
+                 hmsfmlsh = as_factor(hmsfmlsh),
+                 hmsacld = as_factor(hmsacld),
+                 agea = zap_labels(agea),
+                 pspwght = zap_labels(pspwght),
+                 eduyrs = zap_labels(eduyrs))
+```
+
+```{r include = FALSE}
+ESS_keep <- ESS
+```
+
+```{r}
+ESS <- dplyr::filter(ESS,
+                     # Now keep respondents of immigrant origin!
+                     # facntr == "Yes" & mocntr == "Yes" & # Keep respondents of immigrant origin #<<
+                       # Only respondents from direct neighbors of Denmark:
+                       (cntry == "Denmark" | cntry == "Germany" | cntry == "Sweden" | cntry == "Norway")
+)
+
+# Casewise deletion of missing values
+ESS <- drop_na(ESS)
+```
+
+1. Get the ggplot2 [cheat sheet](https://www.rstudio.com/resources/cheatsheets/), and check out the [reference page of ggplot2](https://ggplot2.tidyverse.org/reference/). Look at geoms for univariate (one variable) figures. Make an appropriate (weighted) figure that describes the distribution of `cntry`. Which country (Denmark, Germany, or Sweden) has the largest number of observations? `r mcq(c("Denmark", answer = "Germany", "Norway", "Sweden"))`
+    + Throughout all figures, learn how to use `labs()` (i.e., learn it from the [reference page of ggplot2](https://ggplot2.tidyverse.org/reference/)).
+`r hide("R solution -> dont' peek to early ;) !")`
+```{r out.width='85%', fig.width = 6, fig.height = 3}
+ggplot(data = ESS) +
+  geom_bar(aes(x = cntry, weight = pspwght)) +
+  labs(x = "Country of interview")
+```
+`r unhide()`
+
+2. Make an appropriate (weighted) figure that describes the distribution of `agea`. Across all four countries, are there more or less than 20 respondents who are older than 100? `r mcq(c("More", answer = "Less"))`
+`r hide("R solution -> dont' peek to early ;) !")`
+```{r out.width='85%', fig.width = 6, fig.height = 3}
+ggplot(data = ESS) +
+  geom_histogram(aes(x = agea, weight = pspwght)) +
+  labs(x = "Age")
+```
+`r unhide()`
+
+3. Are women more or less in favor of adoption rights for gay men and women? Make a plot that answers this question. Women are `r mcq(c("Less", answer = "More"))` in favor of adoption rights for gay men and women.
+`r hide("R solution -> dont' peek to early ;) !")`
+```{r out.width='85%', fig.width = 6, fig.height = 3}
+ggplot(data = ESS, mapping = aes(x = hmsacld, weight = pspwght)) +
+  geom_bar() +
+  facet_grid(. ~ gndr) +
+  labs(x = "Gay and lesbian couples should have right to adopt children") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
+`r unhide()`
+
+4. Is this the same in all four countries? `r mcq(c("No", answer = "Yes"))`
+`r hide("R solution -> dont' peek to early ;) !")`
+```{r out.width='85%', fig.width = 6, fig.height = 6}
+ggplot(data = ESS, mapping = aes(x = hmsacld, weight = pspwght)) +
+  geom_bar() +
+  facet_grid(cntry ~ gndr, scales = "free_y") +
+  labs(x = "Gay and lesbian couples should have right to adopt children") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
+`r unhide()`
+
+5. Add another country to your data set. Make it your personal country of origin, or some other country you are interested in (in case you are born in Denmark or your country of birth is not covered in the ESS). In which country are people most ashamed if a family member is gay? Use boxplots and different colors for the countries.
+`r hide("R solution -> dont' peek to early ;) !")`
+```{r eval = FALSE}
+ESS <- import_rounds(rounds = 9, ess_email = "YOUR-EMAIL", format = "spss")
+
+ESS <- transmute(ESS, # Recode several variables & keep only the recoded ones (i.e., transmute vs mutate). #<<
+                 idno = zap_labels(idno),
+                 # Make the following variables factors:
+                 cntry = as_factor(cntry), 
+                 gndr = as_factor(gndr),
+                 facntr = as_factor(facntr),
+                 mocntr = as_factor(mocntr),
+                 # Make the following variables numeric:
+                 imbgeco = max(imbgeco, na.rm = TRUE) - zap_labels(imbgeco), # Also turn scale around.
+                 imueclt = max(imueclt, na.rm = TRUE) - zap_labels(imueclt), # Also turn scale around.
+                 imwbcnt = max(imwbcnt, na.rm = TRUE) - zap_labels(imwbcnt), # Also turn scale around.
+                 # Homophobia #<<
+                 freehms = as_factor(freehms),
+                 hmsfmlsh = as_factor(hmsfmlsh),
+                 hmsacld = as_factor(hmsacld),
+                 agea = zap_labels(agea),
+                 pspwght = zap_labels(pspwght),
+                 eduyrs = zap_labels(eduyrs))
+
+# Some case selection, now also including: France!
+ESS <- dplyr::filter(ESS, # Denmark, Sweden, Norway, Germany, and France.
+              cntry == "Denmark" | cntry == "Sweden" | 
+                cntry == "Norway" | cntry == "Germany" | cntry == "France")
+
+# Casewise deletion of missing values
+ESS <- drop_na(ESS)
+```
+
+```{r include = FALSE}
+ESS <- ESS_keep
+
+# Some case selection.
+ESS <- dplyr::filter(ESS, # Denmark, Sweden, Norway, Germany, and France.
+              cntry == "Denmark" | cntry == "Sweden" | 
+                cntry == "Norway" | cntry == "Germany" | cntry == "France")
+
+# Casewise deletion of missing values
+ESS <- drop_na(ESS)
+```
+
+```{r out.width='85%', fig.width = 8, fig.height = 3}
+ggplot(data = ESS) +
+  geom_boxplot(aes(y = as.numeric(hmsfmlsh), fill = cntry, weight = pspwght)) +
+  labs(y = "Not Ashamed if close family member \n was gay or lesbian")
+```
+`r unhide()`
+
+6. Find an alternative to using boxplots.
+`r hide("R solution -> dont' peek to early ;) !")`
+```{r out.width='85%', fig.width = 8, fig.height = 3}
+ggplot(data = ESS, mapping = aes(y = hmsfmlsh, x = cntry)) +
+  geom_jitter(alpha = 0.1, aes(size = pspwght)) +
+  geom_violin(mapping = aes(fill = cntry, weight = pspwght), 
+              alpha = 0.6, draw_quantiles = c(0.25, 0.5, 0.75)) +
+  labs(y = "Not Ashamed if close family member \n was gay or lesbian",
+       x = "Country of interview")
+```
+`r unhide()`
+
+7. Remember that the years of education have some rather low and large values. Recode all values smaller than 10 years of education to missing. Also Recode all years of education larger than 20 to 20. Visualize how that changes the association between `hmsfmlsh` and years of education. Does it change the main conclusion/insight of that figure? `r mcq(c("No", "Yes", answer = "Not fundametally, but looks less dramatic"))`
+`r hide("R solution -> dont' peek to early ;) !")`
+```{r}
+ESS <- mutate(ESS,
+              eduyrs_rec = case_when(
+                eduyrs < 10 ~ as.numeric(NA), # Eduyears smaller 10 ~ Missing
+                eduyrs > 20 ~ 20, # Eduyears larger 20 ~ 20
+                TRUE ~ eduyrs) # Leave all others as is.
+)
+```
+
+The old one:
+```{r out.width='85%', fig.width = 6, fig.height = 3}
+ggplot(data = ESS, mapping = aes(y = hmsfmlsh, x = eduyrs, weight = pspwght)) +
+  geom_point(aes(size = pspwght), alpha = 0.1) +
+  geom_smooth() +
+  labs(y = "Not Ashamed if close family member \n was gay or lesbian",
+       x = "Years of education")
+```
+
+The new one:
+```{r out.width='85%', fig.width = 6, fig.height = 3}
+ggplot(data = ESS, mapping = aes(y = hmsfmlsh, x = eduyrs_rec, weight = pspwght)) +
+  geom_point(aes(size = pspwght), alpha = 0.1) +
+  geom_smooth() +
+  labs(y = "Not Ashamed if close family member \n was gay or lesbian",
+       x = "Years of education")
+```
+`r unhide()`

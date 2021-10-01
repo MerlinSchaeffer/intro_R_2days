@@ -1,0 +1,238 @@
+---
+title: "Web Exercise 9"
+author: Merlin Schaeffer
+output: webex::webex_default
+date: 2020-03-03
+---
+
+```{r setup, include = FALSE}
+options(htmltools.dir.version = FALSE, servr.interval = 0.5, width = 115, digits = 2)
+knitr::opts_chunk$set(
+  collapse = TRUE, message = FALSE, 
+  warning = FALSE, cache = FALSE,
+  comment = "#", strip.white = TRUE)
+
+library(webex)
+```
+
+1) Use today's set-up; the tibble has `r fitb("5561", width = "4")` observations.
+`r hide("R solution -> dont' peek to early ;) !")`
+```{r}
+# Add packages to library
+library(tidyverse) # Add the tidyverse package to my current library.
+library(haven) # Handle labelled data.
+library(essurvey) # Add ESS API package.
+library(ggplot2) # Allows us to create nice figures.
+library(factoextra) # Allows us to visualize PCAs
+library(psych) # Supports PCA & factor analysis with several useful functions.
+library(estimatr) # Allows us to estimate (cluster-)robust standard errors
+library(texreg) # Allows us to make nicely-formatted Html & Latex regression tables.
+library(broom) # Allows us to turn parts of model objects into tibbles.
+```
+
+```{r include = FALSE}
+# Import the ESS round 9 data via the API
+ESS <- import_rounds(rounds = 9, ess_email = "merlin.schaeffer@uni-koeln.de", format = "spss")
+```
+
+```{r}
+ESS <- ESS %>% transmute( # Create new variables and keep only those
+    cntry = as_factor(cntry), # Country of interview
+    gndr = as_factor(gndr),
+    facntr = as_factor(facntr), # Father born in cntry
+    mocntr = as_factor(mocntr), # Mother born in cntry
+    imbgeco = max(imbgeco, na.rm = TRUE) - zap_labels(imbgeco),
+    imueclt = max(imueclt, na.rm = TRUE) - zap_labels(imueclt),
+    imwbcnt = max(imwbcnt, na.rm = TRUE) - zap_labels(imwbcnt),
+    # Regigion
+    rlgblg = as_factor(rlgblg), # Belonging to a religion
+    rlgdgr = zap_labels(rlgdgr), # How religios
+    rlgatnd = max(rlgatnd, na.rm = TRUE) - zap_labels(rlgatnd), # Service attendance
+    pray = max(pray, na.rm = TRUE) - zap_labels(pray), # Prayer frequency
+    pspwght = zap_label(pspwght),
+    # Parental education (ISCED) #<<
+    eiscedf = zap_labels(eiscedf), #<<
+    eiscedm = zap_labels(eiscedm), #<<
+    par_edu = case_when( #<<
+      # If father's edu is missing but not mother's, take mother's #<<
+      (eiscedf == 55 | is.na(eiscedf)) & eiscedm != 55 & !is.na(eiscedm) ~ eiscedm, #<<
+      # If mother's edu is missing but not father's, take father's #<<
+      (eiscedm == 55 | is.na(eiscedm)) & eiscedf != 55 & !is.na(eiscedf)  ~ eiscedf, #<<
+      # If both are missing, its missing #<<
+      eiscedf == 55 & eiscedm == 55 ~ as.numeric(NA), #<<
+      # For all others, take the average of both parents #<<
+      TRUE ~ (eiscedm + eiscedf) / 2), #<<
+    eduyrs = case_when( # Education
+      eduyrs > 21 ~ 21, # Recode to max 21 years of edu.
+      eduyrs < 9 ~ 9, # Recode to min 9 years of edu.
+      TRUE ~ zap_labels(eduyrs))) %>% # Make it numeric, then
+  dplyr::filter(
+    # Keep only respondents with native-born parents,
+    facntr == "Yes" & mocntr == "Yes" &
+      (cntry == "Denmark" | cntry == "Sweden" | cntry == "Norway" | cntry == "Germany"))
+```
+`r unhide()`
+
+2) Among these religious respondents, the ESS contains three questions on religiosity: Prayer frequency, attendance of religious services, and general importance. Use PCA to identify a xenophobia and a religiosity variable. Using oblique rotation, the two correlate by r = `r fitb("-0.0017", width = "7")`.
+`r hide("R solution -> dont' peek to early ;) !")`
+```{r}
+# Conduct PCA of climate change concerns
+(pca <- ESS %>% prcomp(
+  formula = ~ imbgeco + imueclt + imwbcnt + 
+    rlgdgr + rlgatnd + pray,
+  data = ., na.action = na.exclude,
+  center = TRUE, scale = TRUE))
+
+# Show importance of single components.
+summary(pca) 
+
+# Oblique rotation
+(oblique_solution <- promax(
+  # of first two PCs
+  pca$rotation[, c("PC1", "PC2")]))
+
+# Visualize the results
+pca$rotation <- oblique_solution$loadings
+fviz_pca_var(pca, # Visualize PCA object
+             # Color by contributions to the PC
+             col.var = "contrib",
+             # From blue to red.
+             gradient.cols = c(low = "#00AFBB", 
+                               mid = "#E7B800", 
+                               high = "#FC4E07"))
+
+# Generate new component scores for every respondent based on the 
+# rotated principal components and write the into object "rotated_PCs"
+rotated_PCs <- ESS %>% 
+  dplyr::select(imbgeco, imueclt, imwbcnt, 
+    rlgdgr, rlgatnd, pray) %>% 
+  factor.scores(x = ., f = pca$rotation)
+# Add a "xeno" and "relig" from "rotated_PCs" to our data.
+ESS[, c("xeno", "relig")] <- rotated_PCs$scores
+
+# Correlation
+ESS %>%
+  select(xeno, relig) %>%
+  drop_na() %>%
+  cor()
+```
+`r unhide()`
+
+3) Model 1: Regress xenophobia on religiosity; $\beta$ = `r fitb("0.00368", width = "7")` and the relation is `r mcq(c("Significant", answer = "Insignificant"))`
+`r hide("R solution -> dont' peek to early ;) !")`
+```{r}
+ols1 <- lm_robust(xeno ~ relig, w = pspwght, data = ESS)
+summary(ols1)
+```
+`r unhide()`
+
+4) Model 2: Add `cntry`, `par_edu`, `eduyrs`, and `gndr` as control variables, what happens to our religiosity estimate? `r mcq(c("It does not change", "It turns more negative and actually becomes significant", "It turns significantly positive", answer = "It turns positive but remains insignificant", "It remains insignificantly negative"))`
+`r hide("R solution -> dont' peek to early ;) !")`
+```{r}
+ols2 <- lm_robust(xeno ~ relig + eduyrs + par_edu + cntry + gndr, w = pspwght, data = ESS)
+summary(ols2)
+```
+`r unhide()`
+
+5) Make Denmark the refernce category (i.e., the first category) in the `cntry` variable.
+`r hide("R solution -> dont' peek to early ;) !")`
+```{r}
+ESS$cntry <- fct_relevel(ESS$cntry, "Denmark")
+```
+`r unhide()`
+
+6) Estimate Model 2 again. What changed? Discuss among each other.
+`r hide("R solution -> dont' peek to early ;) !")`
+```{r}
+ols2 <- lm_robust(xeno ~ relig + eduyrs + par_edu + cntry + gndr, w = pspwght, data = ESS)
+summary(ols2)
+```
+`r unhide()`
+
+7) Make a regression table of the results of Models 1 and (the revised) 2.
+`r hide("R solution -> dont' peek to early ;) !")`
+```{r}
+screenreg(list(ols1, ols2), include.ci = FALSE,
+          custom.coef.names = c("Intercept", 
+                                "Religiosity",
+                                "Years of education",
+                                "Parental education", 
+                                "Germany", "Norway", "Sweden", 
+                                "Women"),
+          caption = "My regression table", 
+          caption.above = TRUE)
+```
+`r unhide()`
+
+6) Make a coefficient plot of the results of Model 1 and 2, and emphasize religiosity as predictor of interest.
+`r hide("R solution -> dont' peek to early ;) !")`
+```{r}
+bind_rows(tidy(ols1), tidy(ols2), # Stack the data of model objects into one tibble.
+          .id = "model") %>% # Identify which model the data came from, then
+  mutate(
+    model = case_when(model == 1 ~ "Model 1", # Rename model identifyer.
+                      model == 2 ~ "Model 2"),
+    term = fct_recode(factor(term), # Recode predictor names, then
+                      "Intercept" = "(Intercept)",
+                      "Religiosity" = "relig",
+                      "Years of Education" = "eduyrs",
+                      "Parental education" = "par_edu",
+                      "Germany" = "cntryGermany",
+                      "Norway" = "cntryNorway",
+                      "Sweden" = "cntrySweden",
+                      "Women" = "gndrFemale")) %>% 
+  select(term, estimate, conf.low, conf.high, model) %>% # keep only some of all the info, then
+  ggplot(aes(x = reorder(term, estimate),
+             y = estimate, 
+             ymin = conf.low, ymax = conf.high,
+             color = model)) +
+  geom_hline(yintercept = 0, # Null-hypothesis line.
+             color = "#901A1E", lty = "dashed") + 
+  geom_pointrange(# Coefs & 95% CI. #<<
+    position = position_dodge(width=0.5)) + #<<
+  coord_flip() + 
+  theme_minimal() +
+  labs(y = expression(beta), # Axis title: greek beta.
+       x = "") +
+  theme(legend.position="bottom",
+        legend.title=element_blank(),
+        legend.box = 'vertical')
+```
+`r unhide()`
+
+7) Drop the two intercepts and the Sweden dummy from the coefficients plot, but mention this in the plot's caption.
+`r hide("R solution -> dont' peek to early ;) !")`
+```{r}
+bind_rows(tidy(ols1), tidy(ols2), # Stack the data of model objects into one tibble.
+          .id = "model") %>% # Identify which model the data came from, then
+  dplyr::filter(term != "(Intercept)" & term != "cntrySweden") %>% # drop the two intercepts and Sweden dummy, then
+  mutate(
+    model = case_when(model == 1 ~ "Model 1", # Rename model identifyer.
+                      model == 2 ~ "Model 2"),
+    term = fct_recode(factor(term), # Recode predictor names, then
+                      "Religiosity" = "relig",
+                      "Years of Education" = "eduyrs",
+                      "Parental education" = "par_edu",
+                      "Germany" = "cntryGermany",
+                      "Norway" = "cntryNorway",
+                      "Sweden" = "cntrySweden",
+                      "Women" = "gndrFemale")) %>% 
+  select(term, estimate, conf.low, conf.high, model) %>% # keep only some of all the info, then
+  ggplot(aes(x = reorder(term, estimate),
+             y = estimate, 
+             ymin = conf.low, ymax = conf.high,
+             color = model)) +
+  geom_hline(yintercept = 0, # Null-hypothesis line.
+             color = "#901A1E", lty = "dashed") + 
+  geom_pointrange(# Coefs & 95% CI. #<<
+    position = position_dodge(width=0.5)) + #<<
+  coord_flip() + 
+  theme_minimal() +
+  labs(y = expression(beta), # Axis title: greek beta.
+       x = "",
+       caption = "(Estimates of the intercept are not shown)") +
+  theme(legend.position="bottom",
+        legend.title=element_blank(),
+        legend.box = 'vertical')
+```
+`r unhide()`

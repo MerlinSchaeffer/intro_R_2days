@@ -1,0 +1,92 @@
+---
+title: "Web Exercise 1"
+author: Merlin Schaeffer
+output: webex::webex_default
+date: 2021-02-08
+publishdate: 2021-01-25
+---
+
+```{r setup, include = FALSE}
+options(htmltools.dir.version = FALSE, servr.interval = 0.5, width = 115, digits = 2)
+knitr::opts_chunk$set(
+  collapse = TRUE, message = FALSE, 
+  warning = FALSE, cache = FALSE,
+  comment = "#", strip.white = TRUE)
+
+library(webex)
+```
+
+I suggest you create a new R Script "Exercises.R" that contains your solutions, so you don't intermix exercises with lecture notes.
+
+1. Why does the code below throw an error? Explain, and then solve the problem.
+```{r error = TRUE}
+Oh_a_new_object <- 10
+0h_a_new_object
+```
+`r hide("R solution -> dont' peek to early ;) !")`
+```{r}
+Oh_a_new_object <- 10
+Oh_a_new_object # Exchange the number 0 for the letter O #<<
+```
+`r unhide()`
+
+2. Create an object `another_object2` that contains whole numbers from 123 to 131. The name of the function allowing you to do that is: `r fitb("seq()", width = "5")` and the assignment operator that creates the object is `r fitb("<-", width = "2")`.
+`r hide("R solution -> dont' peek to early ;) !")`
+```{r}
+(another_object2 <- seq(123, 131))
+```
+`r unhide()`
+
+3. Let R evaluate which of `another_object2`'s elements is larger than 128 and smaller than 130.
+`r hide("R solution -> dont' peek to early ;) !")`
+```{r}
+another_object2 > 128 & another_object2 < 130
+```
+`r unhide()`
+
+4. Add 2 to each element of another_object2 and check again which of its elements is larger than 128 and smaller than 130.
+`r hide("R solution -> dont' peek to early ;) !")`
+```{r}
+another_object2 <- another_object2 + 2
+another_object2 > 128 & another_object2 < 130
+```
+`r unhide()`
+
+5. Create an object `another_textobject` that contains the sentence: "I am just another sentence."
+`r hide("R solution -> dont' peek to early ;) !")`
+```{r}
+(another_textobject <- "I am just another sentence.")
+```
+`r unhide()`
+
+6. What does R return if you try to multiply `another_textobject` by 3?
+```{r echo = FALSE}
+another_textobject <- "I am just another sentence."
+```
+`r mcq(c(answer = "non-numeric argument to binary operator", "type mismatch", "'I am just another sentence.' 'I am just another sentence.' 'I am just another sentence.'"))`
+`r hide("R solution -> dont' peek to early ;) !")`
+```{r error = TRUE}
+another_textobject <- another_textobject * 3
+```
+`r unhide()`
+
+7. Use the `rep()` function to repeat `another_textobject` five times. The argument to which you need to supply the value 5 is called `r fitb("times", width = "5")`.
+`r hide("R solution -> dont' peek to early ;) !")`
+```{r}
+rep(another_textobject, times = 5)
+```
+`r unhide()`
+
+8. Use the `rep()` function to repeat `another_object2` three times.
+`r hide("R solution -> dont' peek to early ;) !")`
+```{r}
+rep(another_object2, times = 5)
+```
+`r unhide()`
+
+9. Use the `rep()` function to repeat *each element* of `another_object2` three times. The argument to which you need to supply the value 3 is called `r fitb("each", width = "4")`.
+`r hide("R solution -> dont' peek to early ;) !")`
+```{r}
+rep(another_object2, each = 3)
+```
+`r unhide()`

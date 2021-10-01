@@ -1,0 +1,732 @@
+<!DOCTYPE html>
+<html lang="" xml:lang="">
+  <head>
+    <title>Intro to R for Social Data Science</title>
+    <meta charset="utf-8" />
+    <meta name="author" content="Merlin Schaeffer  Department of Sociology" />
+    <meta name="date" content="2021-09-17" />
+    <script src="libs/header-attrs/header-attrs.js"></script>
+    <link href="libs/tile-view/tile-view.css" rel="stylesheet" />
+    <script src="libs/tile-view/tile-view.js"></script>
+    <link href="libs/tachyons/tachyons.min.css" rel="stylesheet" />
+    <link href="libs/panelset/panelset.css" rel="stylesheet" />
+    <script src="libs/panelset/panelset.js"></script>
+    <link rel="stylesheet" href="libs/Merlin169.css" type="text/css" />
+  </head>
+  <body>
+    <textarea id="source">
+class: center, middle, inverse, title-slide
+
+# Intro to R for Social Data Science
+## Visualization 1
+### Merlin Schaeffer<br> Department of Sociology
+### 2021-09-17
+
+---
+
+background-image: url('https://drupal-images.tv2.dk/sites/images.tv2.dk/files/t2img/2019/12/18/960x540/311984641-7613085-3c76aadd7dd99694e5f5bb3c787190d6.jpeg')
+background-size: cover
+
+&lt;img src="./img/xeno_quest.png" width="60%" style="display: block; margin: auto;" /&gt;
+
+---
+class: clear
+
+&lt;iframe src="https://app.sli.do/event/aflvddc2" height="100%" width="100%" frameBorder="0" style="min-height: 560px;"&gt;&lt;/iframe&gt;
+
+---
+class: clear
+name: setup
+
+
+
+
+```r
+# Add packages to library
+library(tidyverse) # Add the tidyverse package to my current library.
+library(haven) # Read and handle SPSS, Stata &amp; SAS data (no need to install)
+library(essurvey) # Add ESS API package to library.
+*library(ggplot2) # Allows us to create nice figures.
+
+# Import the ESS round 9 data via the API
+ESS &lt;- import_rounds(rounds = 9, ess_email = "YOUR-EMAIL", format = "spss")
+```
+
+
+
+--
+
+
+```r
+*ESS &lt;- transmute(ESS, # Recode several variables &amp; keep only the recoded ones (i.e., transmute vs mutate).
+                 idno = zap_labels(idno),
+                 # Make the following variables factors:
+                 cntry = as_factor(cntry), 
+                 gndr = as_factor(gndr),
+                 facntr = as_factor(facntr),
+                 mocntr = as_factor(mocntr),
+                 # Make the following variables numeric:
+                 imbgeco = max(imbgeco, na.rm = TRUE) - zap_labels(imbgeco), # Also turn scale around.
+                 imueclt = max(imueclt, na.rm = TRUE) - zap_labels(imueclt), # Also turn scale around.
+                 imwbcnt = max(imwbcnt, na.rm = TRUE) - zap_labels(imwbcnt), # Also turn scale around.
+                 agea = zap_labels(agea),
+                 pspwght = zap_labels(pspwght),
+                 eduyrs = case_when(
+                   eduyrs &gt; 21 ~ 21, # Recode to max 21 years of edu.
+                   eduyrs &lt; 9 ~ 9, # Recode to min 9 years of edu.
+                   TRUE ~ zap_labels(eduyrs) # Make it numeric.
+                 ),
+*) 
+```
+
+---
+class: clear middle
+
+
+```r
+# Case selection.
+ESS &lt;- dplyr::filter(ESS,
+                     # Only respondents whose parents were born in country of interview.
+                     facntr == "Yes" &amp; mocntr == "Yes" &amp;
+                       # Only respondents from direct neighbors of Denmark:
+                       (cntry == "Denmark" | cntry == "Germany" | cntry == "Sweden" | cntry == "Norway")
+)
+
+# Casewise deletion of missing values
+(ESS &lt;- drop_na(ESS))
+# # A tibble: 5,354 × 11
+#     idno cntry   gndr   facntr mocntr imbgeco imueclt imwbcnt  agea pspwght eduyrs
+#    &lt;dbl&gt; &lt;fct&gt;   &lt;fct&gt;  &lt;fct&gt;  &lt;fct&gt;    &lt;dbl&gt;   &lt;dbl&gt;   &lt;dbl&gt; &lt;dbl&gt;   &lt;dbl&gt;  &lt;dbl&gt;
+#  1    10 Germany Female Yes    Yes          0       5       5    65   0.854     11
+#  2    64 Germany Female Yes    Yes          1       2       2    74   0.760     20
+#  3    65 Germany Male   Yes    Yes          6       6       7    64   1.08      12
+#  4    91 Germany Female Yes    Yes          2       2       2    54   1.27      14
+#  5   150 Germany Female Yes    Yes          0       0       4    71   0.942     12
+#  6   212 Germany Male   Yes    Yes          2       2       2    41   1.42      14
+#  7   255 Germany Male   Yes    Yes          3       3       3    62   1.23      16
+#  8   270 Germany Male   Yes    Yes          3       6       5    65   0.978     14
+#  9   304 Germany Female Yes    Yes          1       1       5    47   0.984     13
+# 10   311 Germany Male   Yes    Yes          0       0       5    67   0.535     18
+# # … with 5,344 more rows
+```
+
+---
+# Why visualize? .font60[A *simulated* example]
+
+- We are better in detecting visual patterns in figures compared to numeric patterns in tables.
+- You will reach wider audiences with figures than with tables.
+- You will understand your own data faster while exploring it.
+
+
+
+
+.push-left[
+
+```r
+# Multilevel mixed effects model.
+lmer(data = sim_data,
+  formula = xeno ~ education +
+  (1 + education | Country)) %&gt;% 
+  stargazer(type = "text", style = "asr")
+# 
+# ---------------------------------
+#                         xeno     
+# ---------------------------------
+# education             -0.799***  
+# Constant                0.314    
+# N                        500     
+# Log Likelihood        -154.000   
+# AIC                    320.000   
+# BIC                    345.000   
+# ---------------------------------
+# *p &lt; .05; **p &lt; .01; ***p &lt; .001
+```
+]
+
+--
+
+.push-right[
+&lt;img src="4-Visualization-I_files/figure-html/unnamed-chunk-8-1.png" width="100%" style="display: block; margin: auto;" /&gt;
+]
+
+---
+# Why ggplot2? .font60[Because of its *grammar of graphics*]
+
+.left-column[
+Independently specify the building blocks of a figure and combine them to create just about any kind of figure you want; its like Lego ;-).
+]
+
+.right-column[
+&lt;img src="./img/Lego1.png" width="55%" style="display: block; margin: auto;" /&gt;
+]
+
+---
+# The **coordinate system**
+
+
+```r
+ggplot() # Create an empty coordinate system.
+```
+
+&lt;img src="4-Visualization-I_files/figure-html/unnamed-chunk-10-1.png" width="80%" style="display: block; margin: auto;" /&gt;
+
+---
+# The coordinate system
+
+
+```r
+ggplot(data = ESS) # Create an empty coordinate system for the ESS data.
+```
+
+&lt;img src="4-Visualization-I_files/figure-html/unnamed-chunk-11-1.png" width="80%" style="display: block; margin: auto;" /&gt;
+
+---
+# **Layers**
+
+
+```r
+ggplot(data = ESS) + # Add ...
+* geom_point(mapping = aes(y = imwbcnt, x = eduyrs)) # a "layer" of points (i.e., a scatter plot).
+```
+
+&lt;img src="4-Visualization-I_files/figure-html/unnamed-chunk-12-1.png" width="80%" style="display: block; margin: auto;" /&gt;
+
+---
+# Layers
+
+.push-left[
+
+```r
+ggplot(data = ESS) +
+  geom_point(mapping = aes(y = imwbcnt, x = eduyrs))
+```
+
+&lt;img src="4-Visualization-I_files/figure-html/unnamed-chunk-13-1.png" width="85%" style="display: block; margin: auto;" /&gt;
+]
+
+.push-right[
+&lt;img src="./img/Lego1.png" width="80%" style="display: block; margin: auto;" /&gt;
+]
+
+---
+# The layered grammar of graphics
+
+
+```r
+# A general template
+*ggplot(data = &lt;DATA&gt;) +         # Create a coordinate system for &lt;DATA&gt;, and add "+"
+* &lt;GEOM_FUNCTION&gt;(              # a layer of (geometric) information, which
+*    mapping = aes(&lt;MAPPINGS&gt;), # maps our data to aestetics, and
+     stat = &lt;STAT&gt;,             # may depend on statistical transformations.
+     position = &lt;POSITION&gt;      # Positioning may be adjusted.
+  ) +
+  &lt;COORDINATE_FUNCTION&gt; +       # Change the default coordinate system.
+* &lt;FACET_FUNCTION&gt;              # Draw sub-plots by categorical variables.
+```
+.center[.backgrnote[*Source*: Wickham &amp; Grolemund ["R for Data Science"](http://r4ds.had.co.nz/data-visualisation.html)]]
+
+ggplot2 contains many **geom functions**, which put layers of different types of geometric objects (e.g., points, bars, lines) over a coordinate system.
+
+--
+
+- All geom functions depend on the `mapping` argument. It is paired with `aes()`, which stands for **"aestetic"**. Aestetics are the visual properties of your plot. 
+- The most important aestetics of any graph are the y-axis and the x-axis. Therefore, `aes()` depends on `x` and `y`, because these specify which variable to map to the y-axis and which one to map to the x-axis.
+- But of course, aestetics also means, among others, color, shape, size, and so on.
+
+---
+# **Aestetics** .font60[The visual properties of your plot]
+
+If you want to have an aestetic depend on the values of a variable, you need to specify it *within* `aes()`.
+
+
+```r
+ggplot(data = ESS) +
+* geom_point(mapping = aes(y = imwbcnt, x = eduyrs, color = cntry)) # Color by country.
+```
+
+&lt;img src="4-Visualization-I_files/figure-html/unnamed-chunk-16-1.png" width="80%" style="display: block; margin: auto;" /&gt;
+
+???
+
+- ggplot2 will automatically assign a unique aesthetic (e.g., color/shape/size/etc.) to each value of the variable. 
+
+- It will also generate a legend.
+---
+# Aestetics
+
+
+```r
+ggplot(data = ESS) +
+  geom_point(mapping = aes(y = imwbcnt, x = eduyrs, color = cntry, 
+*                          size = pspwght)) # Size by post-stratification weight.
+```
+
+&lt;img src="4-Visualization-I_files/figure-html/unnamed-chunk-17-1.png" width="80%" style="display: block; margin: auto;" /&gt;
+
+???
+
+You can manually control the aestetics, that is, which color and which sizes. But that is fine tuning. We want to explore our data right now.
+
+---
+# Aestetics
+
+Because R is object-oriented, aestetics behave differently depending on whether you give it a categorical or a continuous variable.
+
+
+```r
+ggplot(data = ESS) +
+  geom_point(mapping = aes(y = imwbcnt, x = eduyrs, 
+*                          color = pspwght, size = cntry)) # Exchanged color and date aes.
+```
+
+&lt;img src="4-Visualization-I_files/figure-html/unnamed-chunk-18-1.png" width="70%" style="display: block; margin: auto;" /&gt;
+
+???
+
+- Now color is gradual, rather than different colors.
+
+- For size, a categorical variable makes little sense.
+
+- Categorical are factor and character vectors.
+
+- continuous are numerical vectors.
+---
+# Aestetics
+
+If you want to define an aestetic irrespective of the values of any variable, you need to place *outside* the mapping argument.
+
+
+```r
+ggplot(data = ESS) +
+  geom_point(mapping = aes(y = imwbcnt, x = eduyrs, 
+                           size = pspwght, color = cntry), 
+*            shape = 21) # Use hollow circles.
+```
+
+&lt;img src="4-Visualization-I_files/figure-html/unnamed-chunk-19-1.png" width="65%" style="display: block; margin: auto;" /&gt;
+
+???
+
+- `alpha` adds transparency, which varies between 0 (see through) and 1 nontransparent.
+
+- You need to give that aestetic a value that makes sense to it.
+
+---
+class: clear
+# **Geometric objects** .font60[As what do you visualize your data?]
+
+.center[.content-box-green[
+How are these two plots similar?
+]]
+
+.push-left[
+
+```r
+ggplot(data = ESS) + 
+  geom_point(mapping = aes(y = imwbcnt, x = eduyrs)) 
+```
+
+&lt;img src="4-Visualization-I_files/figure-html/unnamed-chunk-20-1.png" width="75%" style="display: block; margin: auto;" /&gt;
+]
+
+.push-right[
+
+```r
+ggplot(data = ESS) +
+  geom_smooth(mapping = aes(y = imwbcnt, x = eduyrs))
+```
+
+&lt;img src="4-Visualization-I_files/figure-html/unnamed-chunk-21-1.png" width="75%" style="display: block; margin: auto;" /&gt;
+]
+
+???
+
+- They show the same data, but expressed as different geometric objects.
+- ggplot2 contains +30 geoms. Extension packages contain even more.
+
+---
+class: clear
+# **Geometric objects** .font60[As what do you visualize your data?]
+
+.push-left[
+
+```r
+ggplot(data = ESS) + 
+  geom_boxplot(mapping = aes(y = imwbcnt, 
+                             x = factor(eduyrs))) 
+```
+
+&lt;img src="4-Visualization-I_files/figure-html/unnamed-chunk-22-1.png" width="80%" style="display: block; margin: auto;" /&gt;
+]
+
+.push-right[
+&lt;br&gt;
+&lt;br&gt;
+&lt;br&gt;
+&lt;br&gt;
+&lt;img src="./img/Boxplot.png" width="100%" style="display: block; margin: auto;" /&gt;
+.center[.backgrnote[*Source*: [Wikipedia](https://en.wikipedia.org/wiki/Box_plot)]]
+]
+
+---
+class: clear
+# Geoms &amp; weights .font60[Apply or visualize, it depends on the geom ...]
+
+.push-left[
+
+```r
+ggplot(data = ESS) + 
+  geom_point(aes(y = imwbcnt, x = eduyrs, 
+*                size = pspwght)) # Visualize
+```
+
+&lt;img src="4-Visualization-I_files/figure-html/unnamed-chunk-24-1.png" width="80%" style="display: block; margin: auto;" /&gt;
+]
+
+.push-right[
+
+```r
+ggplot(data = ESS) +
+  geom_smooth(aes(y = imwbcnt, x = eduyrs, 
+*                 weight = pspwght)) # Apply
+```
+
+&lt;img src="4-Visualization-I_files/figure-html/unnamed-chunk-25-1.png" width="80%" style="display: block; margin: auto;" /&gt;
+]
+
+---
+class: clear
+# Geoms &amp; aestetics .font60[Some aestetics are geom specific]
+
+.push-left[
+
+```r
+ggplot(data = ESS) + 
+  geom_point(aes(y = imwbcnt, x=eduyrs, color=cntry,
+                 size = pspwght, 
+*                shape = cntry))
+```
+
+&lt;img src="4-Visualization-I_files/figure-html/unnamed-chunk-26-1.png" width="77%" style="display: block; margin: auto;" /&gt;
+]
+
+.push-right[
+
+```r
+ggplot(data = ESS) +
+  geom_smooth(aes(y=imwbcnt, x=eduyrs, color=cntry, 
+                  weight = pspwght, 
+*                 linetype = cntry))
+```
+
+&lt;img src="4-Visualization-I_files/figure-html/unnamed-chunk-27-1.png" width="77%" style="display: block; margin: auto;" /&gt;
+]
+
+???
+
+- We can use the color aestetic in both plots.
+
+- We cannot use shape for lines and line types for points.
+
+- Note that ggplot2 automatically groups data for geoms whenever you map an aesthetic to a categorical variable!
+
+---
+# Multiple geoms .font60[Are layered on top of each other]
+
+To have several geoms in one plot, simply add `+` them on top of each other.
+
+```r
+ggplot(data = ESS) + # Coordinate system, add ...
+* geom_point(mapping = aes(y = imwbcnt, x = eduyrs, size = pspwght)) + # layer of points, add ...
+  geom_smooth(mapping = aes(y = imwbcnt, x = eduyrs, weight = pspwght)) # layer of smoothed average &amp; 95%-CI.
+```
+
+&lt;img src="4-Visualization-I_files/figure-html/unnamed-chunk-28-1.png" width="65%" style="display: block; margin: auto;" /&gt;
+
+---
+# Multiple geoms
+
+The order of geoms matters, ggplot2 adds layer on top of layer.
+
+```r
+ggplot(data = ESS) + # Coordinate system, add ...
+* geom_smooth(mapping = aes(y = imwbcnt, x = eduyrs, weight = pspwght)) +
+* geom_point(mapping = aes(y = imwbcnt, x = eduyrs, size = pspwght))
+```
+
+&lt;img src="4-Visualization-I_files/figure-html/unnamed-chunk-29-1.png" width="65%" style="display: block; margin: auto;" /&gt;
+
+---
+# **Global aestetics**
+
+To avoid repetitive code, we can specify global aestetics, which (by default) hold *for all geoms*.
+
+```r
+*ggplot(data = ESS, mapping = aes(y = imwbcnt, x = eduyrs)) + # Coord. system with global aestetics, add ...
+  geom_point() + # a layer of points, add ...
+  geom_smooth() # a layer with a line of locally-smoothed averages and CI.
+```
+
+&lt;img src="4-Visualization-I_files/figure-html/unnamed-chunk-30-1.png" width="65%" style="display: block; margin: auto;" /&gt;
+
+---
+class: clear
+
+By the way, this is a nice example why graphics are great for data exploration:
+
+```r
+ggplot(data = ESS, mapping = aes(y = imwbcnt, x = factor(eduyrs), weight = pspwght)) + # Coord. system with global aestetics, add ...
+  geom_boxplot() + # a layer of boxplots, add ...
+  # For some reason, geom_smooth needs the "aes(group = 1)" argument.
+  geom_smooth(mapping = aes(group = 1), se = FALSE) + # No CI (i.e., confidence interval), add ...
+  geom_smooth(mapping = aes(group = 1), method = "lm", se = FALSE, color = "red") # an OLS line.
+```
+
+&lt;img src="4-Visualization-I_files/figure-html/unnamed-chunk-31-1.png" width="70%" style="display: block; margin: auto;" /&gt;
+
+---
+# **Local aestetics** .font70[For the single geoms]
+
+.alert[Beware, local aesthetics override the global (default) aestetics!]
+
+```r
+ggplot(data = ESS, mapping = aes(y = imwbcnt, x = eduyrs)) +
+* geom_point(mapping = aes(color = cntry, size = pspwght), alpha = 0.2) + # aes() for geom_point exclusively.
+* geom_smooth(mapping = aes(y = agea, weight = pspwght))
+```
+
+&lt;img src="4-Visualization-I_files/figure-html/unnamed-chunk-32-1.png" width="65%" style="display: block; margin: auto;" /&gt;
+
+---
+# Putting it all together:
+
+```r
+ggplot(data = ESS, # Coordinate system, add ...
+       mapping = aes(y = imwbcnt, x = factor(eduyrs), weight = pspwght)) +  # define global aestetics, add ...
+  geom_boxplot() + # a layer of boxplots, add
+  geom_smooth(mapping = aes(color = cntry, group = cntry)) # Add smooth for each country.
+```
+
+&lt;img src="4-Visualization-I_files/figure-html/unnamed-chunk-33-1.png" width="65%" style="display: block; margin: auto;" /&gt;
+
+---
+# **Facets** .font60[Sub-plots by categorical type]
+
+When another layer of (important) information does not improve the plot.
+
+```r
+ggplot(data = ESS, mapping = aes(y = imwbcnt, x = factor(eduyrs), weight = pspwght)) +
+  geom_boxplot() +
+  geom_smooth(mapping = aes(group = 1)) +
+* facet_wrap( ~ cntry, nrow = 1) # Make sub-plots by cntry.
+```
+
+&lt;img src="4-Visualization-I_files/figure-html/unnamed-chunk-34-1.png" width="75%" style="display: block; margin: auto;" /&gt;
+
+???
+
+Consider whether faceting helps to see the comparisons you are interested in!
+
+---
+# Facet grid .font60[A cross-table of plots]
+
+
+```r
+ggplot(data = ESS, mapping = aes(y = imwbcnt, x = factor(eduyrs), weight = pspwght)) +
+  geom_boxplot() +
+  geom_smooth(mapping = aes(group = 1)) +
+* facet_grid(gndr ~ cntry) # Make sub-plots by gender (row) ~ country (column).
+```
+
+&lt;img src="4-Visualization-I_files/figure-html/unnamed-chunk-35-1.png" width="85%" style="display: block; margin: auto;" /&gt;
+
+---
+# Save your plot
+
+`ggsave()` allows you to save your plot as pdf, jpeg, png, tiff, svg, bmp, ps, eps. It will guess the type from the ending of the name you give the plot (e.g., "MyPlot.pdf"). 
+
+
+```r
+# Make our plot and assign it to object my_plot.
+my_plot &lt;- ggplot(data = ESS, mapping = aes(y = imwbcnt, x = factor(eduyrs), weight = pspwght)) +
+  geom_boxplot() +
+  geom_smooth(mapping = aes(group = 1)) +
+  facet_grid(gndr ~ cntry)
+
+# Save the plot into the working directory as pdf. It shall be 9 inches wide and 4.5 inches high.
+*ggsave(filename = "myplot1.pdf", plot = my_plot, width = 8, height = 3)
+```
+
+--
+
+
+```r
+# Save the plot but with different margins.
+ggsave(filename = "myplot2.pdf", plot = my_plot, width = 16, height = 9)
+```
+
+--
+
+
+```r
+# Save the plot as jpeg, again different margins and very low resolution.
+ggsave(filename = "myplot1.jpeg", plot = my_plot, width = 4.5, height = 9, dpi = 50)
+```
+
+???
+
+PDFs do not need the dpi argument, because they are vector-based graphics.
+
+---
+class: clear
+
+&lt;iframe src="https://app.sli.do/event/aflvddc2" height="100%" width="100%" frameBorder="0" style="min-height: 560px;"&gt;&lt;/iframe&gt;
+
+---
+class: inverse
+# Today's general lesson
+
+
+```r
+# A general template
+*ggplot(data = &lt;DATA&gt;) +         # Create a coordinate system for &lt;DATA&gt;, and add "+"
+* &lt;GEOM_FUNCTION&gt;(              # a layer of (geometric) information, which
+*    mapping = aes(&lt;MAPPINGS&gt;), # maps our data to aestetics, and
+     stat = &lt;STAT&gt;,             # may depend on statistical transformations.
+     position = &lt;POSITION&gt;      # Positioning may be adjusted.
+  ) +
+  &lt;COORDINATE_FUNCTION&gt; +       # Change the default coordinate system.
+* &lt;FACET_FUNCTION&gt;              # Draw sub-plots by categorical variables.
+```
+.font70[*Source*: Wickham &amp; Grolemund ["R for Data Science"](http://r4ds.had.co.nz/data-visualisation.html)]
+
+---
+class: inverse
+# Today's (important) functions
+
+1. `transmute()`: similar to mutate, but only keeps the newly generated variables.
+    </textarea>
+<style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
+<script src="libs/remark-latest.min.js"></script>
+<script>var slideshow = remark.create({
+"highlightLanguage": "r",
+"highlightStyle": "zenburn",
+"highlightLines": true,
+"countIncrementalSlides": false,
+"ratio": "16:9"
+});
+if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
+  window.dispatchEvent(new Event('resize'));
+});
+(function(d) {
+  var s = d.createElement("style"), r = d.querySelector(".remark-slide-scaler");
+  if (!r) return;
+  s.type = "text/css"; s.innerHTML = "@page {size: " + r.style.width + " " + r.style.height +"; }";
+  d.head.appendChild(s);
+})(document);
+
+(function(d) {
+  var el = d.getElementsByClassName("remark-slides-area");
+  if (!el) return;
+  var slide, slides = slideshow.getSlides(), els = el[0].children;
+  for (var i = 1; i < slides.length; i++) {
+    slide = slides[i];
+    if (slide.properties.continued === "true" || slide.properties.count === "false") {
+      els[i - 1].className += ' has-continuation';
+    }
+  }
+  var s = d.createElement("style");
+  s.type = "text/css"; s.innerHTML = "@media print { .has-continuation { display: none; } }";
+  d.head.appendChild(s);
+})(document);
+// delete the temporary CSS (for displaying all slides initially) when the user
+// starts to view slides
+(function() {
+  var deleted = false;
+  slideshow.on('beforeShowSlide', function(slide) {
+    if (deleted) return;
+    var sheets = document.styleSheets, node;
+    for (var i = 0; i < sheets.length; i++) {
+      node = sheets[i].ownerNode;
+      if (node.dataset["target"] !== "print-only") continue;
+      node.parentNode.removeChild(node);
+    }
+    deleted = true;
+  });
+})();
+(function() {
+  "use strict"
+  // Replace <script> tags in slides area to make them executable
+  var scripts = document.querySelectorAll(
+    '.remark-slides-area .remark-slide-container script'
+  );
+  if (!scripts.length) return;
+  for (var i = 0; i < scripts.length; i++) {
+    var s = document.createElement('script');
+    var code = document.createTextNode(scripts[i].textContent);
+    s.appendChild(code);
+    var scriptAttrs = scripts[i].attributes;
+    for (var j = 0; j < scriptAttrs.length; j++) {
+      s.setAttribute(scriptAttrs[j].name, scriptAttrs[j].value);
+    }
+    scripts[i].parentElement.replaceChild(s, scripts[i]);
+  }
+})();
+(function() {
+  var links = document.getElementsByTagName('a');
+  for (var i = 0; i < links.length; i++) {
+    if (/^(https?:)?\/\//.test(links[i].getAttribute('href'))) {
+      links[i].target = '_blank';
+    }
+  }
+})();
+// adds .remark-code-has-line-highlighted class to <pre> parent elements
+// of code chunks containing highlighted lines with class .remark-code-line-highlighted
+(function(d) {
+  const hlines = d.querySelectorAll('.remark-code-line-highlighted');
+  const preParents = [];
+  const findPreParent = function(line, p = 0) {
+    if (p > 1) return null; // traverse up no further than grandparent
+    const el = line.parentElement;
+    return el.tagName === "PRE" ? el : findPreParent(el, ++p);
+  };
+
+  for (let line of hlines) {
+    let pre = findPreParent(line);
+    if (pre && !preParents.includes(pre)) preParents.push(pre);
+  }
+  preParents.forEach(p => p.classList.add("remark-code-has-line-highlighted"));
+})(document);</script>
+
+<script>
+slideshow._releaseMath = function(el) {
+  var i, text, code, codes = el.getElementsByTagName('code');
+  for (i = 0; i < codes.length;) {
+    code = codes[i];
+    if (code.parentNode.tagName !== 'PRE' && code.childElementCount === 0) {
+      text = code.textContent;
+      if (/^\\\((.|\s)+\\\)$/.test(text) || /^\\\[(.|\s)+\\\]$/.test(text) ||
+          /^\$\$(.|\s)+\$\$$/.test(text) ||
+          /^\\begin\{([^}]+)\}(.|\s)+\\end\{[^}]+\}$/.test(text)) {
+        code.outerHTML = code.innerHTML;  // remove <code></code>
+        continue;
+      }
+    }
+    i++;
+  }
+};
+slideshow._releaseMath(document);
+</script>
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+(function () {
+  var script = document.createElement('script');
+  script.type = 'text/javascript';
+  script.src  = 'https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML';
+  if (location.protocol !== 'file:' && /^https?:/.test(script.src))
+    script.src  = script.src.replace(/^https?:/, '');
+  document.getElementsByTagName('head')[0].appendChild(script);
+})();
+</script>
+  </body>
+</html>

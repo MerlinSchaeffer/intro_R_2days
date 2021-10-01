@@ -1,0 +1,96 @@
+---
+title: "Web Exercise 2"
+author: Merlin Schaeffer
+output: webex::webex_default
+date: 2021-02-08
+publishdate: 2021-01-25
+---
+
+```{r setup, include = FALSE}
+options(htmltools.dir.version = FALSE, servr.interval = 0.5, width = 115, digits = 2)
+knitr::opts_chunk$set(
+  collapse = TRUE, message = FALSE, 
+  warning = FALSE, cache = FALSE,
+  comment = "#", strip.white = TRUE)
+
+library(webex)
+library(tidyverse)
+
+options(htmltools.dir.version = FALSE, servr.interval = 0.5, width = 115, digits = 2)
+knitr::opts_chunk$set(
+  collapse = TRUE, message = FALSE, 
+  warning = FALSE, cache = FALSE,
+  comment = "#", strip.white = TRUE)
+
+# Concatenate argument "x" to a factor and give it a
+# comprehensive list "levels" of all potential categories.
+conti <- factor(
+  x = c("Europe", "Africa", "Africa", "Asia", "S.America"),
+  levels = c("Africa", "Asia", "Australia",
+             "Europe", "N.America", "S.America")
+)
+
+# Recode conti to Danish. Watch out: first the new, then the old value...
+conti <- fct_recode(conti,
+                    "Europa" = "Europe",
+                    "Afrika" = "Africa",
+                    "Asien" = "Asia",
+                    "Suedamerika" = "S. America",
+                    "Nordamerika" = "N. America",
+                    "Australien" = "Australia") 
+
+conti <- fct_drop(conti) # Drop unused levels.
+```
+
+
+1. Create numeric vector that runs from 1 to 10 and let R print it. To create and print it right away, you need to enclose your statement with `r fitb("()", width = "2")`.
+`r hide("R solution -> dont' peek to early ;) !")`
+```{r}
+(my_numeric_vector <-seq(1, 10))
+```
+`r unhide()`
+
+2. Now transform that vector so that it's 8th element is being multiplied by 4 and add 7 to it's second element. To access single elements of a vector, you need to use its index via `r fitb("[]", width = "2")`.
+`r hide("R solution -> dont' peek to early ;) !")`
+```{r}
+my_numeric_vector[c(8, 2)] <- c(my_numeric_vector[8] * 4, 
+                                my_numeric_vector[2] + 7)
+
+my_numeric_vector
+```
+`r unhide()`
+
+3. Recode the continent variable into your language, or back to English. To do that, we use the `r fitb("fct_recode()", width = "10")` function from the forcats package.
+`r hide("R solution -> dont' peek to early ;) !")`
+```{r error = TRUE}
+# Recode conti to French.
+# Watch out: first the new, then the old value...
+conti <- fct_recode(conti, 
+                    "Europe" = "Europa", 
+                    "Afrique" = "Afrika", 
+                    "Asie" = "Asien", 
+                    "Amérique Sud" = "Suedamerika") 
+
+table(conti)
+```
+`r unhide()`
+
+4. Add Atlantis as another level. Now we need the `r fitb("fct_expand()", width = "12")` function.
+`r hide("R solution -> dont' peek to early ;) !")`
+```{r error = TRUE}
+conti <- fct_expand(conti, "Atlantis")
+
+table(conti)
+```  
+`r unhide()`
+
+5. Reorder the factor vector such, that Atlantis is shown first. Now we need the `r fitb("fct_relevel()", width = "13")` function.
+`r hide("R solution -> dont' peek to early ;) !")`
+```{r error = TRUE}
+conti <- fct_relevel(conti, "Atlantis")
+
+table(conti)
+```  
+`r unhide()`
+
+

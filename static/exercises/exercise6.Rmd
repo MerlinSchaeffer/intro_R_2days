@@ -1,0 +1,108 @@
+---
+title: "Web Exercise 6"
+author: Merlin Schaeffer
+output: webex::webex_default
+date: 2021-02-22
+publishdate: 2021-01-15
+---
+
+```{r setup, include = FALSE}
+options(htmltools.dir.version = FALSE, servr.interval = 0.5, width = 115, digits = 2)
+knitr::opts_chunk$set(
+  collapse = TRUE, message = FALSE, fig.align='center',
+  warning = FALSE, cache = FALSE, fig.retina = 3,
+  comment = "#", strip.white = TRUE)
+
+# Add packages to library
+library(tidyverse) # Add the tidyverse package to my current library.
+library(haven) # Handle labelled data.
+library(essurvey) # Add ESS API package to library.
+library(Hmisc) # Weighted statistics
+library(webex)
+
+# Import the ESS round 9 data via the API
+ESS <- import_rounds(rounds = 9, ess_email = "merlin.schaeffer@uni-koeln.de", format = "spss")
+```
+
+Session page: [**Visualization II**](#sessions)
+
+1. Remember Excercise 5 from earlier today; visualize your results of task 2 and 3 in one plot each. Color-highlight the most extreme country in each plot. 
+`r hide("R solution -> dont' peek to early ;) !")`
+```{r}
+ESS %>% # Use the ESS, then
+  transmute( # Create new variables and only keep these new ones
+    # Make the following variables factors:
+    cntry = as_factor(cntry), 
+    facntr = as_factor(facntr),
+    mocntr = as_factor(mocntr),
+    # Make the following variables numeric:
+    pspwght = zap_labels(pspwght),
+    # Experienced racial discrimination #<<
+    # Turn vars into factors:
+    dscrgrp = as_factor(dscrgrp), # Belonging to discriminated group.
+    dscrrce = as_factor(dscrrce), # Discriminated because of race.
+    racial_discr = case_when(
+      dscrgrp == "Yes" & dscrrce == "Marked" ~ 1, # Only racial discrimination counts as 1 #<<
+      dscrgrp == "No" | (dscrgrp == "Yes" & dscrrce != "Marked") ~ 0, # No, or all other forms of discr. count as 0 #<<
+      TRUE ~ as.numeric(NA) # all others missing
+    ) 
+  ) %>% # then
+  dplyr::filter( # Keep only respondents of immigrant origin,
+    facntr == "No" & mocntr == "No") %>% # then
+  group_by(cntry) %>% # Group data by country, then
+  dplyr::summarize(
+    # Weighted number of cases.
+    wn = sum(pspwght, na.rm = TRUE), 
+    # Weighted number of persons who see their group face racial discrimination.
+    wn_rd = sum(racial_discr * pspwght, na.rm = TRUE), 
+    # Weighted percent who see their group face racial discrimination.
+    wperc_rd = (wn_rd / wn)  * 100 
+  ) %>%
+  mutate(
+    maxim = case_when(wperc_rd == max(wperc_rd) ~ "Maximum",
+                      TRUE ~ "Other")) %>%
+  ggplot(mapping = aes(y = wperc_rd, x = reorder(cntry, -wperc_rd))) + 
+  geom_bar(aes(fill = maxim), stat = "identity") +
+  labs(y = "% Persons of immigrant origin \n reporting racial discrimination",
+       x = "Country") +
+  coord_flip() +
+  theme_minimal()
+```
+`r unhide()`
+
+2. Use another way (apart from color) to also emphasize, the *least* extreme case in plot two.
+`r hide("R solution -> dont' peek to early ;) !")`
+```{r}
+ESS %>% # Use the ESS, så
+  transmute( # Create new variables and only keep these new ones
+    # Make the following variables factors:
+    cntry = as_factor(cntry), 
+    # Make the following variables numeric:
+    pspwght = zap_labels(pspwght),
+    hmsacld = max(zap_labels(hmsacld), na.rm = TRUE) - zap_labels(hmsacld), #<<
+  ) %>%
+  group_by(cntry) %>% # Group data by country, så
+  dplyr::summarize(
+    n = sum(pspwght, na.rm = TRUE),
+    mean_hmsacld = wtd.mean(hmsacld, weights = pspwght, na.rm = TRUE),
+    sd_hmsacld = wtd.var(hmsacld, weights = pspwght, na.rm = TRUE) %>% sqrt(),
+    se_hmsacld = sd_hmsacld / sqrt(n),
+    min95 = mean_hmsacld - se_hmsacld * qt(p = 0.975, df = n),
+    max95 = mean_hmsacld + se_hmsacld * qt(p = 0.975, df = n)
+  ) %>%
+  mutate(maxim = case_when(mean_hmsacld == max(mean_hmsacld) ~ "Maximum", #<<
+                           TRUE ~ "Other"),
+         minim = case_when(mean_hmsacld == min(mean_hmsacld) ~ "Minimum", #<<
+                           TRUE ~ "Other")) %>%
+  ggplot(aes(y = mean_hmsacld, x = reorder(cntry, mean_hmsacld), 
+             ymin = min95, ymax = max95,
+             color = maxim, shape = minim)) + #<<
+  geom_pointrange() +
+  coord_flip() +
+  labs(y = "Gay men and women should be allowed \n to adopt children (Scale 1 to 5)",
+       x = "Country") +
+  theme_minimal()
+```
+`r unhide()`
+
+3. Polish your favorite figure and use the Absalon discussion forum to share it with your classmates.
