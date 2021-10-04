@@ -1,9 +1,9 @@
 ---
 title: "6 Visualization II"
 summary: "This lecture will finalize our introduction to the basics of the grammar of graphics and ggplot2."
-author: Merlin Schaeffer
-date: 2021-09-24
-publishdate: 2021-09-16
+author: Merlin Schaeffer & Friedolin Merhout
+date: 2021-10-19
+publishdate: 2021-09-03
 ---
 
 ```{r setup, include = FALSE}

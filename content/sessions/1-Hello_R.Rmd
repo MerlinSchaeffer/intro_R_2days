@@ -1,9 +1,9 @@
 ---
 title: "1 Hello R"
 summary: "In this first lecture you will get a gentle intro to R and the way it works as an objects-oriented stats programming language."
-author: Merlin Schaeffer
-date: 2021-09-10
-publishdate: 2021-09-05
+author: Merlin Schaeffer & Friedolin Merhout
+date: 2021-10-18
+publishdate: 2021-09-03
 ---
 
 ```{r setup, include = FALSE}

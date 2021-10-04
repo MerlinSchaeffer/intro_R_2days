@@ -1,9 +1,9 @@
 ---
 title: "3 Data Frames and Tibbles"
 summary: "This lecture will introduce you to data frames and tibbles, the best way to organize data in R."
-author: Merlin Schaeffer
-date: 2021-09-17
-publishdate: 2021-09-12
+author: Merlin Schaeffer & Friedolin Merhout
+date: 2021-10-18
+publishdate: 2021-09-03
 ---
 
 ```{r setup, include = FALSE}
