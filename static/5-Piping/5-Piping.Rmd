@@ -45,11 +45,6 @@ xaringanExtra::use_panelset()
 ESS <- import_rounds(rounds = 9, ess_email = "merlin.schaeffer@uni-koeln.de", format = "spss")
 ```
 
-class: clear
-
-<iframe src="https://app.sli.do/event/aflvddc2" height="100%" width="100%" frameBorder="0" style="min-height: 560px;"></iframe>
-
----
 # Nested code
 
 We have learned that R code may be nested. But too much nesting becomes unintelligible: Because R evaluates code from the inside-out, we need to read nested code from the inside-out!
@@ -167,9 +162,10 @@ ESS <- ESS %>% # Import the ESS, then (pipe result into) #<<
       TRUE ~ zap_labels(eduyrs)) # Make it numeric.
   ) %>% # finish transmute, then (pipe result into) #<<
   dplyr::filter(# Keep only respondents of immigrant origin,
-    facntr == "No" & mocntr == "No",
+    facntr == "Yes" & mocntr == "Yes",
     # filter cases from four countries
-    cntry == "Denmark" | cntry == "Germany" | cntry == "Sweden" | cntry == "Norway")
+    cntry == "Germany" | cntry == "Austria" | cntry == "Denmark" | 
+      cntry == "France" | cntry == "Netherlands" | cntry == "Switzerland")
 ```
 ]
 ---
@@ -237,11 +233,6 @@ ESS %>% t.test(agea ~ gndr, data = .)
  - If you have more than one or two major inputs, don't pipe.
  - If you have more than ca. ten steps, better make intermediate objects.
   + It helps you to debug (i.e., find mistakes) and is simply easier to read.
-
----
-class: clear
-
-<iframe src="https://app.sli.do/event/aflvddc2" height="100%" width="100%" frameBorder="0" style="min-height: 560px;"></iframe>
 
 ---
 # Reminder .font70[Weights]
@@ -381,13 +372,8 @@ $$\text{CI}_{95} = p \pm \text{Critical Value} * \text{SE}(p)$$
 ```
 
 ---
-class: clear
-
-<iframe src="https://app.sli.do/event/aflvddc2" height="100%" width="100%" frameBorder="0" style="min-height: 560px;"></iframe>
-
----
 class: inverse
-# Today's general lessons
+# General lessons
 
 1. R code can be nested, but alternatively it can also be *piped.* Piping allows you two write more legible code that can be read from left to right and that does not contain several useless intermediate objects.
 
@@ -395,7 +381,7 @@ class: inverse
 
 ---
 class: inverse
-# Today's (important) operators
+# Important operators
 
 1. `%>%`: the (forward) pipe, allows you to pipe the output of one function into the next function as input. By default, it will be channeled as value to the first function. `value %>% function(argument1 = value)`.
 
@@ -403,7 +389,7 @@ class: inverse
 
 ---
 class: inverse
-# Today's (important) functions
+# Important functions
 1. `group_by()`: Subsets a tibble into groups. Certain functions will afterwards operate by each of the specified groups.
 
 2. `summarize()`: Allows you to estimate any kind of aggregate statistic. Combined with `group_by()`, it estimates those statistic by specified group.

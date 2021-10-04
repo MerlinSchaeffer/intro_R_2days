@@ -4,7 +4,7 @@
     <title>Intro to R for Social Data Science</title>
     <meta charset="utf-8" />
     <meta name="author" content="Merlin Schaeffer  Department of Sociology" />
-    <meta name="date" content="2021-03-07" />
+    <meta name="date" content="2021-10-04" />
     <script src="libs/header-attrs/header-attrs.js"></script>
     <link href="libs/tile-view/tile-view.css" rel="stylesheet" />
     <script src="libs/tile-view/tile-view.js"></script>
@@ -20,7 +20,7 @@ class: center, middle, inverse, title-slide
 # Intro to R for Social Data Science
 ## Linear OLS Regression I
 ### Merlin Schaeffer<br> Department of Sociology
-### 2021-03-07
+### 2021-10-04
 
 ---
 
@@ -53,8 +53,6 @@ ESS &lt;- ESS %&gt;% transmute( # Create new variables and keep only those
     gndr = as_factor(gndr),
     facntr = as_factor(facntr), # Father born in cntry
     mocntr = as_factor(mocntr), # Mother born in cntry
-    imbgeco = max(imbgeco, na.rm = TRUE) - zap_labels(imbgeco),
-    imueclt = max(imueclt, na.rm = TRUE) - zap_labels(imueclt),
     imwbcnt = max(imwbcnt, na.rm = TRUE) - zap_labels(imwbcnt),
     pspwght = zap_label(pspwght),
 *   # Parental education (ISCED)
@@ -76,41 +74,22 @@ ESS &lt;- ESS %&gt;% transmute( # Create new variables and keep only those
   dplyr::filter(
     # Keep only respondents with native-born parents,
     facntr == "Yes" &amp; mocntr == "Yes" &amp;
-*     (cntry == "Denmark" | cntry == "Sweden" | cntry == "Norway" | cntry == "Germany"))
+      (cntry == "Denmark" | cntry == "Sweden" | cntry == "Norway" | cntry == "Germany"))
 ```
 
 ---
-# PCA &amp; design matrix
+# Design matrix
 
 
 ```r
-# Perform pca of three items and write the results into object xeno.
-(xeno &lt;- ESS %&gt;% 
-   prcomp(formula = ~ imbgeco + imueclt + imwbcnt, 
-          data = ., scale = TRUE, center = TRUE,
-          na.action = na.exclude))
-# Standard deviations (1, .., p=3):
-# [1] 1.514 0.659 0.525
-# 
-# Rotation (n x k) = (3 x 3):
-#           PC1    PC2     PC3
-# imbgeco 0.552 -0.833  0.0422
-# imueclt 0.588  0.425  0.6886
-# imwbcnt 0.591  0.355 -0.7239
-
-# Make a new "xeno" variable and fill it with z-standardized PC1.
-ESS$xeno &lt;- xeno$x[ , "PC1"] %&gt;% # Take PC1 scores, then
-  scale() %&gt;% # z-standardize (but sometimes returns a "matrix"), then 
-  as.numeric() # turn into numeric vector.
-
 # Design matrix (i.e., tibble of the vars going into out model)
 ESS &lt;- ESS %&gt;%
-  select(cntry, xeno, eduyrs, par_edu, gndr, pspwght) %&gt;%
+  select(cntry, imwbcnt, eduyrs, par_edu, gndr, pspwght) %&gt;%
   drop_na() # Casewise deletion.
 ```
 
 ---
-# Modeling Xenophobia
+# Modeling imwbcntphobia
 
 .push-left[
 .panelset[
@@ -119,8 +98,8 @@ ESS &lt;- ESS %&gt;%
 .panel[.panel-name[Code]
 
 ```r
-# Plot the distribution of xeno
-ggplot(data = ESS, aes(x = xeno)) +
+# Plot the distribution of imwbcnt
+ggplot(data = ESS, aes(x = imwbcnt)) +
   geom_freqpoly() +
   theme_minimal()
 ```
@@ -131,7 +110,7 @@ ggplot(data = ESS, aes(x = xeno)) +
 
 .push-right[
 #### Modeling
-Coming up with a model of xenophobia means: Can xenophobia (i.e., `\(y\)`) be expressed as a function (i.e., `\(f()\)`) of another variable (i.e., `\(x\)`)?
+Coming up with a model of imwbcntphobia means: Can imwbcntphobia (i.e., `\(y\)`) be expressed as a function (i.e., `\(f()\)`) of another variable (i.e., `\(x\)`)?
 
 `$$\hat{y} = f(x)$$`
 The two critical questions are thus:
@@ -164,7 +143,7 @@ You will need to find the answer to the second question in your research questio
 # A linear Model of `\(y\)`
 
 .left-column[
-Let's try `\(x = \text{years of education}\)`, since schools in most countries teach humanism and tolerance: Is xenophobia a linear (i.e., constant slope) function of one's years of education?
+Let's try `\(x = \text{years of education}\)`, since schools in most countries teach humanism and tolerance: Is imwbcntphobia a linear (i.e., constant slope) function of one's years of education?
 ]
 
 .right-column[
@@ -175,12 +154,12 @@ Let's try `\(x = \text{years of education}\)`, since schools in most countries t
 .panel[.panel-name[Code]
 
 ```r
-ggplot(data = ESS, mapping = aes(y = xeno, x = eduyrs)) +
+ggplot(data = ESS, mapping = aes(y = imwbcnt, x = eduyrs)) +
   geom_jitter(aes(size = pspwght), alpha = 1/5) + 
   geom_smooth(aes(weight = pspwght), se = FALSE) +
   geom_smooth(aes(weight = pspwght), method = "lm", 
               se = FALSE, color = "red") +
-  labs(y = "Xenophobia", x =  "Years of education", 
+  labs(y = "imwbcntphobia", x =  "Years of education", 
        size = "Survey \n weight") +
   theme_minimal()
 ```
@@ -215,33 +194,33 @@ Note, how the residuals are defined only in terms of `\(y\)` and thereby differ 
 
 ```r
 # Estimate a linear OLS model and assign the results to object ols.
-ols &lt;- lm(formula = xeno ~ eduyrs, data = ESS)
+ols &lt;- lm(formula = imwbcnt ~ eduyrs, data = ESS)
 summary(ols) # Give a summary of the main results.
 # 
 # Call:
-# lm(formula = xeno ~ eduyrs, data = ESS)
+# lm(formula = imwbcnt ~ eduyrs, data = ESS)
 # 
 # Residuals:
 #    Min     1Q Median     3Q    Max 
-# -2.421 -0.671 -0.073  0.584  3.235 
+# -4.894 -1.527  0.106  1.209  6.576 
 # 
 # Coefficients:
 #             Estimate Std. Error t value Pr(&gt;|t|)    
-# (Intercept)  1.00191    0.05812    17.2   &lt;2e-16 ***
-# eduyrs      -0.07090    0.00397   -17.9   &lt;2e-16 ***
+# (Intercept)  5.99717    0.12627    47.5   &lt;2e-16 ***
+# eduyrs      -0.12255    0.00863   -14.2   &lt;2e-16 ***
 # ---
 # Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 # 
-# Residual standard error: 0.969 on 5229 degrees of freedom
-# Multiple R-squared:  0.0575,	Adjusted R-squared:  0.0573 
-# F-statistic:  319 on 1 and 5229 DF,  p-value: &lt;2e-16
+# Residual standard error: 2.12 on 5309 degrees of freedom
+# Multiple R-squared:  0.0366,	Adjusted R-squared:  0.0364 
+# F-statistic:  202 on 1 and 5309 DF,  p-value: &lt;2e-16
 ```
 ]
 
 .left-column[
 
 $$$$
-\operatorname{\widehat{xeno}} = 1 - 0.07(\operatorname{eduyrs})
+\operatorname{\widehat{imwbcnt}} = 6 - 0.12(\operatorname{eduyrs})
 `$$,$$` is the line that `\(\min \sum_{i=1}^{n} e_{i}^{2}\)`.
 
 ]
@@ -259,27 +238,27 @@ The `weights` argument allows you to use (post-stratification) weights.
 
 ```r
 # Estimate a weighted linear OLS model.
-ols &lt;- lm(formula = xeno ~ eduyrs, data = ESS, 
+ols &lt;- lm(formula = imwbcnt ~ eduyrs, data = ESS, 
 *         weights = pspwght)
 summary(ols) # Give a summary of the main results.
 # 
 # Call:
-# lm(formula = xeno ~ eduyrs, data = ESS, weights = pspwght)
+# lm(formula = imwbcnt ~ eduyrs, data = ESS, weights = pspwght)
 # 
 # Weighted Residuals:
 #    Min     1Q Median     3Q    Max 
-# -3.616 -0.626 -0.085  0.513  4.981 
+# -8.625 -1.415  0.079  1.026 10.319 
 # 
 # Coefficients:
 #             Estimate Std. Error t value Pr(&gt;|t|)    
-# (Intercept)  1.03691    0.05869    17.7   &lt;2e-16 ***
-# eduyrs      -0.07181    0.00414   -17.4   &lt;2e-16 ***
+# (Intercept)    6.104      0.128    47.9   &lt;2e-16 ***
+# eduyrs        -0.128      0.009   -14.2   &lt;2e-16 ***
 # ---
 # Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 # 
-# Residual standard error: 0.97 on 5229 degrees of freedom
-# Multiple R-squared:  0.0544,	Adjusted R-squared:  0.0543 
-# F-statistic:  301 on 1 and 5229 DF,  p-value: &lt;2e-16
+# Residual standard error: 2.13 on 5309 degrees of freedom
+# Multiple R-squared:  0.0366,	Adjusted R-squared:  0.0364 
+# F-statistic:  202 on 1 and 5309 DF,  p-value: &lt;2e-16
 ```
 ]
 
@@ -298,22 +277,22 @@ But beware, `lm()` inference (e.g., standard errors, *t*-values, *p*-values) wil
 
 ```r
 # Estimate a weighted linear OLS model.
-*ols &lt;- lm_robust(formula = xeno ~ eduyrs, data = ESS,
+*ols &lt;- lm_robust(formula = imwbcnt ~ eduyrs, data = ESS,
                  weights = pspwght)
 summary(ols) # Give a summary of the main results.
 # 
 # Call:
-# lm_robust(formula = xeno ~ eduyrs, data = ESS, weights = pspwght)
+# lm_robust(formula = imwbcnt ~ eduyrs, data = ESS, weights = pspwght)
 # 
 # Weighted, Standard error type:  HC2 
 # 
 # Coefficients:
-#             Estimate Std. Error t value Pr(&gt;|t|) CI Lower CI Upper   DF
-# (Intercept)   1.0369    0.07097    14.6 2.02e-47   0.8978   1.1760 5229
-# eduyrs       -0.0718    0.00476   -15.1 2.09e-50  -0.0811  -0.0625 5229
+#             Estimate Std. Error t value  Pr(&gt;|t|) CI Lower CI Upper   DF
+# (Intercept)    6.104     0.1536    39.7 1.41e-302    5.803    6.406 5309
+# eduyrs        -0.128     0.0102   -12.5  2.97e-35   -0.148   -0.108 5309
 # 
-# Multiple R-squared:  0.0544 ,	Adjusted R-squared:  0.0543 
-# F-statistic:  228 on 1 and 5229 DF,  p-value: &lt;2e-16
+# Multiple R-squared:  0.0366 ,	Adjusted R-squared:  0.0364 
+# F-statistic:  156 on 1 and 5309 DF,  p-value: &lt;2e-16
 ```
 ]
 
@@ -326,7 +305,7 @@ summary(ols) # Give a summary of the main results.
 .alert[But is parental education the only confounder?] 
 
 .backgrnote[
-A confounder is a common cause of both one's predictor `\(x_{i1}\)` (e.g., years of education) and of the outcome `\(y_i\)` (e.g., xenophobia). Counfounder bias is: `\(\mathbb{E}(\tilde{\beta_{x_{1}}}) = \beta_{x_{1}} + \color{orange}{\beta_{x_{2}} \frac{\text{Cov}(x_{i1},x_{i2})}{\text{Var}(x_{i1})}}.\)`
+A confounder is a common cause of both one's predictor `\(x_{i1}\)` (e.g., years of education) and of the outcome `\(y_i\)` (e.g., imwbcntphobia). Counfounder bias is: `\(\mathbb{E}(\tilde{\beta_{x_{1}}}) = \beta_{x_{1}} + \color{orange}{\beta_{x_{2}} \frac{\text{Cov}(x_{i1},x_{i2})}{\text{Var}(x_{i1})}}.\)`
 ]
 ]
 
@@ -336,23 +315,23 @@ In the social sciences we use OLS to test theories about causal effects. It is t
 ```r
 # Estimate a weighted linear OLS model.
 ols2 &lt;- lm_robust(
-* formula = xeno ~ eduyrs + par_edu,
+* formula = imwbcnt ~ eduyrs + par_edu,
   data = ESS, weights = pspwght)
 summary(ols2) # Give a summary of the main results.
 # 
 # Call:
-# lm_robust(formula = xeno ~ eduyrs + par_edu, data = ESS, weights = pspwght)
+# lm_robust(formula = imwbcnt ~ eduyrs + par_edu, data = ESS, weights = pspwght)
 # 
 # Weighted, Standard error type:  HC2 
 # 
 # Coefficients:
 #             Estimate Std. Error t value Pr(&gt;|t|) CI Lower CI Upper   DF
-# (Intercept)   1.1887    0.07076   16.80 1.01e-61   1.0500   1.3275 5228
-# eduyrs       -0.0592    0.00482  -12.28 3.34e-34  -0.0687  -0.0498 5228
-# par_edu      -0.0972    0.01006   -9.66 6.51e-22  -0.1169  -0.0775 5228
+# (Intercept)    6.403     0.1528   41.91 0.00e+00    6.104   6.7030 5308
+# eduyrs        -0.103     0.0105   -9.81 1.56e-22   -0.124  -0.0826 5308
+# par_edu       -0.191     0.0221   -8.64 7.31e-18   -0.235  -0.1478 5308
 # 
-# Multiple R-squared:  0.0771 ,	Adjusted R-squared:  0.0768 
-# F-statistic:  168 on 2 and 5228 DF,  p-value: &lt;2e-16
+# Multiple R-squared:  0.0553 ,	Adjusted R-squared:  0.055 
+# F-statistic:  122 on 2 and 5308 DF,  p-value: &lt;2e-16
 ```
 ]
 
@@ -443,7 +422,7 @@ How can we make sense of a categorical predictor in a linear model?]]
 
 ```r
 ggplot(data = ESS, 
-       mapping = aes(y = xeno, 
+       mapping = aes(y = imwbcnt, 
                      x = case_when(
                        cntry == "Denmark" ~ 0,
                        cntry == "Sweden" ~ 1,
@@ -453,7 +432,7 @@ ggplot(data = ESS,
   geom_smooth(aes(weight = pspwght), method = "lm", se = FALSE) +
   scale_x_continuous(breaks = c(0, 1), 
                      labels = c("0 = Denmark", "1 = Sweden")) +
-  labs(x = "Country", y = "Xenophobia", 
+  labs(x = "Country", y = "imwbcntphobia", 
        size = "Survey \n weight") +
   theme_minimal()
 ```
@@ -470,28 +449,28 @@ Factors are automatically treated as dummies, with the first level taken as refe
 .font90[
 
 ```r
-ols3 &lt;- lm_robust(formula = xeno ~ eduyrs + par_edu + gndr + cntry, 
+ols3 &lt;- lm_robust(formula = imwbcnt ~ eduyrs + par_edu + gndr + cntry, 
                   data = ESS, weights = pspwght)
 summary(ols3) # Give a summary of the main results.
 # 
 # Call:
-# lm_robust(formula = xeno ~ eduyrs + par_edu + gndr + cntry, data = ESS, 
-#     weights = pspwght)
+# lm_robust(formula = imwbcnt ~ eduyrs + par_edu + gndr + cntry, 
+#     data = ESS, weights = pspwght)
 # 
 # Weighted, Standard error type:  HC2 
 # 
 # Coefficients:
-#              Estimate Std. Error t value Pr(&gt;|t|)  CI Lower CI Upper   DF
-# (Intercept)    1.3255    0.07536   17.59 2.57e-67  1.18e+00  1.47323 5224
-# eduyrs        -0.0606    0.00472  -12.83 3.90e-37 -6.98e-02 -0.05133 5224
-# par_edu       -0.0914    0.00982   -9.31 1.90e-20 -1.11e-01 -0.07214 5224
-# gndrFemale    -0.1383    0.03038   -4.55 5.47e-06 -1.98e-01 -0.07870 5224
-# cntryDenmark   0.0829    0.04232    1.96 5.01e-02 -3.58e-05  0.16591 5224
-# cntryNorway   -0.0826    0.03932   -2.10 3.57e-02 -1.60e-01 -0.00553 5224
-# cntrySweden   -0.3599    0.04245   -8.48 2.91e-17 -4.43e-01 -0.27672 5224
+#              Estimate Std. Error t value Pr(&gt;|t|) CI Lower CI Upper   DF
+# (Intercept)     7.071     0.1629   43.40 0.00e+00    6.752   7.3904 5304
+# eduyrs         -0.108     0.0104  -10.42 3.68e-25   -0.128  -0.0877 5304
+# par_edu        -0.189     0.0221   -8.57 1.38e-17   -0.232  -0.1457 5304
+# gndrFemale     -0.250     0.0664   -3.76 1.69e-04   -0.380  -0.1198 5304
+# cntryDenmark   -0.446     0.0910   -4.91 9.60e-07   -0.625  -0.2680 5304
+# cntryNorway    -0.558     0.0866   -6.44 1.29e-10   -0.727  -0.3879 5304
+# cntrySweden    -1.224     0.0937  -13.06 2.21e-38   -1.408  -1.0403 5304
 # 
-# Multiple R-squared:  0.106 ,	Adjusted R-squared:  0.105 
-# F-statistic: 73.9 on 6 and 5224 DF,  p-value: &lt;2e-16
+# Multiple R-squared:  0.0974 ,	Adjusted R-squared:  0.0964 
+# F-statistic: 68.9 on 6 and 5304 DF,  p-value: &lt;2e-16
 ```
 ]]
 
@@ -507,25 +486,25 @@ texreg::screenreg(list(ols, ols2, ols3), include.ci = FALSE)
 # ===================================================
 #               Model 1      Model 2      Model 3    
 # ---------------------------------------------------
-# (Intercept)      1.04 ***     1.19 ***     1.33 ***
-#                 (0.07)       (0.07)       (0.08)   
-# eduyrs          -0.07 ***    -0.06 ***    -0.06 ***
-#                 (0.00)       (0.00)       (0.00)   
-# par_edu                      -0.10 ***    -0.09 ***
-#                              (0.01)       (0.01)   
-# gndrFemale                                -0.14 ***
-#                                           (0.03)   
-# cntryDenmark                               0.08    
-#                                           (0.04)   
-# cntryNorway                               -0.08 *  
-#                                           (0.04)   
-# cntrySweden                               -0.36 ***
-#                                           (0.04)   
+# (Intercept)      6.10 ***     6.40 ***     7.07 ***
+#                 (0.15)       (0.15)       (0.16)   
+# eduyrs          -0.13 ***    -0.10 ***    -0.11 ***
+#                 (0.01)       (0.01)       (0.01)   
+# par_edu                      -0.19 ***    -0.19 ***
+#                              (0.02)       (0.02)   
+# gndrFemale                                -0.25 ***
+#                                           (0.07)   
+# cntryDenmark                              -0.45 ***
+#                                           (0.09)   
+# cntryNorway                               -0.56 ***
+#                                           (0.09)   
+# cntrySweden                               -1.22 ***
+#                                           (0.09)   
 # ---------------------------------------------------
-# R^2              0.05         0.08         0.11    
-# Adj. R^2         0.05         0.08         0.10    
-# Num. obs.     5231         5231         5231       
-# RMSE             0.97         0.96         0.94    
+# R^2              0.04         0.06         0.10    
+# Adj. R^2         0.04         0.05         0.10    
+# Num. obs.     5311         5311         5311       
+# RMSE             2.13         2.11         2.06    
 # ===================================================
 # *** p &lt; 0.001; ** p &lt; 0.01; * p &lt; 0.05
 ```
@@ -581,69 +560,69 @@ htmlreg(list(ols, ols2, ols3), include.ci = FALSE,
 &lt;tbody&gt;
 &lt;tr style="border-top: 1px solid #000000;"&gt;
 &lt;td style="padding-left: 5px;padding-right: 5px;"&gt;Intercept&lt;/td&gt;
-&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;1.04 (0.07)&lt;sup&gt;***&lt;/sup&gt;&lt;/td&gt;
-&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;1.19 (0.07)&lt;sup&gt;***&lt;/sup&gt;&lt;/td&gt;
-&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;1.33 (0.08)&lt;sup&gt;***&lt;/sup&gt;&lt;/td&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;6.10 (0.15)&lt;sup&gt;***&lt;/sup&gt;&lt;/td&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;6.40 (0.15)&lt;sup&gt;***&lt;/sup&gt;&lt;/td&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;7.07 (0.16)&lt;sup&gt;***&lt;/sup&gt;&lt;/td&gt;
 &lt;/tr&gt;
 &lt;tr&gt;
 &lt;td style="padding-left: 5px;padding-right: 5px;"&gt;Years of Education&lt;/td&gt;
-&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;-0.07 (0.00)&lt;sup&gt;***&lt;/sup&gt;&lt;/td&gt;
-&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;-0.06 (0.00)&lt;sup&gt;***&lt;/sup&gt;&lt;/td&gt;
-&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;-0.06 (0.00)&lt;sup&gt;***&lt;/sup&gt;&lt;/td&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;-0.13 (0.01)&lt;sup&gt;***&lt;/sup&gt;&lt;/td&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;-0.10 (0.01)&lt;sup&gt;***&lt;/sup&gt;&lt;/td&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;-0.11 (0.01)&lt;sup&gt;***&lt;/sup&gt;&lt;/td&gt;
 &lt;/tr&gt;
 &lt;tr&gt;
 &lt;td style="padding-left: 5px;padding-right: 5px;"&gt;Age&lt;/td&gt;
 &lt;td style="padding-left: 5px;padding-right: 5px;"&gt;&amp;nbsp;&lt;/td&gt;
-&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;-0.10 (0.01)&lt;sup&gt;***&lt;/sup&gt;&lt;/td&gt;
-&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;-0.09 (0.01)&lt;sup&gt;***&lt;/sup&gt;&lt;/td&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;-0.19 (0.02)&lt;sup&gt;***&lt;/sup&gt;&lt;/td&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;-0.19 (0.02)&lt;sup&gt;***&lt;/sup&gt;&lt;/td&gt;
 &lt;/tr&gt;
 &lt;tr&gt;
 &lt;td style="padding-left: 5px;padding-right: 5px;"&gt;Women&lt;/td&gt;
 &lt;td style="padding-left: 5px;padding-right: 5px;"&gt;&amp;nbsp;&lt;/td&gt;
 &lt;td style="padding-left: 5px;padding-right: 5px;"&gt;&amp;nbsp;&lt;/td&gt;
-&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;-0.14 (0.03)&lt;sup&gt;***&lt;/sup&gt;&lt;/td&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;-0.25 (0.07)&lt;sup&gt;***&lt;/sup&gt;&lt;/td&gt;
 &lt;/tr&gt;
 &lt;tr&gt;
 &lt;td style="padding-left: 5px;padding-right: 5px;"&gt;Denmark&lt;/td&gt;
 &lt;td style="padding-left: 5px;padding-right: 5px;"&gt;&amp;nbsp;&lt;/td&gt;
 &lt;td style="padding-left: 5px;padding-right: 5px;"&gt;&amp;nbsp;&lt;/td&gt;
-&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;0.08 (0.04)&lt;/td&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;-0.45 (0.09)&lt;sup&gt;***&lt;/sup&gt;&lt;/td&gt;
 &lt;/tr&gt;
 &lt;tr&gt;
 &lt;td style="padding-left: 5px;padding-right: 5px;"&gt;Norway&lt;/td&gt;
 &lt;td style="padding-left: 5px;padding-right: 5px;"&gt;&amp;nbsp;&lt;/td&gt;
 &lt;td style="padding-left: 5px;padding-right: 5px;"&gt;&amp;nbsp;&lt;/td&gt;
-&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;-0.08 (0.04)&lt;sup&gt;*&lt;/sup&gt;&lt;/td&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;-0.56 (0.09)&lt;sup&gt;***&lt;/sup&gt;&lt;/td&gt;
 &lt;/tr&gt;
 &lt;tr&gt;
 &lt;td style="padding-left: 5px;padding-right: 5px;"&gt;Sweden&lt;/td&gt;
 &lt;td style="padding-left: 5px;padding-right: 5px;"&gt;&amp;nbsp;&lt;/td&gt;
 &lt;td style="padding-left: 5px;padding-right: 5px;"&gt;&amp;nbsp;&lt;/td&gt;
-&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;-0.36 (0.04)&lt;sup&gt;***&lt;/sup&gt;&lt;/td&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;-1.22 (0.09)&lt;sup&gt;***&lt;/sup&gt;&lt;/td&gt;
 &lt;/tr&gt;
 &lt;tr style="border-top: 1px solid #000000;"&gt;
 &lt;td style="padding-left: 5px;padding-right: 5px;"&gt;R&lt;sup&gt;2&lt;/sup&gt;&lt;/td&gt;
-&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;0.05&lt;/td&gt;
-&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;0.08&lt;/td&gt;
-&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;0.11&lt;/td&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;0.04&lt;/td&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;0.06&lt;/td&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;0.10&lt;/td&gt;
 &lt;/tr&gt;
 &lt;tr&gt;
 &lt;td style="padding-left: 5px;padding-right: 5px;"&gt;Adj. R&lt;sup&gt;2&lt;/sup&gt;&lt;/td&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;0.04&lt;/td&gt;
 &lt;td style="padding-left: 5px;padding-right: 5px;"&gt;0.05&lt;/td&gt;
-&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;0.08&lt;/td&gt;
 &lt;td style="padding-left: 5px;padding-right: 5px;"&gt;0.10&lt;/td&gt;
 &lt;/tr&gt;
 &lt;tr&gt;
 &lt;td style="padding-left: 5px;padding-right: 5px;"&gt;Num. obs.&lt;/td&gt;
-&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;5231&lt;/td&gt;
-&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;5231&lt;/td&gt;
-&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;5231&lt;/td&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;5311&lt;/td&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;5311&lt;/td&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;5311&lt;/td&gt;
 &lt;/tr&gt;
 &lt;tr style="border-bottom: 2px solid #000000;"&gt;
 &lt;td style="padding-left: 5px;padding-right: 5px;"&gt;RMSE&lt;/td&gt;
-&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;0.97&lt;/td&gt;
-&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;0.96&lt;/td&gt;
-&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;0.94&lt;/td&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;2.13&lt;/td&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;2.11&lt;/td&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;2.06&lt;/td&gt;
 &lt;/tr&gt;
 &lt;/tbody&gt;
 &lt;tfoot&gt;
@@ -661,14 +640,14 @@ htmlreg(list(ols, ols2, ols3), include.ci = FALSE,
 
 ```r
 tidy(ols3) 
-#           term estimate std.error statistic  p.value  conf.low conf.high   df outcome
-# 1  (Intercept)   1.3255   0.07536     17.59 2.57e-67  1.18e+00   1.47323 5224    xeno
-# 2       eduyrs  -0.0606   0.00472    -12.83 3.90e-37 -6.98e-02  -0.05133 5224    xeno
-# 3      par_edu  -0.0914   0.00982     -9.31 1.90e-20 -1.11e-01  -0.07214 5224    xeno
-# 4   gndrFemale  -0.1383   0.03038     -4.55 5.47e-06 -1.98e-01  -0.07870 5224    xeno
-# 5 cntryDenmark   0.0829   0.04232      1.96 5.01e-02 -3.58e-05   0.16591 5224    xeno
-# 6  cntryNorway  -0.0826   0.03932     -2.10 3.57e-02 -1.60e-01  -0.00553 5224    xeno
-# 7  cntrySweden  -0.3599   0.04245     -8.48 2.91e-17 -4.43e-01  -0.27672 5224    xeno
+#           term estimate std.error statistic  p.value conf.low conf.high   df outcome
+# 1  (Intercept)    7.071    0.1629     43.40 0.00e+00    6.752    7.3904 5304 imwbcnt
+# 2       eduyrs   -0.108    0.0104    -10.42 3.68e-25   -0.128   -0.0877 5304 imwbcnt
+# 3      par_edu   -0.189    0.0221     -8.57 1.38e-17   -0.232   -0.1457 5304 imwbcnt
+# 4   gndrFemale   -0.250    0.0664     -3.76 1.69e-04   -0.380   -0.1198 5304 imwbcnt
+# 5 cntryDenmark   -0.446    0.0910     -4.91 9.60e-07   -0.625   -0.2680 5304 imwbcnt
+# 6  cntryNorway   -0.558    0.0866     -6.44 1.29e-10   -0.727   -0.3879 5304 imwbcnt
+# 7  cntrySweden   -1.224    0.0937    -13.06 2.21e-38   -1.408   -1.0403 5304 imwbcnt
 ```
 
 ---
@@ -689,14 +668,14 @@ tidy(ols3)
             term == "Years of Education" | term == "Years of education^2" ~ "Predictor",
             TRUE ~ "Potential confounder"))) %&gt;% 
   select(term, estimate, conf.low, conf.high, predictor) # keep only some of all the info.
-#                 term estimate  conf.low conf.high            predictor
-# 1          Intercept   1.3255  1.18e+00   1.47323 Potential confounder
-# 2 Years of Education  -0.0606 -6.98e-02  -0.05133            Predictor
-# 3 Parental education  -0.0914 -1.11e-01  -0.07214 Potential confounder
-# 4              Women  -0.1383 -1.98e-01  -0.07870 Potential confounder
-# 5            Denmark   0.0829 -3.58e-05   0.16591 Potential confounder
-# 6             Norway  -0.0826 -1.60e-01  -0.00553 Potential confounder
-# 7             Sweden  -0.3599 -4.43e-01  -0.27672 Potential confounder
+#                 term estimate conf.low conf.high            predictor
+# 1          Intercept    7.071    6.752    7.3904 Potential confounder
+# 2 Years of Education   -0.108   -0.128   -0.0877            Predictor
+# 3 Parental education   -0.189   -0.232   -0.1457 Potential confounder
+# 4              Women   -0.250   -0.380   -0.1198 Potential confounder
+# 5            Denmark   -0.446   -0.625   -0.2680 Potential confounder
+# 6             Norway   -0.558   -0.727   -0.3879 Potential confounder
+# 7             Sweden   -1.224   -1.408   -1.0403 Potential confounder
 ```
 
 ---
@@ -733,12 +712,12 @@ class: clear
 * tidy(ols), tidy(ols2), # turn the two models into tibbles,
 * .id = "model" # Identify which model the tibbles came from.
 )) 
-#   model        term estimate std.error statistic  p.value conf.low conf.high   df outcome
-# 1     1 (Intercept)   1.0369   0.07097     14.61 2.02e-47   0.8978    1.1760 5229    xeno
-# 2     1      eduyrs  -0.0718   0.00476    -15.09 2.09e-50  -0.0811   -0.0625 5229    xeno
-# 3     2 (Intercept)   1.1887   0.07076     16.80 1.01e-61   1.0500    1.3275 5228    xeno
-# 4     2      eduyrs  -0.0592   0.00482    -12.28 3.34e-34  -0.0687   -0.0498 5228    xeno
-# 5     2     par_edu  -0.0972   0.01006     -9.66 6.51e-22  -0.1169   -0.0775 5228    xeno
+#   model        term estimate std.error statistic   p.value conf.low conf.high   df outcome
+# 1     1 (Intercept)    6.104    0.1536     39.74 1.41e-302    5.803    6.4056 5309 imwbcnt
+# 2     1      eduyrs   -0.128    0.0102    -12.48  2.97e-35   -0.148   -0.1078 5309 imwbcnt
+# 3     2 (Intercept)    6.403    0.1528     41.91  0.00e+00    6.104    6.7030 5308 imwbcnt
+# 4     2      eduyrs   -0.103    0.0105     -9.81  1.56e-22   -0.124   -0.0826 5308 imwbcnt
+# 5     2     par_edu   -0.191    0.0221     -8.64  7.31e-18   -0.235   -0.1478 5308 imwbcnt
 ```
 
 ---
@@ -761,9 +740,9 @@ class: clear
        TRUE ~ "Potential confounder")) %&gt;% 
    select(term, estimate, conf.low, conf.high, model, predictor)) # keep only some of all the info.
 #                 term estimate conf.low conf.high   model            predictor
-# 1 Years of Education  -0.0718  -0.0811   -0.0625 Model 1            Predictor
-# 2 Years of Education  -0.0592  -0.0687   -0.0498 Model 2            Predictor
-# 3 Parental education  -0.0972  -0.1169   -0.0775 Model 2 Potential confounder
+# 1 Years of Education   -0.128   -0.148   -0.1078 Model 1            Predictor
+# 2 Years of Education   -0.103   -0.124   -0.0826 Model 2            Predictor
+# 3 Parental education   -0.191   -0.235   -0.1478 Model 2 Potential confounder
 ```
 
 ---

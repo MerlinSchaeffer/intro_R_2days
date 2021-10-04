@@ -4,7 +4,7 @@
     <title>Intro to R for Social Data Science</title>
     <meta charset="utf-8" />
     <meta name="author" content="Merlin Schaeffer  Department of Sociology" />
-    <meta name="date" content="2021-09-17" />
+    <meta name="date" content="2021-10-04" />
     <script src="libs/header-attrs/header-attrs.js"></script>
     <link href="libs/tile-view/tile-view.css" rel="stylesheet" />
     <script src="libs/tile-view/tile-view.js"></script>
@@ -20,16 +20,10 @@ class: center, middle, inverse, title-slide
 # Intro to R for Social Data Science
 ## Visualization II
 ### Merlin Schaeffer<br> Department of Sociology
-### 2021-09-17
+### 2021-10-04
 
 ---
 
-
-class: clear
-
-&lt;iframe src="https://app.sli.do/event/aflvddc2" height="100%" width="100%" frameBorder="0" style="min-height: 560px;"&gt;&lt;/iframe&gt;
-
----
 # The final pieces of ggplot2's grammar
 
 
@@ -91,10 +85,11 @@ ESS &lt;- ESS %&gt;% # Import the ESS, then (pipe result into)
       eduyrs &lt; 9 ~ 9, # Recode to min 9 years of edu.
       TRUE ~ zap_labels(eduyrs)), # Make it numeric
 *   atchctr = zap_labels(atchctr)) %&gt;% # Emotionally attached to cntry, then
-  dplyr::filter(# Keep only respondents of immigrant origin,
-    facntr == "No" &amp; mocntr == "No",
+  dplyr::filter(# Keep only respondents of native-born parents,
+    facntr == "Yes" &amp; mocntr == "Yes",
     # filter cases from four countries
-    cntry == "Denmark" | cntry == "Germany" | cntry == "Sweden" | cntry == "Norway")
+    cntry == "Germany" | cntry == "Austria" | cntry == "Denmark" | 
+      cntry == "France" | cntry == "Netherlands" | cntry == "Switzerland")
 ```
 ]
 
@@ -259,7 +254,7 @@ ggplot(data = ESS) +
 table(ESS$rel_discr, useNA = "always") 
 # 
 #   No  Yes &lt;NA&gt; 
-#  782   52   11
+# 8910   53   28
 ```
 ]
 
@@ -347,13 +342,15 @@ ggplot(data = ESS_cntry) +
 
 ```r
 ESS_cntry
-# # A tibble: 4 × 8
-#   cntry      wn    df wn_rd wperc_rd wse_rd wmin95_rd wmax95_rd
-#   &lt;fct&gt;   &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;    &lt;dbl&gt;  &lt;dbl&gt;     &lt;dbl&gt;     &lt;dbl&gt;
-# 1 Germany 416.  284.   32.0     7.69   1.31      5.12     10.3 
-# 2 Denmark  95.8  62.6  10.5    11.0    3.19      4.59     17.4 
-# 3 Norway  147.  112.   10.0     6.81   2.08      2.69     10.9 
-# 4 Sweden  298.  187.   12.6     4.22   1.16      1.93      6.52
+# # A tibble: 6 × 8
+#   cntry          wn    df wn_rd wperc_rd wse_rd wmin95_rd wmax95_rd
+#   &lt;fct&gt;       &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;    &lt;dbl&gt;  &lt;dbl&gt;     &lt;dbl&gt;     &lt;dbl&gt;
+# 1 Austria     1894. 1158.  7.43    0.392  0.144    0.110      0.674
+# 2 Switzerland  855.  843.  2.09    0.244  0.169   -0.0871     0.576
+# 3 Germany     1770. 1569.  4.74    0.268  0.123    0.0269     0.509
+# 4 Denmark     1381.  866. 11.4     0.826  0.244    0.348      1.30 
+# 5 France      1487. 1134. 15.8     1.06   0.266    0.540      1.58 
+# 6 Netherlands 1376. 1310. 15.1     1.10   0.281    0.548      1.65
 ```
 ]
 
@@ -386,13 +383,15 @@ ggplot(data = ESS_cntry) +
 
 ```r
 ESS_cntry
-# # A tibble: 4 × 8
-#   cntry      wn    df wn_rd wperc_rd wse_rd wmin95_rd wmax95_rd
-#   &lt;fct&gt;   &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;    &lt;dbl&gt;  &lt;dbl&gt;     &lt;dbl&gt;     &lt;dbl&gt;
-# 1 Germany 416.  284.   32.0     7.69   1.31      5.12     10.3 
-# 2 Denmark  95.8  62.6  10.5    11.0    3.19      4.59     17.4 
-# 3 Norway  147.  112.   10.0     6.81   2.08      2.69     10.9 
-# 4 Sweden  298.  187.   12.6     4.22   1.16      1.93      6.52
+# # A tibble: 6 × 8
+#   cntry          wn    df wn_rd wperc_rd wse_rd wmin95_rd wmax95_rd
+#   &lt;fct&gt;       &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;    &lt;dbl&gt;  &lt;dbl&gt;     &lt;dbl&gt;     &lt;dbl&gt;
+# 1 Austria     1894. 1158.  7.43    0.392  0.144    0.110      0.674
+# 2 Switzerland  855.  843.  2.09    0.244  0.169   -0.0871     0.576
+# 3 Germany     1770. 1569.  4.74    0.268  0.123    0.0269     0.509
+# 4 Denmark     1381.  866. 11.4     0.826  0.244    0.348      1.30 
+# 5 France      1487. 1134. 15.8     1.06   0.266    0.540      1.58 
+# 6 Netherlands 1376. 1310. 15.1     1.10   0.281    0.548      1.65
 ```
 ]
 
@@ -577,17 +576,19 @@ ggplot(data = ESS_cntry,
 ```r
 (ESS_cntry &lt;- ESS_cntry %&gt;% 
   mutate(discr_level = case_when(
-      cntry == "Denmark" ~ "Pronounced",
+      cntry == "Netherlands" ~ "Pronounced",
       TRUE ~ "Less pronounced") %&gt;% 
         # Make "Pronounced" first level
         fct_relevel("Pronounced")))
-# # A tibble: 4 × 9
-#   cntry      wn    df wn_rd wperc_rd wse_rd wmin95_rd wmax95_rd discr_level    
-#   &lt;fct&gt;   &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;    &lt;dbl&gt;  &lt;dbl&gt;     &lt;dbl&gt;     &lt;dbl&gt; &lt;fct&gt;          
-# 1 Germany 416.  284.   32.0     7.69   1.31      5.12     10.3  Less pronounced
-# 2 Denmark  95.8  62.6  10.5    11.0    3.19      4.59     17.4  Pronounced     
-# 3 Norway  147.  112.   10.0     6.81   2.08      2.69     10.9  Less pronounced
-# 4 Sweden  298.  187.   12.6     4.22   1.16      1.93      6.52 Less pronounced
+# # A tibble: 6 × 9
+#   cntry          wn    df wn_rd wperc_rd wse_rd wmin95_rd wmax95_rd discr_level    
+#   &lt;fct&gt;       &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;    &lt;dbl&gt;  &lt;dbl&gt;     &lt;dbl&gt;     &lt;dbl&gt; &lt;fct&gt;          
+# 1 Austria     1894. 1158.  7.43    0.392  0.144    0.110      0.674 Less pronounced
+# 2 Switzerland  855.  843.  2.09    0.244  0.169   -0.0871     0.576 Less pronounced
+# 3 Germany     1770. 1569.  4.74    0.268  0.123    0.0269     0.509 Less pronounced
+# 4 Denmark     1381.  866. 11.4     0.826  0.244    0.348      1.30  Less pronounced
+# 5 France      1487. 1134. 15.8     1.06   0.266    0.540      1.58  Less pronounced
+# 6 Netherlands 1376. 1310. 15.1     1.10   0.281    0.548      1.65  Pronounced
 ```
 
 ---
@@ -640,8 +641,8 @@ ggplot(data = ESS_cntry,
        x = "Country", 
 *      color = "Level of Discrimination",
 *      fill = "Level of Discrimination",
-*      title = "Perceived Ethnic Discrimination",
-*      subtitle = "A Comparison of Denmark and its Neighboring Countries",
+*      title = "Perceived Religious Discrimination",
+*      subtitle = "A Comparison of Germany and some of its Neighbors",
 *      caption = "(Based on the European Social Survey 2018)") +
   coord_flip()) # Switch the x and y axes.
 ```
@@ -684,11 +685,6 @@ myplot + # The object that contains the figure
 &lt;iframe src="https://www.soc.ku.dk/instituttet/nyheder_/2021/hver-femte-dansker-vil-sende-indvandrere-med-covid-19-bag-i-hospitalskoeen/" height="100%" width="100%" frameBorder="0" style="min-height: 560px;"&gt;&lt;/iframe&gt;
 
 ]
-
----
-class: clear
-
-&lt;iframe src="https://app.sli.do/event/aflvddc2" height="100%" width="100%" frameBorder="0" style="min-height: 560px;"&gt;&lt;/iframe&gt;
 
 ---
 class: inverse

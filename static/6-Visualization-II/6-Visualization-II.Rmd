@@ -16,12 +16,6 @@ output:
       countIncrementalSlides: false
       ratio: '16:9'
 ---
-
-class: clear
-
-<iframe src="https://app.sli.do/event/aflvddc2" height="100%" width="100%" frameBorder="0" style="min-height: 560px;"></iframe>
-
----
 # The final pieces of ggplot2's grammar
 
 ```{r setup, include = FALSE}
@@ -102,10 +96,11 @@ ESS <- ESS %>% # Import the ESS, then (pipe result into)
       eduyrs < 9 ~ 9, # Recode to min 9 years of edu.
       TRUE ~ zap_labels(eduyrs)), # Make it numeric
     atchctr = zap_labels(atchctr)) %>% # Emotionally attached to cntry, then #<< 
-  dplyr::filter(# Keep only respondents of immigrant origin,
-    facntr == "No" & mocntr == "No",
+  dplyr::filter(# Keep only respondents of native-born parents,
+    facntr == "Yes" & mocntr == "Yes",
     # filter cases from four countries
-    cntry == "Denmark" | cntry == "Germany" | cntry == "Sweden" | cntry == "Norway")
+    cntry == "Germany" | cntry == "Austria" | cntry == "Denmark" | 
+      cntry == "France" | cntry == "Netherlands" | cntry == "Switzerland")
 ```
 ]
 
@@ -530,7 +525,7 @@ ggplot(data = ESS_cntry,
 ```{r}
 (ESS_cntry <- ESS_cntry %>% 
   mutate(discr_level = case_when(
-      cntry == "Denmark" ~ "Pronounced",
+      cntry == "Netherlands" ~ "Pronounced",
       TRUE ~ "Less pronounced") %>% 
         # Make "Pronounced" first level
         fct_relevel("Pronounced")))
@@ -585,8 +580,8 @@ ggplot(data = ESS_cntry,
        x = "Country", 
        color = "Level of Discrimination", #<<
        fill = "Level of Discrimination", #<<
-       title = "Perceived Ethnic Discrimination", #<<
-       subtitle = "A Comparison of Denmark and its Neighboring Countries", #<<
+       title = "Perceived Religious Discrimination", #<<
+       subtitle = "A Comparison of Germany and some of its Neighbors", #<<
        caption = "(Based on the European Social Survey 2018)") + #<<
   coord_flip()) # Switch the x and y axes.
 ```
@@ -631,11 +626,6 @@ myplot + # The object that contains the figure
 <iframe src="https://www.soc.ku.dk/instituttet/nyheder_/2021/hver-femte-dansker-vil-sende-indvandrere-med-covid-19-bag-i-hospitalskoeen/" height="100%" width="100%" frameBorder="0" style="min-height: 560px;"></iframe>
 
 ]
-
----
-class: clear
-
-<iframe src="https://app.sli.do/event/aflvddc2" height="100%" width="100%" frameBorder="0" style="min-height: 560px;"></iframe>
 
 ---
 class: inverse

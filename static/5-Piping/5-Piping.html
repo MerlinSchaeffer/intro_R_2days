@@ -4,7 +4,7 @@
     <title>Intro to R for Social Data Science</title>
     <meta charset="utf-8" />
     <meta name="author" content="Merlin Schaeffer  Department of Sociology" />
-    <meta name="date" content="2021-09-17" />
+    <meta name="date" content="2021-10-04" />
     <script src="libs/header-attrs/header-attrs.js"></script>
     <link href="libs/tile-view/tile-view.css" rel="stylesheet" />
     <script src="libs/tile-view/tile-view.js"></script>
@@ -20,7 +20,7 @@ class: center, middle, inverse, title-slide
 # Intro to R for Social Data Science
 ## Piping &amp; Grouped Operations
 ### Merlin Schaeffer<br> Department of Sociology
-### 2021-09-17
+### 2021-10-04
 
 ---
 
@@ -28,11 +28,6 @@ class: clear
 
 
 
-class: clear
-
-&lt;iframe src="https://app.sli.do/event/aflvddc2" height="100%" width="100%" frameBorder="0" style="min-height: 560px;"&gt;&lt;/iframe&gt;
-
----
 # Nested code
 
 We have learned that R code may be nested. But too much nesting becomes unintelligible: Because R evaluates code from the inside-out, we need to read nested code from the inside-out!
@@ -149,9 +144,10 @@ ESS &lt;- import_rounds(rounds = 9, ess_email = "YOUR-EMAIL", format = "spss")
       TRUE ~ zap_labels(eduyrs)) # Make it numeric.
 * ) %&gt;% # finish transmute, then (pipe result into)
   dplyr::filter(# Keep only respondents of immigrant origin,
-    facntr == "No" &amp; mocntr == "No",
+    facntr == "Yes" &amp; mocntr == "Yes",
     # filter cases from four countries
-    cntry == "Denmark" | cntry == "Germany" | cntry == "Sweden" | cntry == "Norway")
+    cntry == "Germany" | cntry == "Austria" | cntry == "Denmark" | 
+      cntry == "France" | cntry == "Netherlands" | cntry == "Switzerland")
 ```
 ]
 ---
@@ -160,20 +156,20 @@ ESS &lt;- import_rounds(rounds = 9, ess_email = "YOUR-EMAIL", format = "spss")
 
 ```r
 ESS
-# # A tibble: 845 × 10
+# # A tibble: 8,991 × 10
 #    cntry   gndr   facntr mocntr dscrgrp dscrrlg    rel_discr pspwght  agea eduyrs
 #    &lt;fct&gt;   &lt;fct&gt;  &lt;fct&gt;  &lt;fct&gt;  &lt;fct&gt;   &lt;fct&gt;      &lt;fct&gt;       &lt;dbl&gt; &lt;dbl&gt;  &lt;dbl&gt;
-#  1 Germany Female No     No     No      Not marked No          1.28     26     13
-#  2 Germany Female No     No     No      Not marked No          1.28     20     13
-#  3 Germany Female No     No     No      Not marked No          1.09     67      9
-#  4 Germany Female No     No     No      Not marked No          2.61     44      9
-#  5 Germany Male   No     No     Yes     Not marked No          1.10     41     16
-#  6 Germany Male   No     No     No      Not marked No          0.675    30     19
-#  7 Germany Male   No     No     No      Not marked No          1.27     20     12
-#  8 Germany Male   No     No     No      Not marked No          3.74     70     10
-#  9 Germany Female No     No     No      Not marked No          0.760    61     16
-# 10 Germany Female No     No     No      Not marked No          1.06     18     11
-# # … with 835 more rows
+#  1 Austria Male   Yes    Yes    No      Not marked No          0.218    43     12
+#  2 Austria Male   Yes    Yes    No      Not marked No          0.413    67     12
+#  3 Austria Female Yes    Yes    No      Not marked No          2.27     40     12
+#  4 Austria Male   Yes    Yes    No      Not marked No          0.386    63     11
+#  5 Austria Female Yes    Yes    No      Not marked No          1.03     71      9
+#  6 Austria Male   Yes    Yes    No      Not marked No          0.576    64     13
+#  7 Austria Male   Yes    Yes    No      Not marked No          0.721    56     12
+#  8 Austria Male   Yes    Yes    No      Not marked No          1.77     37     12
+#  9 Austria Female Yes    Yes    No      Not marked No          0.743    22     12
+# 10 Austria Male   Yes    Yes    No      Not marked No          0.160    48     12
+# # … with 8,981 more rows
 ```
 
 ---
@@ -232,13 +228,13 @@ ESS %&gt;% t.test(agea ~ gndr, data = .)
 # 	Welch Two Sample t-test
 # 
 # data:  agea by gndr
-# t = -2, df = 841, p-value = 0.05
+# t = -2, df = 8966, p-value = 0.05
 # alternative hypothesis: true difference in means between group Male and group Female is not equal to 0
 # 95 percent confidence interval:
-#  -4.9436 -0.0398
+#  -1.57177 -0.00964
 # sample estimates:
 #   mean in group Male mean in group Female 
-#                 42.0                 44.5
+#                 51.1                 51.9
 ```
 ]
 
@@ -256,11 +252,6 @@ ESS %&gt;% t.test(agea ~ gndr, data = .)
  - If you have more than one or two major inputs, don't pipe.
  - If you have more than ca. ten steps, better make intermediate objects.
   + It helps you to debug (i.e., find mistakes) and is simply easier to read.
-
----
-class: clear
-
-&lt;iframe src="https://app.sli.do/event/aflvddc2" height="100%" width="100%" frameBorder="0" style="min-height: 560px;"&gt;&lt;/iframe&gt;
 
 ---
 # Reminder .font70[Weights]
@@ -379,21 +370,21 @@ Today, we want to compare countries. `group_by()` will transform your data into 
 # Group my data by country.
 (ESS_cntry &lt;- ESS %&gt;% 
 *  group_by(cntry))
-# # A tibble: 845 × 10
-# # Groups:   cntry [4]
+# # A tibble: 8,991 × 10
+# # Groups:   cntry [6]
 #    cntry   gndr   facntr mocntr dscrgrp dscrrlg    rel_discr pspwght  agea eduyrs
 #    &lt;fct&gt;   &lt;fct&gt;  &lt;fct&gt;  &lt;fct&gt;  &lt;fct&gt;   &lt;fct&gt;      &lt;fct&gt;       &lt;dbl&gt; &lt;dbl&gt;  &lt;dbl&gt;
-#  1 Germany Female No     No     No      Not marked No          1.28     26     13
-#  2 Germany Female No     No     No      Not marked No          1.28     20     13
-#  3 Germany Female No     No     No      Not marked No          1.09     67      9
-#  4 Germany Female No     No     No      Not marked No          2.61     44      9
-#  5 Germany Male   No     No     Yes     Not marked No          1.10     41     16
-#  6 Germany Male   No     No     No      Not marked No          0.675    30     19
-#  7 Germany Male   No     No     No      Not marked No          1.27     20     12
-#  8 Germany Male   No     No     No      Not marked No          3.74     70     10
-#  9 Germany Female No     No     No      Not marked No          0.760    61     16
-# 10 Germany Female No     No     No      Not marked No          1.06     18     11
-# # … with 835 more rows
+#  1 Austria Male   Yes    Yes    No      Not marked No          0.218    43     12
+#  2 Austria Male   Yes    Yes    No      Not marked No          0.413    67     12
+#  3 Austria Female Yes    Yes    No      Not marked No          2.27     40     12
+#  4 Austria Male   Yes    Yes    No      Not marked No          0.386    63     11
+#  5 Austria Female Yes    Yes    No      Not marked No          1.03     71      9
+#  6 Austria Male   Yes    Yes    No      Not marked No          0.576    64     13
+#  7 Austria Male   Yes    Yes    No      Not marked No          0.721    56     12
+#  8 Austria Male   Yes    Yes    No      Not marked No          1.77     37     12
+#  9 Austria Female Yes    Yes    No      Not marked No          0.743    22     12
+# 10 Austria Male   Yes    Yes    No      Not marked No          0.160    48     12
+# # … with 8,981 more rows
 ```
 
 ---
@@ -417,13 +408,15 @@ Today, we want to compare countries. `group_by()` will transform your data into 
      perc_rd = (n_rd / n) * 100, # % cases who ...,
      wperc_rd = (wn_rd / wn) * 100 # weighted % who ...,
 *  )) # End of summarize.
-# # A tibble: 4 × 7
-#   cntry       n    wn  n_rd wn_rd perc_rd wperc_rd
-#   &lt;fct&gt;   &lt;int&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;   &lt;dbl&gt;    &lt;dbl&gt;
-# 1 Germany   356 416.     23  32.0    6.46     7.69
-# 2 Denmark    97  95.8     9  10.5    9.28    11.0 
-# 3 Norway    139 147.     10  10.0    7.19     6.81
-# 4 Sweden    253 298.     10  12.6    3.95     4.22
+# # A tibble: 6 × 7
+#   cntry           n    wn  n_rd wn_rd perc_rd wperc_rd
+#   &lt;fct&gt;       &lt;int&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;   &lt;dbl&gt;    &lt;dbl&gt;
+# 1 Austria      2011 1894.     5  7.43   0.249    0.392
+# 2 Switzerland   850  855.     2  2.09   0.235    0.244
+# 3 Germany      1829 1770.     6  4.74   0.328    0.268
+# 4 Denmark      1379 1381.    11 11.4    0.798    0.826
+# 5 France       1541 1487.    15 15.8    0.973    1.06 
+# 6 Netherlands  1381 1376.    14 15.1    1.01     1.10
 ```
 
 ---
@@ -467,23 +460,20 @@ The *95% Confidence Interval* tries to capture the range in which the true value
 *    wmin95_rd = wperc_rd - qt(p = 0.975, df = df) * wse_rd, # Lower bound of 95% CI,
 *    wmax95_rd = wperc_rd + qt(p = 0.975, df = df) * wse_rd # Upper bound of 95% CI,
    )) # End of summarize.
-# # A tibble: 4 × 8
-#   cntry      wn    df wn_rd wperc_rd wse_rd wmin95_rd wmax95_rd
-#   &lt;fct&gt;   &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;    &lt;dbl&gt;  &lt;dbl&gt;     &lt;dbl&gt;     &lt;dbl&gt;
-# 1 Germany 416.  284.   32.0     7.69   1.31      5.12     10.3 
-# 2 Denmark  95.8  62.6  10.5    11.0    3.19      4.59     17.4 
-# 3 Norway  147.  112.   10.0     6.81   2.08      2.69     10.9 
-# 4 Sweden  298.  187.   12.6     4.22   1.16      1.93      6.52
+# # A tibble: 6 × 8
+#   cntry          wn    df wn_rd wperc_rd wse_rd wmin95_rd wmax95_rd
+#   &lt;fct&gt;       &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;    &lt;dbl&gt;  &lt;dbl&gt;     &lt;dbl&gt;     &lt;dbl&gt;
+# 1 Austria     1894. 1158.  7.43    0.392  0.144    0.110      0.674
+# 2 Switzerland  855.  843.  2.09    0.244  0.169   -0.0871     0.576
+# 3 Germany     1770. 1569.  4.74    0.268  0.123    0.0269     0.509
+# 4 Denmark     1381.  866. 11.4     0.826  0.244    0.348      1.30 
+# 5 France      1487. 1134. 15.8     1.06   0.266    0.540      1.58 
+# 6 Netherlands 1376. 1310. 15.1     1.10   0.281    0.548      1.65
 ```
 
 ---
-class: clear
-
-&lt;iframe src="https://app.sli.do/event/aflvddc2" height="100%" width="100%" frameBorder="0" style="min-height: 560px;"&gt;&lt;/iframe&gt;
-
----
 class: inverse
-# Today's general lessons
+# General lessons
 
 1. R code can be nested, but alternatively it can also be *piped.* Piping allows you two write more legible code that can be read from left to right and that does not contain several useless intermediate objects.
 
@@ -491,7 +481,7 @@ class: inverse
 
 ---
 class: inverse
-# Today's (important) operators
+# Important operators
 
 1. `%&gt;%`: the (forward) pipe, allows you to pipe the output of one function into the next function as input. By default, it will be channeled as value to the first function. `value %&gt;% function(argument1 = value)`.
 
@@ -499,7 +489,7 @@ class: inverse
 
 ---
 class: inverse
-# Today's (important) functions
+# Important functions
 1. `group_by()`: Subsets a tibble into groups. Certain functions will afterwards operate by each of the specified groups.
 
 2. `summarize()`: Allows you to estimate any kind of aggregate statistic. Combined with `group_by()`, it estimates those statistic by specified group.
