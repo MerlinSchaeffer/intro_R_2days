@@ -99,8 +99,8 @@ ESS <- ESS %>% # Import the ESS, then (pipe result into)
   dplyr::filter(# Keep only respondents of native-born parents,
     facntr == "Yes" & mocntr == "Yes",
     # filter cases from four countries
-    cntry == "Germany" | cntry == "Austria" | cntry == "Denmark" | 
-      cntry == "France" | cntry == "Netherlands" | cntry == "Switzerland")
+    cntry == "Germany" | cntry == "Denmark" | 
+      cntry == "France" | cntry == "Netherlands")
 ```
 ]
 

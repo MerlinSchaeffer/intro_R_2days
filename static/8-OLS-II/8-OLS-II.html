@@ -4,7 +4,7 @@
     <title>Intro to R for Social Data Science</title>
     <meta charset="utf-8" />
     <meta name="author" content="Merlin Schaeffer  Department of Sociology" />
-    <meta name="date" content="2021-03-08" />
+    <meta name="date" content="2021-10-10" />
     <script src="libs/header-attrs/header-attrs.js"></script>
     <link href="libs/tile-view/tile-view.css" rel="stylesheet" />
     <script src="libs/tile-view/tile-view.js"></script>
@@ -20,7 +20,7 @@ class: center, middle, inverse, title-slide
 # Intro to R for Social Data Science
 ## Linear OLS Regression II
 ### Merlin Schaeffer<br> Department of Sociology
-### 2021-03-08
+### 2021-10-10
 
 ---
 
@@ -55,8 +55,6 @@ ESS &lt;- ESS %&gt;% transmute( # Create new variables and keep only those
 *   agea = zap_labels(agea), # Age
     facntr = as_factor(facntr), # Father born in cntry
     mocntr = as_factor(mocntr), # Mother born in cntry
-    imbgeco = max(imbgeco, na.rm = TRUE) - zap_labels(imbgeco),
-    imueclt = max(imueclt, na.rm = TRUE) - zap_labels(imueclt),
     imwbcnt = max(imwbcnt, na.rm = TRUE) - zap_labels(imwbcnt),
     pspwght = zap_labels(pspwght),
     # Parental education (ISCED)
@@ -81,43 +79,24 @@ ESS &lt;- ESS %&gt;% transmute( # Create new variables and keep only those
 ```
 
 ---
-# PCA &amp; design matrix
+# Design matrix
 
 
 ```r
-# Perform pca of three items and write the results into object xeno.
-(xeno &lt;- ESS %&gt;% 
-   prcomp(formula = ~ imbgeco + imueclt + imwbcnt, 
-          data = ., scale = TRUE, center = TRUE,
-          na.action = na.exclude))
-# Standard deviations (1, .., p=3):
-# [1] 1.576 0.566 0.443
-# 
-# Rotation (n x k) = (3 x 3):
-#            PC1    PC2     PC3
-# imbgeco -0.560 -0.828  0.0209
-# imueclt -0.585  0.414  0.6977
-# imwbcnt -0.586  0.379 -0.7161
-
-# Make a new "xeno" variable and fill it with z-standardized PC1.
-ESS$xeno &lt;- -xeno$x[ , "PC1"] %&gt;% # Take PC1 scores, then
-  scale() %&gt;% # z-standardize (but sometimes returns a "matrix"), then 
-  as.numeric() # turn into numeric vector.
-
 # Design matrix (i.e., tibble of the vars going into out model)
 ESS &lt;- ESS %&gt;%
-  select(cntry, xeno, eduyrs, par_edu, gndr, agea, pspwght) %&gt;%
+  select(cntry, imwbcnt, eduyrs, par_edu, gndr, agea, pspwght) %&gt;%
   mutate(cntry = fct_drop(cntry)) %&gt;% # Drop unused cntry factor levels, then
   drop_na() # Casewise deletion.
 ```
 
 ---
-# Morning `\(\rightarrow\)` Afternoon
+# OLS I `\(\rightarrow\)` OLS II
 
 .left-column[
-**Morning**: OLS allows us to express a continuous outcome as *linear* function of continuous or categorical predictors. We can adjust/control for multiple confounding variables. The estimated linear association is *not conditional* on the level of the control/confounding variables.
+**OLS I**: OLS allows us to express a continuous outcome as *linear* function of continuous or categorical predictors. We can adjust/control for multiple confounding variables. The estimated linear association is *not conditional* on the level of the control/confounding variables.
 
-**Afternoon**: Conditional and non-linear relationships!
+**OLS II**: Conditional and non-linear relationships!
 ]
 
 .right-column[
@@ -125,34 +104,34 @@ ESS &lt;- ESS %&gt;%
 
 ```r
 # Run a series of three post-stratification weighted linear OLS models.
-ols1 &lt;- lm_robust(formula = xeno ~ eduyrs, data = ESS, weights = pspwght)
-ols2 &lt;- lm_robust(formula = xeno ~ eduyrs + par_edu, data = ESS, weights = pspwght)
-ols3 &lt;- lm_robust(formula = xeno ~ eduyrs + par_edu + gndr + cntry, data = ESS, weights = pspwght)
+ols1 &lt;- lm_robust(formula = imwbcnt ~ eduyrs, data = ESS, weights = pspwght)
+ols2 &lt;- lm_robust(formula = imwbcnt ~ eduyrs + par_edu, data = ESS, weights = pspwght)
+ols3 &lt;- lm_robust(formula = imwbcnt ~ eduyrs + par_edu + gndr + cntry, data = ESS, weights = pspwght)
 # Report results in a regression table.
 screenreg(list(ols1, ols2, ols3), include.ci = FALSE) 
 # 
 # ====================================================
 #                Model 1      Model 2      Model 3    
 # ----------------------------------------------------
-# (Intercept)       0.84 ***     0.90 ***     0.72 ***
-#                  (0.06)       (0.06)       (0.07)   
-# eduyrs           -0.06 ***    -0.05 ***    -0.04 ***
-#                  (0.00)       (0.00)       (0.00)   
-# par_edu                       -0.06 ***    -0.06 ***
-#                               (0.01)       (0.01)   
-# gndrFemale                                 -0.08 ** 
-#                                            (0.03)   
-# cntryBulgaria                               0.54 ***
-#                                            (0.04)   
-# cntryGermany                               -0.09 *  
-#                                            (0.04)   
-# cntrySweden                                -0.39 ***
-#                                            (0.04)   
+# (Intercept)       6.56 ***     6.67 ***     5.96 ***
+#                  (0.15)       (0.15)       (0.17)   
+# eduyrs           -0.13 ***    -0.11 ***    -0.08 ***
+#                  (0.01)       (0.01)       (0.01)   
+# par_edu                       -0.10 ***    -0.12 ***
+#                               (0.03)       (0.02)   
+# gndrFemale                                 -0.17 *  
+#                                            (0.07)   
+# cntryBulgaria                               1.51 ***
+#                                            (0.10)   
+# cntryGermany                                0.41 ***
+#                                            (0.09)   
+# cntrySweden                                -0.80 ***
+#                                            (0.10)   
 # ----------------------------------------------------
-# R^2               0.04         0.05         0.16    
-# Adj. R^2          0.04         0.05         0.16    
-# Num. obs.      5681         5681         5681       
-# RMSE              0.96         0.96         0.90    
+# R^2               0.03         0.03         0.14    
+# Adj. R^2          0.03         0.03         0.14    
+# Num. obs.      5885         5885         5885       
+# RMSE              2.37         2.36         2.22    
 # ====================================================
 # *** p &lt; 0.001; ** p &lt; 0.01; * p &lt; 0.05
 ```
@@ -163,16 +142,17 @@ screenreg(list(ols1, ols2, ols3), include.ci = FALSE)
 
 .panelset[
 .panel[.panel-name[Plot]
-&lt;img src="10-OLS-II_files/figure-html/unnamed-chunk-6-1.png" width="60%" style="display: block; margin: auto;" /&gt;
+&lt;img src="8-OLS-II_files/figure-html/unnamed-chunk-6-1.png" width="60%" style="display: block; margin: auto;" /&gt;
 ]
+
 .panel[.panel-name[Code]
 
 ```r
 ggplot(data = ESS, 
-       mapping = aes(y = xeno, x = eduyrs, color = cntry)) +
+       mapping = aes(y = imwbcnt, x = eduyrs, color = cntry)) +
   geom_jitter(aes(size = pspwght), alpha = 1/7) +
   geom_smooth(aes(weight = pspwght), method = "lm", se = FALSE) +
-  labs(x = "Years of education", y = "Xenophobia", size = "Survey \n weight", color = "Country") +
+  labs(x = "Years of education", y = "imwbcntphobia", size = "Survey \n weight", color = "Country") +
   theme_minimal()
 ```
 ]]
@@ -185,7 +165,7 @@ class: clear
 .font70[
 
 ```r
-ols4 &lt;- lm_robust(formula = xeno ~ par_edu + gndr +
+ols4 &lt;- lm_robust(formula = imwbcnt ~ par_edu + gndr +
 *                   eduyrs*cntry,
                   data = ESS, weights = pspwght)
 screenreg(ols4, include.ci = FALSE) 
@@ -193,31 +173,31 @@ screenreg(ols4, include.ci = FALSE)
 # =================================
 #                       Model 1    
 # ---------------------------------
-# (Intercept)              0.92 ***
-#                         (0.12)   
-# par_edu                 -0.06 ***
-#                         (0.01)   
-# gndrFemale              -0.08 ** 
+# (Intercept)              6.42 ***
+#                         (0.29)   
+# par_edu                 -0.13 ***
+#                         (0.02)   
+# gndrFemale              -0.17 *  
+#                         (0.07)   
+# eduyrs                  -0.11 ***
+#                         (0.02)   
+# cntryBulgaria           -0.75    
+#                         (0.40)   
+# cntryGermany             0.72    
+#                         (0.40)   
+# cntrySweden              0.06    
+#                         (0.46)   
+# eduyrs:cntryBulgaria     0.18 ***
 #                         (0.03)   
-# eduyrs                  -0.05 ***
-#                         (0.01)   
-# cntryBulgaria           -0.43 *  
-#                         (0.17)   
-# cntryGermany             0.04    
-#                         (0.16)   
-# cntrySweden             -0.08    
-#                         (0.18)   
-# eduyrs:cntryBulgaria     0.08 ***
-#                         (0.01)   
-# eduyrs:cntryGermany     -0.01    
-#                         (0.01)   
-# eduyrs:cntrySweden      -0.02    
-#                         (0.01)   
+# eduyrs:cntryGermany     -0.02    
+#                         (0.03)   
+# eduyrs:cntrySweden      -0.06 *  
+#                         (0.03)   
 # ---------------------------------
-# R^2                      0.17    
-# Adj. R^2                 0.17    
-# Num. obs.             5681       
-# RMSE                     0.90    
+# R^2                      0.16    
+# Adj. R^2                 0.16    
+# Num. obs.             5885       
+# RMSE                     2.20    
 # =================================
 # *** p &lt; 0.001; ** p &lt; 0.01; * p &lt; 0.05
 ```
@@ -225,32 +205,33 @@ screenreg(ols4, include.ci = FALSE)
 
 --
 
-.left-column[
-How do we interpret the estimates correctly?
+.left-column[.content-box-green[
 
-Why is `\(\beta_{\text{eduyrs}}\)` smaller than in model 3?
+1. How do we interpret the estimates correctly?
 
-Why do Bulgarians suddenly seem to have *lower* levels of xenophobia, whereas before they had higher ones?
-]
+2. Why is `\(\beta_{\text{eduyrs}}\)` smaller than in model 3?
+
+3. Why do Bulgarians suddenly seem to have *lower* levels of imwbcntphobia, whereas before they had higher ones?
+]]
 
 ---
 # Interaction effects .font60[Beware of the scaling of the Xs!]
 
 .panelset[
 .panel[.panel-name[Plot]
-&lt;img src="10-OLS-II_files/figure-html/unnamed-chunk-9-1.png" width="60%" style="display: block; margin: auto;" /&gt;
+&lt;img src="8-OLS-II_files/figure-html/unnamed-chunk-9-1.png" width="60%" style="display: block; margin: auto;" /&gt;
 ]
 .panel[.panel-name[Code]
 
 ```r
 ggplot(data = ESS, 
-       mapping = aes(y = xeno, x = eduyrs, color = cntry)) +
+       mapping = aes(y = imwbcnt, x = eduyrs, color = cntry)) +
   geom_jitter(aes(size = pspwght), alpha = 1/7) +
   geom_smooth(aes(weight = pspwght), method = "lm", se = FALSE,
 *             # draw line beyond observed cases.
 *             fullrange = TRUE) +
 * xlim(c(0, 21)) + # Extend range of x-axis.
-  labs(x = "Years of education", y = "Xenophobia", size = "Survey \n weight", color = "Country") +
+  labs(x = "Years of education", y = "imwbcntphobia", size = "Survey \n weight", color = "Country") +
   theme_minimal()
 ```
 ]]
@@ -271,17 +252,17 @@ ESS &lt;- ESS %&gt;% mutate(
 
 ```r
 ggplot(data = ESS, 
-       mapping = aes(y = xeno, x = z_eduyrs, color = cntry)) +
+       mapping = aes(y = imwbcnt, x = z_eduyrs, color = cntry)) +
   geom_jitter(aes(size = pspwght), alpha = 1/7) +
   geom_vline(xintercept = 0, color = "#901A1E") + 
   geom_smooth(aes(weight = pspwght), 
               method = "lm", se = FALSE) +
-  labs(x = "Years of education \n (z-standardized)", y = "Xenophobia", size = "Survey \n weight", color = "Country") +
+  labs(x = "Years of education \n (z-standardized)", y = "imwbcntphobia", size = "Survey \n weight", color = "Country") +
   theme_minimal()
 ```
 ]
 .panel[.panel-name[Plot]
-&lt;img src="10-OLS-II_files/figure-html/unnamed-chunk-12-1.png" width="60%" style="display: block; margin: auto;" /&gt;
+&lt;img src="8-OLS-II_files/figure-html/unnamed-chunk-12-1.png" width="60%" style="display: block; margin: auto;" /&gt;
 ]]
 
 ---
@@ -291,62 +272,61 @@ ggplot(data = ESS,
 .font70[
 
 ```r
-ols4 &lt;- lm_robust(formula = xeno ~ par_edu + gndr +
-                    z_eduyrs*cntry,
+ols4 &lt;- lm_robust(formula = imwbcnt ~ par_edu + gndr +
+                    I(scale(eduyrs))*cntry,
                   data = ESS, weights = pspwght)
 screenreg(ols4, include.ci = FALSE) 
 # 
-# ===================================
-#                         Model 1    
-# -----------------------------------
-# (Intercept)                0.21 ***
-#                           (0.04)   
-# par_edu                   -0.06 ***
-#                           (0.01)   
-# gndrFemale                -0.08 ** 
-#                           (0.03)   
-# z_eduyrs                  -0.17 ***
-#                           (0.03)   
-# cntryBulgaria              0.60 ***
-#                           (0.04)   
-# cntryGermany              -0.08 *  
-#                           (0.04)   
-# cntrySweden               -0.39 ***
-#                           (0.04)   
-# z_eduyrs:cntryBulgaria     0.25 ***
-#                           (0.04)   
-# z_eduyrs:cntryGermany     -0.03    
-#                           (0.04)   
-# z_eduyrs:cntrySweden      -0.07    
-#                           (0.04)   
-# -----------------------------------
-# R^2                        0.17    
-# Adj. R^2                   0.17    
-# Num. obs.               5681       
-# RMSE                       0.90    
-# ===================================
+# ========================================
+#                              Model 1    
+# ----------------------------------------
+# (Intercept)                     4.94 ***
+#                                (0.11)   
+# par_edu                        -0.13 ***
+#                                (0.02)   
+# gndrFemale                     -0.17 *  
+#                                (0.07)   
+# scale(eduyrs)                  -0.36 ***
+#                                (0.06)   
+# cntryBulgaria                   1.65 ***
+#                                (0.10)   
+# cntryGermany                    0.43 ***
+#                                (0.09)   
+# cntrySweden                    -0.80 ***
+#                                (0.10)   
+# scale(eduyrs):cntryBulgaria     0.59 ***
+#                                (0.10)   
+# scale(eduyrs):cntryGermany     -0.07    
+#                                (0.09)   
+# scale(eduyrs):cntrySweden      -0.21 *  
+#                                (0.11)   
+# ----------------------------------------
+# R^2                             0.16    
+# Adj. R^2                        0.16    
+# Num. obs.                    5885       
+# RMSE                            2.20    
+# ========================================
 # *** p &lt; 0.001; ** p &lt; 0.01; * p &lt; 0.05
 ```
 ]]
 
 .push-left[
-How do we interpret the estimates correctly?
-&lt;img src="10-OLS-II_files/figure-html/unnamed-chunk-14-1.png" width="100%" style="display: block; margin: auto;" /&gt;
+&lt;img src="8-OLS-II_files/figure-html/unnamed-chunk-14-1.png" width="100%" style="display: block; margin: auto;" /&gt;
 ]
 
 ---
 # Non-linearities? .font60[Transform using `I()` and `poly()`]
 
 .push-left[
-`I()` allows you to perform any transformation without a need to change the underlying tibble/design matrix.
+`I()` allows you to perform any transformation without a need to change the underlying tibble/design matrix. Really helpful for predictions!
 
-`poly()` introduces *orthogonal* polynomials (i.e., squared, and higher degrees). If you don't want them to be orthogonal, you can use the option `raw = TRUE`.
+`poly()` introduces *orthogonal* polynomials (e.g., squared terms). If you don't want them to be orthogonal, you can use the option `raw = TRUE`.
 
-.alert[Beware of over-fitting!!]
+.alert[Beware of over-fitting!]
 
 ```r
 ols6 &lt;- lm_robust(
-  formula = xeno ~ gndr + cntry + eduyrs +
+  formula = imwbcnt ~ gndr + cntry + eduyrs +
 *   poly(agea, 2, raw = TRUE) +
 *   I(log(par_edu)),
   data = ESS, weights = pspwght)
@@ -362,29 +342,29 @@ screenreg(ols6, include.ci = FALSE, digits = 4)
 # =========================================
 #                             Model 1      
 # -----------------------------------------
-# (Intercept)                    0.3351 ** 
-#                               (0.1064)   
-# gndrFemale                    -0.0858 ** 
-#                               (0.0279)   
-# cntryBulgaria                  0.5232 ***
-#                               (0.0427)   
-# cntryGermany                  -0.1002 ** 
-#                               (0.0372)   
-# cntrySweden                   -0.4033 ***
-#                               (0.0406)   
-# eduyrs                        -0.0454 ***
-#                               (0.0047)   
-# poly(agea, 2, raw = TRUE)1     0.0135 ** 
-#                               (0.0041)   
-# poly(agea, 2, raw = TRUE)2    -0.0001 *  
-#                               (0.0000)   
-# log(par_edu)                  -0.0754 *  
-#                               (0.0308)   
+# (Intercept)                    4.9017 ***
+#                               (0.2736)   
+# gndrFemale                    -0.1810 ** 
+#                               (0.0680)   
+# cntryBulgaria                  1.4559 ***
+#                               (0.1022)   
+# cntryGermany                   0.3494 ***
+#                               (0.0924)   
+# cntrySweden                   -0.8312 ***
+#                               (0.1036)   
+# eduyrs                        -0.0954 ***
+#                               (0.0114)   
+# poly(agea, 2, raw = TRUE)1     0.0325 ** 
+#                               (0.0102)   
+# poly(agea, 2, raw = TRUE)2    -0.0002 *  
+#                               (0.0001)   
+# log(par_edu)                  -0.0506    
+#                               (0.0775)   
 # -----------------------------------------
-# R^2                            0.1592    
-# Adj. R^2                       0.1580    
-# Num. obs.                   5681         
-# RMSE                           0.9026    
+# R^2                            0.1496    
+# Adj. R^2                       0.1484    
+# Num. obs.                   5885         
+# RMSE                           2.2155    
 # =========================================
 # *** p &lt; 0.001; ** p &lt; 0.01; * p &lt; 0.05
 ```
@@ -402,7 +382,7 @@ screenreg(ols6, include.ci = FALSE, digits = 4)
    # Generate theoretically-informative 
    # but artificial tibble for predictions.
 *  data_grid(eduyrs, par_edu, gndr, agea, cntry))
-# # A tibble: 154,128 x 5
+# # A tibble: 154,128 × 5
 #    eduyrs par_edu gndr   agea cntry   
 #     &lt;dbl&gt;   &lt;dbl&gt; &lt;fct&gt; &lt;dbl&gt; &lt;fct&gt;   
 #  1      9       1 Male     15 Denmark 
@@ -433,19 +413,19 @@ screenreg(ols6, include.ci = FALSE, digits = 4)
      gndr = "Female",
      cntry = "Denmark") %&gt;% # then
    unique()) # Drop duplicates.
-# # A tibble: 76 x 5
+# # A tibble: 76 × 5
 #    eduyrs par_edu gndr    agea cntry  
 #     &lt;dbl&gt;   &lt;dbl&gt; &lt;chr&gt;  &lt;dbl&gt; &lt;chr&gt;  
-#  1   13.8    3.14 Female    15 Denmark
-#  2   13.8    3.14 Female    16 Denmark
-#  3   13.8    3.14 Female    17 Denmark
-#  4   13.8    3.14 Female    18 Denmark
-#  5   13.8    3.14 Female    19 Denmark
-#  6   13.8    3.14 Female    20 Denmark
-#  7   13.8    3.14 Female    21 Denmark
-#  8   13.8    3.14 Female    22 Denmark
-#  9   13.8    3.14 Female    23 Denmark
-# 10   13.8    3.14 Female    24 Denmark
+#  1   13.7    3.11 Female    15 Denmark
+#  2   13.7    3.11 Female    16 Denmark
+#  3   13.7    3.11 Female    17 Denmark
+#  4   13.7    3.11 Female    18 Denmark
+#  5   13.7    3.11 Female    19 Denmark
+#  6   13.7    3.11 Female    20 Denmark
+#  7   13.7    3.11 Female    21 Denmark
+#  8   13.7    3.11 Female    22 Denmark
+#  9   13.7    3.11 Female    23 Denmark
+# 10   13.7    3.11 Female    24 Denmark
 # # … with 66 more rows
 ```
 ]]
@@ -471,19 +451,19 @@ screenreg(ols6, include.ci = FALSE, digits = 4)
 .font80[
 
 ```
-# # A tibble: 76 x 8
-#    eduyrs par_edu gndr    agea cntry      fit    lwr    upr
-#     &lt;dbl&gt;   &lt;dbl&gt; &lt;chr&gt;  &lt;dbl&gt; &lt;chr&gt;    &lt;dbl&gt;  &lt;dbl&gt;  &lt;dbl&gt;
-#  1   13.8    3.14 Female    15 Denmark -0.282 -0.384 -0.179
-#  2   13.8    3.14 Female    16 Denmark -0.272 -0.370 -0.173
-#  3   13.8    3.14 Female    17 Denmark -0.261 -0.356 -0.167
-#  4   13.8    3.14 Female    18 Denmark -0.252 -0.342 -0.161
-#  5   13.8    3.14 Female    19 Denmark -0.242 -0.329 -0.154
-#  6   13.8    3.14 Female    20 Denmark -0.232 -0.316 -0.148
-#  7   13.8    3.14 Female    21 Denmark -0.223 -0.304 -0.142
-#  8   13.8    3.14 Female    22 Denmark -0.214 -0.293 -0.135
-#  9   13.8    3.14 Female    23 Denmark -0.205 -0.281 -0.129
-# 10   13.8    3.14 Female    24 Denmark -0.196 -0.271 -0.122
+# # A tibble: 76 × 8
+#    eduyrs par_edu gndr    agea cntry     fit   lwr   upr
+#     &lt;dbl&gt;   &lt;dbl&gt; &lt;chr&gt;  &lt;dbl&gt; &lt;chr&gt;   &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;
+#  1   13.7    3.11 Female    15 Denmark  3.80  3.54  4.05
+#  2   13.7    3.11 Female    16 Denmark  3.82  3.58  4.07
+#  3   13.7    3.11 Female    17 Denmark  3.85  3.61  4.08
+#  4   13.7    3.11 Female    18 Denmark  3.87  3.65  4.10
+#  5   13.7    3.11 Female    19 Denmark  3.90  3.68  4.12
+#  6   13.7    3.11 Female    20 Denmark  3.92  3.71  4.13
+#  7   13.7    3.11 Female    21 Denmark  3.95  3.74  4.15
+#  8   13.7    3.11 Female    22 Denmark  3.97  3.77  4.16
+#  9   13.7    3.11 Female    23 Denmark  3.99  3.80  4.18
+# 10   13.7    3.11 Female    24 Denmark  4.01  3.83  4.20
 # # … with 66 more rows
 ```
 ]]
@@ -494,7 +474,7 @@ screenreg(ols6, include.ci = FALSE, digits = 4)
 .push-left[
 .panelset[
 .panel[.panel-name[Plot]
-&lt;img src="10-OLS-II_files/figure-html/unnamed-chunk-20-1.png" width="90%" style="display: block; margin: auto;" /&gt;
+&lt;img src="8-OLS-II_files/figure-html/unnamed-chunk-20-1.png" width="90%" style="display: block; margin: auto;" /&gt;
 ]
 .panel[.panel-name[Code]
 
@@ -505,7 +485,7 @@ ggplot(data = synth_data,
               alpha = 0.5) +
   geom_line() +
   labs(x = "Age",
-  y = "Xenophobia",
+  y = "imwbcntphobia",
   caption = "(Covariates set to: Women in Denmark \n at mean levels of (parental) education)") + 
   theme_minimal()
 ```
@@ -519,29 +499,29 @@ screenreg(ols6, include.ci = FALSE, digits = 4)
 # =========================================
 #                             Model 1      
 # -----------------------------------------
-# (Intercept)                    0.3351 ** 
-#                               (0.1064)   
-# gndrFemale                    -0.0858 ** 
-#                               (0.0279)   
-# cntryBulgaria                  0.5232 ***
-#                               (0.0427)   
-# cntryGermany                  -0.1002 ** 
-#                               (0.0372)   
-# cntrySweden                   -0.4033 ***
-#                               (0.0406)   
-# eduyrs                        -0.0454 ***
-#                               (0.0047)   
-# poly(agea, 2, raw = TRUE)1     0.0135 ** 
-#                               (0.0041)   
-# poly(agea, 2, raw = TRUE)2    -0.0001 *  
-#                               (0.0000)   
-# log(par_edu)                  -0.0754 *  
-#                               (0.0308)   
+# (Intercept)                    4.9017 ***
+#                               (0.2736)   
+# gndrFemale                    -0.1810 ** 
+#                               (0.0680)   
+# cntryBulgaria                  1.4559 ***
+#                               (0.1022)   
+# cntryGermany                   0.3494 ***
+#                               (0.0924)   
+# cntrySweden                   -0.8312 ***
+#                               (0.1036)   
+# eduyrs                        -0.0954 ***
+#                               (0.0114)   
+# poly(agea, 2, raw = TRUE)1     0.0325 ** 
+#                               (0.0102)   
+# poly(agea, 2, raw = TRUE)2    -0.0002 *  
+#                               (0.0001)   
+# log(par_edu)                  -0.0506    
+#                               (0.0775)   
 # -----------------------------------------
-# R^2                            0.1592    
-# Adj. R^2                       0.1580    
-# Num. obs.                   5681         
-# RMSE                           0.9026    
+# R^2                            0.1496    
+# Adj. R^2                       0.1484    
+# Num. obs.                   5885         
+# RMSE                           2.2155    
 # =========================================
 # *** p &lt; 0.001; ** p &lt; 0.01; * p &lt; 0.05
 ```
@@ -578,7 +558,7 @@ synth_data &lt;- predict(ols6, newdata = synth_data,
 .push-right[
 .panelset[
 .panel[.panel-name[Plot]
-&lt;img src="10-OLS-II_files/figure-html/unnamed-chunk-24-1.png" width="90%" style="display: block; margin: auto;" /&gt;
+&lt;img src="8-OLS-II_files/figure-html/unnamed-chunk-24-1.png" width="90%" style="display: block; margin: auto;" /&gt;
 ]
 .panel[.panel-name[Code]
 .font90[
@@ -587,7 +567,7 @@ synth_data &lt;- predict(ols6, newdata = synth_data,
 ggplot(data = synth_data, aes(y = fit, x = par_edu)) +
   geom_ribbon(aes(ymin = lwr, ymax = upr), alpha = 0.5) +
   geom_line() +
-  labs(x = "Parental education", y = "Xenophobia", 
+  labs(x = "Parental education", y = "imwbcntphobia", 
        caption = "(Covariates set to: Women at mean levels of parental education)") + 
   theme_minimal()
 ```
@@ -601,7 +581,7 @@ ggplot(data = synth_data, aes(y = fit, x = par_edu)) +
 ```r
 # Estimate linear OLS with interaction effect;
 # no z-standardization if you visualize.
-ols7 &lt;- lm_robust(formula = xeno ~ log(par_edu) + gndr + poly(agea, 2) +
+ols7 &lt;- lm_robust(formula = imwbcnt ~ log(par_edu) + gndr + poly(agea, 2) +
 *                   eduyrs*cntry,
                   data = ESS, weights = pspwght)
 
@@ -631,37 +611,37 @@ synth_data &lt;- predict(ols7, newdata = synth_data,
 .font80[
 
 ```
-# # A tibble: 52 x 8
-#    par_edu gndr   cntry    eduyrs  agea      fit     lwr     upr
-#      &lt;dbl&gt; &lt;chr&gt;  &lt;fct&gt;     &lt;dbl&gt; &lt;dbl&gt;    &lt;dbl&gt;   &lt;dbl&gt;   &lt;dbl&gt;
-#  1    3.14 Female Denmark       9  52.3  0.238    0.122   0.353 
-#  2    3.14 Female Denmark      10  52.3  0.180    0.0769  0.283 
-#  3    3.14 Female Denmark      11  52.3  0.122    0.0305  0.215 
-#  4    3.14 Female Denmark      12  52.3  0.0649  -0.0175  0.147 
-#  5    3.14 Female Denmark      13  52.3  0.00723 -0.0678  0.0823
-#  6    3.14 Female Denmark      14  52.3 -0.0504  -0.121   0.0202
-#  7    3.14 Female Denmark      15  52.3 -0.108   -0.178  -0.0384
-#  8    3.14 Female Denmark      16  52.3 -0.166   -0.238  -0.0933
-#  9    3.14 Female Denmark      17  52.3 -0.223   -0.302  -0.145 
-# 10    3.14 Female Denmark      18  52.3 -0.281   -0.368  -0.194 
-# 11    3.14 Female Denmark      19  52.3 -0.339   -0.436  -0.241 
-# 12    3.14 Female Denmark      20  52.3 -0.396   -0.505  -0.287 
-# 13    3.14 Female Denmark      21  52.3 -0.454   -0.576  -0.332 
-# 14    3.14 Female Bulgaria      9  52.3  0.475    0.372   0.577 
-# 15    3.14 Female Bulgaria     10  52.3  0.490    0.400   0.580 
-# 16    3.14 Female Bulgaria     11  52.3  0.505    0.426   0.584 
-# 17    3.14 Female Bulgaria     12  52.3  0.520    0.449   0.591 
-# 18    3.14 Female Bulgaria     13  52.3  0.535    0.468   0.603 
-# 19    3.14 Female Bulgaria     14  52.3  0.550    0.481   0.619 
-# 20    3.14 Female Bulgaria     15  52.3  0.565    0.491   0.640 
-# 21    3.14 Female Bulgaria     16  52.3  0.580    0.497   0.664 
-# 22    3.14 Female Bulgaria     17  52.3  0.596    0.500   0.691 
-# 23    3.14 Female Bulgaria     18  52.3  0.611    0.501   0.720 
-# 24    3.14 Female Bulgaria     19  52.3  0.626    0.502   0.750 
-# 25    3.14 Female Bulgaria     20  52.3  0.641    0.501   0.781 
-# 26    3.14 Female Bulgaria     21  52.3  0.656    0.500   0.812 
-# 27    3.14 Female Germany       9  52.3  0.195    0.0861  0.303 
-# 28    3.14 Female Germany      10  52.3  0.128    0.0314  0.225 
+# # A tibble: 52 × 8
+#    par_edu gndr   cntry    eduyrs  agea   fit   lwr   upr
+#      &lt;dbl&gt; &lt;chr&gt;  &lt;fct&gt;     &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;
+#  1    3.11 Female Denmark       9  52.4  5.05  4.77  5.32
+#  2    3.11 Female Denmark      10  52.4  4.92  4.67  5.17
+#  3    3.11 Female Denmark      11  52.4  4.80  4.58  5.02
+#  4    3.11 Female Denmark      12  52.4  4.68  4.48  4.88
+#  5    3.11 Female Denmark      13  52.4  4.56  4.37  4.74
+#  6    3.11 Female Denmark      14  52.4  4.43  4.26  4.61
+#  7    3.11 Female Denmark      15  52.4  4.31  4.14  4.48
+#  8    3.11 Female Denmark      16  52.4  4.19  4.01  4.36
+#  9    3.11 Female Denmark      17  52.4  4.07  3.88  4.25
+# 10    3.11 Female Denmark      18  52.4  3.94  3.73  4.15
+# 11    3.11 Female Denmark      19  52.4  3.82  3.59  4.05
+# 12    3.11 Female Denmark      20  52.4  3.70  3.44  3.96
+# 13    3.11 Female Denmark      21  52.4  3.57  3.28  3.86
+# 14    3.11 Female Bulgaria      9  52.4  5.87  5.63  6.11
+# 15    3.11 Female Bulgaria     10  52.4  5.91  5.70  6.12
+# 16    3.11 Female Bulgaria     11  52.4  5.95  5.77  6.14
+# 17    3.11 Female Bulgaria     12  52.4  6.00  5.83  6.16
+# 18    3.11 Female Bulgaria     13  52.4  6.04  5.88  6.20
+# 19    3.11 Female Bulgaria     14  52.4  6.08  5.92  6.24
+# 20    3.11 Female Bulgaria     15  52.4  6.12  5.95  6.30
+# 21    3.11 Female Bulgaria     16  52.4  6.16  5.97  6.36
+# 22    3.11 Female Bulgaria     17  52.4  6.21  5.98  6.43
+# 23    3.11 Female Bulgaria     18  52.4  6.25  5.99  6.51
+# 24    3.11 Female Bulgaria     19  52.4  6.29  6.00  6.58
+# 25    3.11 Female Bulgaria     20  52.4  6.33  6.01  6.66
+# 26    3.11 Female Bulgaria     21  52.4  6.38  6.01  6.74
+# 27    3.11 Female Germany       9  52.4  5.52  5.26  5.79
+# 28    3.11 Female Germany      10  52.4  5.38  5.14  5.62
 # # … with 24 more rows
 ```
 ]]
@@ -671,7 +651,7 @@ synth_data &lt;- predict(ols7, newdata = synth_data,
 
 .panelset[
 .panel[.panel-name[Plot]
-&lt;img src="10-OLS-II_files/figure-html/unnamed-chunk-28-1.png" width="65%" style="display: block; margin: auto;" /&gt;
+&lt;img src="8-OLS-II_files/figure-html/unnamed-chunk-28-1.png" width="65%" style="display: block; margin: auto;" /&gt;
 ]
 .panel[.panel-name[Code]
 
@@ -681,15 +661,20 @@ ggplot(data = synth_data, aes(y = fit, x = eduyrs)) +
 *                 fill = cntry),
               alpha = 0.5) +
 * geom_line(aes(color = cntry)) +
-  labs(x = "Years of education", y = "Xenophobia", 
+  labs(x = "Years of education", y = "imwbcntphobia", 
        caption = "(Covariates set to: Women at mean levels of parental education)") + 
   theme_minimal()
 ```
 ]]
 
 ---
+# Marginal effects 
+
+&lt;iframe src="https://www.rdocumentation.org/packages/margins/versions/0.3.26" height="100%" width="100%" frameBorder="0" style="min-height: 560px;"&gt;&lt;/iframe&gt;
+
+---
 class: inverse
-# Today's general lessons
+# General lessons
 
 1. Linear OLS models are very versatile and can approximate very complex relationships. Theoretically, interaction effects, transformed variables and polynomials allow us to *linearize* any relationship/functional form.
 2. You can formulate conditional and non-linear relationships directly in your model's formula.
@@ -697,11 +682,11 @@ class: inverse
 
 ---
 class: inverse
-# Today's (important) functions
+# Important functions
 
 1. `I()` allows you to transform predictors in the formula argument of your regression model.
 2. `poly()` allows you to introduce orthogonal polynomials to your model.
-3. `predic()` generates predictions from your model for a tibble that you feed to it.
+3. `predict()` generates predictions from your model for a tibble that you feed to it.
 4. `modelr::data_grid()` generates synthetic data sets that contain all combinations of variables you feed to it.
     </textarea>
 <style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>

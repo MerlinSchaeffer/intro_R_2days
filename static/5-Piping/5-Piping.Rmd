@@ -161,11 +161,11 @@ ESS <- ESS %>% # Import the ESS, then (pipe result into) #<<
       eduyrs < 9 ~ 9, # Recode to min 9 years of edu.
       TRUE ~ zap_labels(eduyrs)) # Make it numeric.
   ) %>% # finish transmute, then (pipe result into) #<<
-  dplyr::filter(# Keep only respondents of immigrant origin,
+  dplyr::filter(# Keep only respondents of native-born parents,
     facntr == "Yes" & mocntr == "Yes",
     # filter cases from four countries
-    cntry == "Germany" | cntry == "Austria" | cntry == "Denmark" | 
-      cntry == "France" | cntry == "Netherlands" | cntry == "Switzerland")
+    cntry == "Germany" | cntry == "Denmark" | 
+      cntry == "France" | cntry == "Netherlands")
 ```
 ]
 ---

@@ -4,7 +4,7 @@
     <title>Intro to R for Social Data Science</title>
     <meta charset="utf-8" />
     <meta name="author" content="Merlin Schaeffer  Department of Sociology" />
-    <meta name="date" content="2021-10-04" />
+    <meta name="date" content="2021-10-10" />
     <script src="libs/header-attrs/header-attrs.js"></script>
     <link href="libs/tile-view/tile-view.css" rel="stylesheet" />
     <script src="libs/tile-view/tile-view.js"></script>
@@ -20,7 +20,7 @@ class: center, middle, inverse, title-slide
 # Intro to R for Social Data Science
 ## Linear OLS Regression I
 ### Merlin Schaeffer<br> Department of Sociology
-### 2021-10-04
+### 2021-10-10
 
 ---
 
@@ -89,12 +89,12 @@ ESS &lt;- ESS %&gt;%
 ```
 
 ---
-# Modeling imwbcntphobia
+# Modeling xenophobia
 
 .push-left[
 .panelset[
 .panel[.panel-name[Plot]
-&lt;img src="9-OLS-I_files/figure-html/unnamed-chunk-5-1.png" width="100%" style="display: block; margin: auto;" /&gt;
+&lt;img src="7-OLS-I_files/figure-html/unnamed-chunk-5-1.png" width="100%" style="display: block; margin: auto;" /&gt;
 .panel[.panel-name[Code]
 
 ```r
@@ -149,7 +149,7 @@ Let's try `\(x = \text{years of education}\)`, since schools in most countries t
 .right-column[
 .panelset[
 .panel[.panel-name[Plot]
-&lt;img src="9-OLS-I_files/figure-html/unnamed-chunk-8-1.png" width="85%" style="display: block; margin: auto;" /&gt;
+&lt;img src="7-OLS-I_files/figure-html/unnamed-chunk-8-1.png" width="85%" style="display: block; margin: auto;" /&gt;
 ]
 .panel[.panel-name[Code]
 
@@ -183,7 +183,7 @@ Note, how the residuals are defined only in terms of `\(y\)` and thereby differ 
 ]
 
 .right-column[
-&lt;img src="9-OLS-I_files/figure-html/OLS-1.png" width="90%" style="display: block; margin: auto;" /&gt;
+&lt;img src="7-OLS-I_files/figure-html/OLS-1.png" width="90%" style="display: block; margin: auto;" /&gt;
 
 ]
 
@@ -219,9 +219,11 @@ summary(ols) # Give a summary of the main results.
 
 .left-column[
 
-$$$$
+$$
 \operatorname{\widehat{imwbcnt}} = 6 - 0.12(\operatorname{eduyrs})
-`$$,$$` is the line that `\(\min \sum_{i=1}^{n} e_{i}^{2}\)`.
+$$
+
+is the line that `\(\min \sum_{i=1}^{n} e_{i}^{2}\)`.
 
 ]
 
@@ -300,7 +302,7 @@ summary(ols) # Give a summary of the main results.
 # Multiple linear OLS
 
 .left-column[
-&lt;img src="9-OLS-I_files/figure-html/unnamed-chunk-13-1.png" width="100%" style="display: block; margin: auto;" /&gt;
+&lt;img src="7-OLS-I_files/figure-html/unnamed-chunk-13-1.png" width="100%" style="display: block; margin: auto;" /&gt;
 
 .alert[But is parental education the only confounder?] 
 
@@ -336,74 +338,6 @@ summary(ols2) # Give a summary of the main results.
 ]
 
 ---
-# Confounder bias .font60[A simulation]
-
-
-```r
-set.seed(838377)
-# The Data Generating Process (DGP)
-simu &lt;- tibble(Confounder = rnorm(n = 2000, mean = 0, sd = 1), # The confounder is exogeneous.
-               x = 0.5*Confounder + rnorm(n = 2000, mean = 0, sd = 1), # x is a "child" of the confounder.
-               y = 0.5*x + 0.5*Confounder + rnorm(n = 2000, mean = 0, sd = 1)) # y is a child of x and the confounder.
-```
-
---
-
-.left-column[
-.center[.content-box-blue[.font70[
-Based on `\(\mathbb{E}(\tilde{\beta_{x_{1}}}) = \beta_{x_{1}} + \color{orange}{\beta_{x_{2}} \frac{\text{Cov}(x_{i1},x_{i2})}{\text{Var}(x_{i1})}}\)`, what bias should we expect?
-]]]
-
-&lt;img src="9-OLS-I_files/figure-html/unnamed-chunk-16-1.png" width="80%" style="display: block; margin: auto;" /&gt;
-]
-
-.right-column[
-.panelset[
-.panel[.panel-name[Correct model]
-.font80[
-
-```r
-lm_robust(y ~ x + Confounder, data = simu) %&gt;%
-  summary(single.row = TRUE)
-# 
-# Call:
-# lm_robust(formula = y ~ x + Confounder, data = simu)
-# 
-# Standard error type:  HC2 
-# 
-# Coefficients:
-#             Estimate Std. Error t value  Pr(&gt;|t|) CI Lower CI Upper   DF
-# (Intercept)  0.00296     0.0221   0.134  8.94e-01  -0.0404   0.0464 1997
-# x            0.51470     0.0226  22.813 1.45e-102   0.4705   0.5590 1997
-# Confounder   0.48869     0.0240  20.377  5.21e-84   0.4417   0.5357 1997
-# 
-# Multiple R-squared:  0.446 ,	Adjusted R-squared:  0.445 
-# F-statistic:  816 on 2 and 1997 DF,  p-value: &lt;2e-16
-```
-]]
-.panel[.panel-name[Biased model]
-.font80[
-
-```r
-lm_robust(y ~ x, data = simu) %&gt;%
-  summary(single.row = TRUE)
-# 
-# Call:
-# lm_robust(formula = y ~ x, data = simu)
-# 
-# Standard error type:  HC2 
-# 
-# Coefficients:
-#             Estimate Std. Error t value  Pr(&gt;|t|) CI Lower CI Upper   DF
-# (Intercept)   -0.020     0.0243  -0.824  4.10e-01  -0.0676   0.0276 1998
-# x              0.704     0.0223  31.506 3.17e-177   0.6603   0.7479 1998
-# 
-# Multiple R-squared:  0.334 ,	Adjusted R-squared:  0.334 
-# F-statistic:  993 on 1 and 1998 DF,  p-value: &lt;2e-16
-```
-]]]]
-
----
 # Categorical predictors
 
 .left-column[
@@ -416,7 +350,7 @@ How can we make sense of a categorical predictor in a linear model?]]
 .right-column[
 .panelset[
 .panel[.panel-name[Plot]
-&lt;img src="9-OLS-I_files/figure-html/dummies-1.png" width="90%" style="display: block; margin: auto;" /&gt;
+&lt;img src="7-OLS-I_files/figure-html/dummies-1.png" width="90%" style="display: block; margin: auto;" /&gt;
 ]
 .panel[.panel-name[Code]
 
@@ -684,7 +618,7 @@ class: clear
 
 .panelset[
 .panel[.panel-name[Plot]
-&lt;img src="9-OLS-I_files/figure-html/unnamed-chunk-27-1.png" width="60%" style="display: block; margin: auto;" /&gt;
+&lt;img src="7-OLS-I_files/figure-html/unnamed-chunk-23-1.png" width="60%" style="display: block; margin: auto;" /&gt;
 ]
 .panel[.panel-name[Code]
 
@@ -751,7 +685,7 @@ class: clear
 
 .panelset[
 .panel[.panel-name[Plot]
-&lt;img src="9-OLS-I_files/figure-html/unnamed-chunk-31-1.png" width="60%" style="display: block; margin: auto;" /&gt;
+&lt;img src="7-OLS-I_files/figure-html/unnamed-chunk-27-1.png" width="60%" style="display: block; margin: auto;" /&gt;
 ]
 .panel[.panel-name[Code]
 
@@ -778,13 +712,13 @@ ggplot(data = plotdata,
 
 ---
 class: inverse
-# Today's general lessons
+# General lessons
 
 1. Again: everything in R is an object and you can always further process it. For instance, regression results are also just data, which you can visualize, table, join to other data, etc.
 
 ---
 class: inverse
-# Today's (important) functions
+# Important functions
 
 1. `lm()`: Estimate linear OLS regression. `estimatr::lm_robust()` estimates OLS regression with heteroscedasticity-robust standard errors (or cluster-robust standard errors if you wish).
 2. `broom::tidy()`: Return tibble of model results.

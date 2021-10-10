@@ -4,7 +4,7 @@
     <title>Intro to R for Social Data Science</title>
     <meta charset="utf-8" />
     <meta name="author" content="Merlin Schaeffer  Department of Sociology" />
-    <meta name="date" content="2021-10-04" />
+    <meta name="date" content="2021-10-10" />
     <script src="libs/header-attrs/header-attrs.js"></script>
     <link href="libs/tile-view/tile-view.css" rel="stylesheet" />
     <script src="libs/tile-view/tile-view.js"></script>
@@ -20,7 +20,7 @@ class: center, middle, inverse, title-slide
 # Intro to R for Social Data Science
 ## Visualization II
 ### Merlin Schaeffer<br> Department of Sociology
-### 2021-10-04
+### 2021-10-10
 
 ---
 
@@ -88,8 +88,8 @@ ESS &lt;- ESS %&gt;% # Import the ESS, then (pipe result into)
   dplyr::filter(# Keep only respondents of native-born parents,
     facntr == "Yes" &amp; mocntr == "Yes",
     # filter cases from four countries
-    cntry == "Germany" | cntry == "Austria" | cntry == "Denmark" | 
-      cntry == "France" | cntry == "Netherlands" | cntry == "Switzerland")
+    cntry == "Germany" | cntry == "Denmark" | 
+      cntry == "France" | cntry == "Netherlands")
 ```
 ]
 
@@ -254,7 +254,7 @@ ggplot(data = ESS) +
 table(ESS$rel_discr, useNA = "always") 
 # 
 #   No  Yes &lt;NA&gt; 
-# 8910   53   28
+# 6064   46   20
 ```
 ]
 
@@ -342,15 +342,13 @@ ggplot(data = ESS_cntry) +
 
 ```r
 ESS_cntry
-# # A tibble: 6 × 8
+# # A tibble: 4 × 8
 #   cntry          wn    df wn_rd wperc_rd wse_rd wmin95_rd wmax95_rd
 #   &lt;fct&gt;       &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;    &lt;dbl&gt;  &lt;dbl&gt;     &lt;dbl&gt;     &lt;dbl&gt;
-# 1 Austria     1894. 1158.  7.43    0.392  0.144    0.110      0.674
-# 2 Switzerland  855.  843.  2.09    0.244  0.169   -0.0871     0.576
-# 3 Germany     1770. 1569.  4.74    0.268  0.123    0.0269     0.509
-# 4 Denmark     1381.  866. 11.4     0.826  0.244    0.348      1.30 
-# 5 France      1487. 1134. 15.8     1.06   0.266    0.540      1.58 
-# 6 Netherlands 1376. 1310. 15.1     1.10   0.281    0.548      1.65
+# 1 Germany     1770. 1569.  4.74    0.268  0.123    0.0269     0.509
+# 2 Denmark     1381.  866. 11.4     0.826  0.244    0.348      1.30 
+# 3 France      1487. 1134. 15.8     1.06   0.266    0.540      1.58 
+# 4 Netherlands 1376. 1310. 15.1     1.10   0.281    0.548      1.65
 ```
 ]
 
@@ -383,15 +381,13 @@ ggplot(data = ESS_cntry) +
 
 ```r
 ESS_cntry
-# # A tibble: 6 × 8
+# # A tibble: 4 × 8
 #   cntry          wn    df wn_rd wperc_rd wse_rd wmin95_rd wmax95_rd
 #   &lt;fct&gt;       &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;    &lt;dbl&gt;  &lt;dbl&gt;     &lt;dbl&gt;     &lt;dbl&gt;
-# 1 Austria     1894. 1158.  7.43    0.392  0.144    0.110      0.674
-# 2 Switzerland  855.  843.  2.09    0.244  0.169   -0.0871     0.576
-# 3 Germany     1770. 1569.  4.74    0.268  0.123    0.0269     0.509
-# 4 Denmark     1381.  866. 11.4     0.826  0.244    0.348      1.30 
-# 5 France      1487. 1134. 15.8     1.06   0.266    0.540      1.58 
-# 6 Netherlands 1376. 1310. 15.1     1.10   0.281    0.548      1.65
+# 1 Germany     1770. 1569.  4.74    0.268  0.123    0.0269     0.509
+# 2 Denmark     1381.  866. 11.4     0.826  0.244    0.348      1.30 
+# 3 France      1487. 1134. 15.8     1.06   0.266    0.540      1.58 
+# 4 Netherlands 1376. 1310. 15.1     1.10   0.281    0.548      1.65
 ```
 ]
 
@@ -580,15 +576,13 @@ ggplot(data = ESS_cntry,
       TRUE ~ "Less pronounced") %&gt;% 
         # Make "Pronounced" first level
         fct_relevel("Pronounced")))
-# # A tibble: 6 × 9
+# # A tibble: 4 × 9
 #   cntry          wn    df wn_rd wperc_rd wse_rd wmin95_rd wmax95_rd discr_level    
 #   &lt;fct&gt;       &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;    &lt;dbl&gt;  &lt;dbl&gt;     &lt;dbl&gt;     &lt;dbl&gt; &lt;fct&gt;          
-# 1 Austria     1894. 1158.  7.43    0.392  0.144    0.110      0.674 Less pronounced
-# 2 Switzerland  855.  843.  2.09    0.244  0.169   -0.0871     0.576 Less pronounced
-# 3 Germany     1770. 1569.  4.74    0.268  0.123    0.0269     0.509 Less pronounced
-# 4 Denmark     1381.  866. 11.4     0.826  0.244    0.348      1.30  Less pronounced
-# 5 France      1487. 1134. 15.8     1.06   0.266    0.540      1.58  Less pronounced
-# 6 Netherlands 1376. 1310. 15.1     1.10   0.281    0.548      1.65  Pronounced
+# 1 Germany     1770. 1569.  4.74    0.268  0.123    0.0269     0.509 Less pronounced
+# 2 Denmark     1381.  866. 11.4     0.826  0.244    0.348      1.30  Less pronounced
+# 3 France      1487. 1134. 15.8     1.06   0.266    0.540      1.58  Less pronounced
+# 4 Netherlands 1376. 1310. 15.1     1.10   0.281    0.548      1.65  Pronounced
 ```
 
 ---

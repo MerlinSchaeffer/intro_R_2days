@@ -103,7 +103,7 @@ ESS <- ESS %>%
 ```
 
 ---
-# Modeling imwbcntphobia
+# Modeling xenophobia
 
 .push-left[
 .panelset[
@@ -111,7 +111,7 @@ ESS <- ESS %>%
 ```{r echo = FALSE, out.width='100%', fig.height = 4, fig.width = 6}
 # Plot the distribution of imwbcnt
 ggplot(data = ESS, aes(x = imwbcnt)) +
-  geom_freqpoly() +
+  geom_histogram() +
   theme_minimal()
 ```
 .panel[.panel-name[Code]
@@ -242,7 +242,9 @@ summary(ols) # Give a summary of the main results.
 
 .left-column[
 
-$$`r extract_eq(ols, use_coefs = TRUE)`,$$ is the line that $\min \sum_{i=1}^{n} e_{i}^{2}$.
+`r extract_eq(ols, use_coefs = TRUE)`
+
+is the line that $\min \sum_{i=1}^{n} e_{i}^{2}$.
 
 ]
 
@@ -323,60 +325,6 @@ ols2 <- lm_robust(
 summary(ols2) # Give a summary of the main results.
 ```
 ]
-
----
-# Confounder bias .font60[A simulation]
-
-```{r}
-set.seed(838377)
-# The Data Generating Process (DGP)
-simu <- tibble(Confounder = rnorm(n = 2000, mean = 0, sd = 1), # The confounder is exogeneous.
-               x = 0.5*Confounder + rnorm(n = 2000, mean = 0, sd = 1), # x is a "child" of the confounder.
-               y = 0.5*x + 0.5*Confounder + rnorm(n = 2000, mean = 0, sd = 1)) # y is a child of x and the confounder.
-```
-
---
-
-.left-column[
-.center[.content-box-blue[.font70[
-Based on $\mathbb{E}(\tilde{\beta_{x_{1}}}) = \beta_{x_{1}} + \color{orange}{\beta_{x_{2}} \frac{\text{Cov}(x_{i1},x_{i2})}{\text{Var}(x_{i1})}}$, what bias should we expect?
-]]]
-
-```{r echo = FALSE, out.width='80%', fig.height = 4, fig.width = 5}
-dagify( # Define the DAG
-  # Define the theoretical causal model
-  imwbcnt ~ Edu + Par_edu + Conf,
-  Edu ~ Par_edu + Conf,
-  # Add labels
-  labels = c("imwbcnt" = "y", 
-             "Edu" = "x",
-             "Par_edu" = "Confounder"),
-  # Specify coordinates for the graph
-  coords = list(
-    x = c(Edu = 0, Par_edu = 0, imwbcnt = 1),
-    y = c(Edu = 0, Par_edu = 1, imwbcnt = 0.5))
-) %>%
-  ggdag(text = FALSE, use_labels = "label") + 
-  theme_dag_blank()
-```
-]
-
-.right-column[
-.panelset[
-.panel[.panel-name[Correct model]
-.font80[
-```{r}
-lm_robust(y ~ x + Confounder, data = simu) %>%
-  summary(single.row = TRUE)
-```
-]]
-.panel[.panel-name[Biased model]
-.font80[
-```{r}
-lm_robust(y ~ x, data = simu) %>%
-  summary(single.row = TRUE)
-```
-]]]]
 
 ---
 # Categorical predictors
@@ -647,13 +595,13 @@ ggplot(data = plotdata,
 
 ---
 class: inverse
-# Today's general lessons
+# General lessons
 
 1. Again: everything in R is an object and you can always further process it. For instance, regression results are also just data, which you can visualize, table, join to other data, etc.
 
 ---
 class: inverse
-# Today's (important) functions
+# Important functions
 
 1. `lm()`: Estimate linear OLS regression. `estimatr::lm_robust()` estimates OLS regression with heteroscedasticity-robust standard errors (or cluster-robust standard errors if you wish).
 2. `broom::tidy()`: Return tibble of model results.

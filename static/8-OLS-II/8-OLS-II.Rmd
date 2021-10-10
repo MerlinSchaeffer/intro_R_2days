@@ -70,8 +70,6 @@ ESS <- ESS %>% transmute( # Create new variables and keep only those
     agea = zap_labels(agea), # Age #<<
     facntr = as_factor(facntr), # Father born in cntry
     mocntr = as_factor(mocntr), # Mother born in cntry
-    imbgeco = max(imbgeco, na.rm = TRUE) - zap_labels(imbgeco),
-    imueclt = max(imueclt, na.rm = TRUE) - zap_labels(imueclt),
     imwbcnt = max(imwbcnt, na.rm = TRUE) - zap_labels(imwbcnt),
     pspwght = zap_labels(pspwght),
     # Parental education (ISCED)
@@ -96,43 +94,32 @@ ESS <- ESS %>% transmute( # Create new variables and keep only those
 ```
 
 ---
-# PCA & design matrix
+# Design matrix
 
 ```{r}
-# Perform pca of three items and write the results into object xeno.
-(xeno <- ESS %>% 
-   prcomp(formula = ~ imbgeco + imueclt + imwbcnt, 
-          data = ., scale = TRUE, center = TRUE,
-          na.action = na.exclude))
-
-# Make a new "xeno" variable and fill it with z-standardized PC1.
-ESS$xeno <- -xeno$x[ , "PC1"] %>% # Take PC1 scores, then
-  scale() %>% # z-standardize (but sometimes returns a "matrix"), then 
-  as.numeric() # turn into numeric vector.
-
 # Design matrix (i.e., tibble of the vars going into out model)
 ESS <- ESS %>%
-  select(cntry, xeno, eduyrs, par_edu, gndr, agea, pspwght) %>%
+  select(cntry, imwbcnt, eduyrs, par_edu, gndr, agea, pspwght) %>%
   mutate(cntry = fct_drop(cntry)) %>% # Drop unused cntry factor levels, then
   drop_na() # Casewise deletion.
 ```
 
 ---
-# Morning $\rightarrow$ Afternoon
+# OLS I $\rightarrow$ OLS II
 
 .left-column[
-**Morning**: OLS allows us to express a continuous outcome as *linear* function of continuous or categorical predictors. We can adjust/control for multiple confounding variables. The estimated linear association is *not conditional* on the level of the control/confounding variables.
+**OLS I**: OLS allows us to express a continuous outcome as *linear* function of continuous or categorical predictors. We can adjust/control for multiple confounding variables. The estimated linear association is *not conditional* on the level of the control/confounding variables.
 
-**Afternoon**: Conditional and non-linear relationships!
+**OLS II**: Conditional and non-linear relationships!
 ]
 
 .right-column[
 .font80[
 ```{r}
 # Run a series of three post-stratification weighted linear OLS models.
-ols1 <- lm_robust(formula = xeno ~ eduyrs, data = ESS, weights = pspwght)
-ols2 <- lm_robust(formula = xeno ~ eduyrs + par_edu, data = ESS, weights = pspwght)
-ols3 <- lm_robust(formula = xeno ~ eduyrs + par_edu + gndr + cntry, data = ESS, weights = pspwght)
+ols1 <- lm_robust(formula = imwbcnt ~ eduyrs, data = ESS, weights = pspwght)
+ols2 <- lm_robust(formula = imwbcnt ~ eduyrs + par_edu, data = ESS, weights = pspwght)
+ols3 <- lm_robust(formula = imwbcnt ~ eduyrs + par_edu + gndr + cntry, data = ESS, weights = pspwght)
 # Report results in a regression table.
 screenreg(list(ols1, ols2, ols3), include.ci = FALSE) 
 ```
@@ -145,26 +132,27 @@ screenreg(list(ols1, ols2, ols3), include.ci = FALSE)
 .panel[.panel-name[Plot]
 ```{r out.width='60%', fig.height = 4, fig.width = 7, echo = FALSE}
 ggplot(data = ESS, 
-       mapping = aes(y = xeno, 
+       mapping = aes(y = imwbcnt, 
                      x = eduyrs, 
                      color = cntry)) +
   geom_jitter(aes(size = pspwght), alpha = 1/7) +
   geom_smooth(aes(weight = pspwght), 
               method = "lm", se = FALSE) +
   labs(x = "Years of education",
-       y = "Xenophobia",
+       y = "imwbcntphobia",
        size = "Survey \n weight", 
        color = "Country") +
   theme_minimal()
 ```
 ]
+
 .panel[.panel-name[Code]
 ```{r fig.show = "hide"}
 ggplot(data = ESS, 
-       mapping = aes(y = xeno, x = eduyrs, color = cntry)) +
+       mapping = aes(y = imwbcnt, x = eduyrs, color = cntry)) +
   geom_jitter(aes(size = pspwght), alpha = 1/7) +
   geom_smooth(aes(weight = pspwght), method = "lm", se = FALSE) +
-  labs(x = "Years of education", y = "Xenophobia", size = "Survey \n weight", color = "Country") +
+  labs(x = "Years of education", y = "imwbcntphobia", size = "Survey \n weight", color = "Country") +
   theme_minimal()
 ```
 ]]
@@ -176,7 +164,7 @@ class: clear
 .right-column[
 .font70[
 ```{r}
-ols4 <- lm_robust(formula = xeno ~ par_edu + gndr +
+ols4 <- lm_robust(formula = imwbcnt ~ par_edu + gndr +
                     eduyrs*cntry, #<< 
                   data = ESS, weights = pspwght)
 screenreg(ols4, include.ci = FALSE) 
@@ -185,13 +173,14 @@ screenreg(ols4, include.ci = FALSE)
 
 --
 
-.left-column[
-How do we interpret the estimates correctly?
+.left-column[.content-box-green[
 
-Why is $\beta_{\text{eduyrs}}$ smaller than in model 3?
+1. How do we interpret the estimates correctly?
 
-Why do Bulgarians suddenly seem to have *lower* levels of xenophobia, whereas before they had higher ones?
-]
+2. Why is $\beta_{\text{eduyrs}}$ smaller than in model 3?
+
+3. Why do Bulgarians suddenly seem to have *lower* levels of imwbcntphobia, whereas before they had higher ones?
+]]
 
 ---
 # Interaction effects .font60[Beware of the scaling of the Xs!]
@@ -200,7 +189,7 @@ Why do Bulgarians suddenly seem to have *lower* levels of xenophobia, whereas be
 .panel[.panel-name[Plot]
 ```{r out.width='60%', fig.height = 4, fig.width = 7, echo = FALSE}
 ggplot(data = ESS, 
-       mapping = aes(y = xeno, 
+       mapping = aes(y = imwbcnt, 
                      x = eduyrs, 
                      color = cntry)) +
   geom_jitter(aes(size = pspwght), alpha = 1/7) +
@@ -210,7 +199,7 @@ ggplot(data = ESS,
               fullrange = TRUE) + #<<
   xlim(c(0, 21)) + # Extend range of x-axis. #<<
   labs(x = "Years of education",
-       y = "Xenophobia",
+       y = "imwbcntphobia",
        size = "Survey \n weight", 
        color = "Country") +
   theme_minimal()
@@ -219,13 +208,13 @@ ggplot(data = ESS,
 .panel[.panel-name[Code]
 ```{r fig.show = "hide"}
 ggplot(data = ESS, 
-       mapping = aes(y = xeno, x = eduyrs, color = cntry)) +
+       mapping = aes(y = imwbcnt, x = eduyrs, color = cntry)) +
   geom_jitter(aes(size = pspwght), alpha = 1/7) +
   geom_smooth(aes(weight = pspwght), method = "lm", se = FALSE,
               # draw line beyond observed cases. #<<
               fullrange = TRUE) + #<<
   xlim(c(0, 21)) + # Extend range of x-axis. #<<
-  labs(x = "Years of education", y = "Xenophobia", size = "Survey \n weight", color = "Country") +
+  labs(x = "Years of education", y = "imwbcntphobia", size = "Survey \n weight", color = "Country") +
   theme_minimal()
 ```
 ]]
@@ -244,12 +233,12 @@ ESS <- ESS %>% mutate(
 
 ```{r z-standardize, fig.show = "hide"}
 ggplot(data = ESS, 
-       mapping = aes(y = xeno, x = z_eduyrs, color = cntry)) +
+       mapping = aes(y = imwbcnt, x = z_eduyrs, color = cntry)) +
   geom_jitter(aes(size = pspwght), alpha = 1/7) +
   geom_vline(xintercept = 0, color = "#901A1E") + 
   geom_smooth(aes(weight = pspwght), 
               method = "lm", se = FALSE) +
-  labs(x = "Years of education \n (z-standardized)", y = "Xenophobia", size = "Survey \n weight", color = "Country") +
+  labs(x = "Years of education \n (z-standardized)", y = "imwbcntphobia", size = "Survey \n weight", color = "Country") +
   theme_minimal()
 ```
 ]
@@ -264,15 +253,14 @@ ggplot(data = ESS,
 .push-right[
 .font70[
 ```{r}
-ols4 <- lm_robust(formula = xeno ~ par_edu + gndr +
-                    z_eduyrs*cntry,
+ols4 <- lm_robust(formula = imwbcnt ~ par_edu + gndr +
+                    I(scale(eduyrs))*cntry,
                   data = ESS, weights = pspwght)
 screenreg(ols4, include.ci = FALSE) 
 ```
 ]]
 
 .push-left[
-How do we interpret the estimates correctly?
 ```{r ref.label = "z-standardize", out.width='100%', fig.height = 4, fig.width = 6, echo = FALSE}
 ```
 ]
@@ -281,14 +269,14 @@ How do we interpret the estimates correctly?
 # Non-linearities? .font60[Transform using `I()` and `poly()`]
 
 .push-left[
-`I()` allows you to perform any transformation without a need to change the underlying tibble/design matrix.
+`I()` allows you to perform any transformation without a need to change the underlying tibble/design matrix. Really helpful for predictions!
 
-`poly()` introduces *orthogonal* polynomials (i.e., squared, and higher degrees). If you don't want them to be orthogonal, you can use the option `raw = TRUE`.
+`poly()` introduces *orthogonal* polynomials (e.g., squared terms). If you don't want them to be orthogonal, you can use the option `raw = TRUE`.
 
-.alert[Beware of over-fitting!!]
+.alert[Beware of over-fitting!]
 ```{r}
 ols6 <- lm_robust(
-  formula = xeno ~ gndr + cntry + eduyrs +
+  formula = imwbcnt ~ gndr + cntry + eduyrs +
     poly(agea, 2, raw = TRUE) + #<<
     I(log(par_edu)), #<<
   data = ESS, weights = pspwght)
@@ -367,7 +355,7 @@ ggplot(data = synth_data,
               alpha = 0.5) +
   geom_line() +
   labs(x = "Age",
-  y = "Xenophobia",
+  y = "imwbcntphobia",
   caption = "(Covariates set to: Women in Denmark \n at mean levels of (parental) education)") + 
   theme_minimal()
 ```
@@ -380,7 +368,7 @@ ggplot(data = synth_data,
               alpha = 0.5) +
   geom_line() +
   labs(x = "Age",
-  y = "Xenophobia",
+  y = "imwbcntphobia",
   caption = "(Covariates set to: Women in Denmark \n at mean levels of (parental) education)") + 
   theme_minimal()
 ```
@@ -429,7 +417,7 @@ ggplot(data = synth_data,
               alpha = 0.5) +
   geom_line() +
   labs(x = "Parental education",
-  y = "Xenophobia",
+  y = "imwbcntphobia",
   caption = "(Covariates set to: Women at mean levels of parental education)") + 
   theme_minimal()
 ```
@@ -440,7 +428,7 @@ ggplot(data = synth_data,
 ggplot(data = synth_data, aes(y = fit, x = par_edu)) +
   geom_ribbon(aes(ymin = lwr, ymax = upr), alpha = 0.5) +
   geom_line() +
-  labs(x = "Parental education", y = "Xenophobia", 
+  labs(x = "Parental education", y = "imwbcntphobia", 
        caption = "(Covariates set to: Women at mean levels of parental education)") + 
   theme_minimal()
 ```
@@ -453,7 +441,7 @@ ggplot(data = synth_data, aes(y = fit, x = par_edu)) +
 ```{r}
 # Estimate linear OLS with interaction effect;
 # no z-standardization if you visualize.
-ols7 <- lm_robust(formula = xeno ~ log(par_edu) + gndr + poly(agea, 2) +
+ols7 <- lm_robust(formula = imwbcnt ~ log(par_edu) + gndr + poly(agea, 2) +
                     eduyrs*cntry, #<<
                   data = ESS, weights = pspwght)
 
@@ -499,7 +487,7 @@ ggplot(data = synth_data,
               alpha = 0.5) +
   geom_line(aes(color = cntry)) + #<<
   labs(x = "Years of education",
-  y = "Xenophobia",
+  y = "imwbcntphobia",
   caption = "(Covariates set to: Women at mean levels of parental education)") + 
   theme_minimal()
 ```
@@ -511,15 +499,20 @@ ggplot(data = synth_data, aes(y = fit, x = eduyrs)) +
                   fill = cntry), #<<
               alpha = 0.5) +
   geom_line(aes(color = cntry)) + #<<
-  labs(x = "Years of education", y = "Xenophobia", 
+  labs(x = "Years of education", y = "imwbcntphobia", 
        caption = "(Covariates set to: Women at mean levels of parental education)") + 
   theme_minimal()
 ```
 ]]
 
 ---
+# Marginal effects 
+
+<iframe src="https://www.rdocumentation.org/packages/margins/versions/0.3.26" height="100%" width="100%" frameBorder="0" style="min-height: 560px;"></iframe>
+
+---
 class: inverse
-# Today's general lessons
+# General lessons
 
 1. Linear OLS models are very versatile and can approximate very complex relationships. Theoretically, interaction effects, transformed variables and polynomials allow us to *linearize* any relationship/functional form.
 2. You can formulate conditional and non-linear relationships directly in your model's formula.
@@ -527,9 +520,9 @@ class: inverse
 
 ---
 class: inverse
-# Today's (important) functions
+# Important functions
 
 1. `I()` allows you to transform predictors in the formula argument of your regression model.
 2. `poly()` allows you to introduce orthogonal polynomials to your model.
-3. `predic()` generates predictions from your model for a tibble that you feed to it.
+3. `predict()` generates predictions from your model for a tibble that you feed to it.
 4. `modelr::data_grid()` generates synthetic data sets that contain all combinations of variables you feed to it.
