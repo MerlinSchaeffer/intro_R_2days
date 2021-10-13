@@ -3,7 +3,6 @@ title: "4 Piping and Grouped Operations"
 summary: "This lecture introduces you the %>% operator as neat way to organize your code."
 author: Merlin Schaeffer & Friedolin Merhout
 date: 2021-10-19
-publishdate: 2021-09-03
 ---
 
 ```{r setup, include = FALSE}
@@ -62,7 +61,7 @@ This lecture introduces you to piping as a neat way to organize your code and ma
 
 This code shows how you can use `%>%`, `group_by()` and `summarize()` to quickly estimate the share of persons of immigrant origin who feel that they belong to a discriminated religious minority in the country in which they live.
 
-Lecture slides: [**Piping and Grouped Operations**](/4-piping/4-Piping.html)
+Lecture slides: [**Piping and Grouped Operations**](/4-Piping/4-Piping.html)
 
 Today's exercise: [**Web Excercise 4**](/exercises/exercise4.html)
 

@@ -1,7 +1,7 @@
 ---
 title: "Intro to R for Social Data Science"
 subtitle: "Visualization 1"
-author: "Merlin Schaeffer<br> Department of Sociology"
+author: "Merlin Schaeffer & Friedolin Merhout <br> Department of Sociology"
 date: "`r Sys.Date()`"
 output: 
   xaringan::moon_reader:

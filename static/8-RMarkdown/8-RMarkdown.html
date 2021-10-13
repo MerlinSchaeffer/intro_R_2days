@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html lang="" xml:lang="">
+  <head>
+    <title>Intro to R for Social Data Science</title>
+    <meta charset="utf-8" />
+    <meta name="author" content="Merlin Schaeffer &amp; Friedolin Merhout   Department of Sociology" />
+    <meta name="date" content="2021-10-13" />
+    <script src="libs/header-attrs/header-attrs.js"></script>
+    <link rel="stylesheet" href="libs/Merlin169.css" type="text/css" />
+  </head>
+  <body>
+    <textarea id="source">
+class: center, middle, inverse, title-slide
+
+# Intro to R for Social Data Science
+## Dynamic Documents with R Markdown
+### Merlin Schaeffer &amp; Friedolin Merhout <br> Department of Sociology
+### 2021-10-13
+
+---
+
+# Work flow
+
+
+
+.push-left[
+The normal work flow:
+
+1. R script which contains the *R code* that produces,
+2. Our R output: *Figures and Tables*,
+3. An MS Word document, which is the *report* describing our results.
+
+&lt;img src="./img/Folder.png" width="100%" style="display: block; margin: auto;" /&gt;
+]
+
+--
+
+.push-right[
+.alert[It's disadvantages:]
+1. Every time the output changes, we have to revise the Word document.
+2. If we comment our R code a lot (as is good practice), we have excessive `#`, and much will be repeated in the 'Data and Methods' section of the Word document.
+
+`\(\rightarrow\)` R Markdown combines R and Markdown to overcome these limitations.
+]
+
+---
+background-image: url('https://upload.wikimedia.org/wikipedia/commons/thumb/4/48/Markdown-mark.svg/640px-Markdown-mark.svg.png')
+background-size: contain
+background-position: center
+---
+# MS Word versus Markdown
+
+.push-left[
+
+Word is a so-called 'What You See is What You Get' text editor. That is, you edit your text and it looks just like the final *formatted document*.
+
+&lt;img src="./img/MSWord.png" width="100%" style="display: block; margin: auto;" /&gt;
+
+]
+--
+
+.push-right[
+
+Markdown separates text editing in *source files*, from the resulting *formatted output*. The source files contain your text and very simple formatting commands:
+
+```markdown
+# This is a (level 1) header
+This is just some plain text, maybe an introduction
+to your final paper.
+
+## This is a (level 2) sub-header
+Again this is just some simple text. But in this text,
+I also want to *emphasize* something. In fact, I want
+to make it **bold**!
+
+```
+
+&lt;img src="./img/MarkdownExample1.png" width="100%" style="display: block; margin: auto;" /&gt;
+
+]
+
+---
+background-image: url('https://bookdown.org/yihui/rmarkdown/images/hex-rmarkdown.png')
+background-size: contain
+background-position: center
+
+---
+# R Markdown
+
+.push-left[
+
+R Markdown allows you to insert *R code chunks* into your Markdown source file:
+
+````markdown
+# This is a (level 1) header
+This is just some plain text, maybe an introduction
+to your final paper.
+
+## This is a (level 2) sub-header
+Again this is just some simple text. But in this text,
+I also want to *emphasize* something. In fact, I want
+to make it **bold**!
+
+And this is some R code:
+
+```r
+mean(c(1, 2, 3, NA), na.rm = TRUE)
+```
+````
+]
+
+--
+
+.push-right[
+When you turn the source file into a formatted output, the R code will be *evaluated* and with its output, nicely rendered and inserted into your formatted document:
+
+&lt;img src="./img/MarkdownExample2b.png" width="100%" style="display: block; margin: auto;" /&gt;
+
+]
+
+---
+layout: true
+# Getting started with R Markdown
+---
+
+.left-column[
+First, open your R Studio project and install 'rmarkdown'.
+```r
+install.packages("rmarkdown")
+```
+]
+
+--
+
+.right-column[
+.center[Then start a new R Markdown document.]
+&lt;img src="./img/RMarkdown1.png" width="100%" style="display: block; margin: auto;" /&gt;
+]
+
+---
+
+&lt;img src="./img/RMarkdown2.png" width="50%" style="display: block; margin: auto;" /&gt;
+
+---
+
+&lt;img src="./img/RMarkdown3.png" width="80%" style="display: block; margin: auto;" /&gt;
+
+---
+layout: false
+# Klick 'Knit' to compile
+
+.left-column[
+
+&lt;img src="https://ih0.redbubble.net/image.543341178.1637/flat,750x,075,f-pad,750x1000,f8f8f8.u1.jpg" width="100%" style="display: block; margin: auto;" /&gt;
+]
+
+.right-column[
+&lt;img src="./img/RMarkdown4.png" width="100%" style="display: block; margin: auto;" /&gt;
+]
+---
+# What happens in the background
+
+&lt;img src="https://d33wubrfki0l68.cloudfront.net/61d189fd9cdf955058415d3e1b28dd60e1bd7c9b/9791d/images/rmarkdownflow.png" width="60%" style="display: block; margin: auto;" /&gt;
+
+---
+# Four remaining topics
+
+1. Markdown formatting commands,
+2. R Code chunk options,
+3. The YAML header (e.g., how to produce a word file),
+4. Citation.
+
+---
+# Markdown formatting commands
+
+&lt;img src="./img/MarkdownCommands.png" width="100%" style="display: block; margin: auto;" /&gt;
+
+---
+class: inverse
+# Exercise 1
+
+Revise your R Markdown template to a draft of your final paper:
+1. Delete the template text.
+2. Add a brief intro about the topic of your final paper (see Exam) to the R Markdown document.
+3. Give that paragraph the heading "Introduction".
+4. Use Markdown code to emphasize what your outcome is.
+5. Make a list of some of the the predictor variables you consider to investigate.
+6. Mention that you will analyze the ESS and embed a link to the project homepage.
+7. Knit it.
+
+---
+# R code chunks
+
+.push-left[
+You can initiate an R code chunk with `\(\rightarrow\)`
+
+Everything between ` ```{r} ` ...  ` ``` ` is evaluated as R code. Moreover, results produced by that R code are pasted into your document.
+
+R output can be customized with [chunk options](http://yihui.name/knitr/options/), which you can add to the initiation:
+
+` ```{r, echo = FALSE, message = FALSE, warning = FALSE} `
+.font80[
+  - `include = FALSE` prevents code and results from appearing in the final document, although R will evaluate the code.
+  - `echo = FALSE` prevents code, but not the results from appearing in the finished file.
+  - `message = FALSE` prevents messages that are generated by code from appearing in the final document.
+  - `warning = FALSE` prevents warnings that are generated by code from appearing in the final document.
+
+]]
+
+.push-right[
+````markdown 
+```r
+
+```
+P.S.: You should write {r}, not r
+````
+
+````markdown 
+
+```r
+5 + 8
+# [1] 13
+```
+P.S.: You should write {r}, not r
+````
+]
+
+---
+# Further important R code chunks
+
+.push-left[
+#### Options for (regression) tables as output:
+
+- `results = 'asis'` prevents Knitr from further processing the R output. This is necessary, for instance, when you generate an html regression table with 'texreg'. Note that this will not work with a Word document as output.
+]
+
+.push-right[
+#### Options for figures as output:
+
+- `out.width = "90%"` size of the figure in % of the width of your document.
+- `fig.align = "center"` centers the figure in the middle of the document. Alternatives are `"left"` or `"right"`.
+- `fig.cap = "This is my beautiful figure"` adds a caption to the figure.
+- `dpi = 200` defines pixel resolution of the figure.
+- `fig.width = 8` defines the width of the figure in inches.
+- `fig.height = 4` defines the height of the figure in inches.
+]
+
+---
+class: inverse
+# Exercise 2
+
+Add three R code chunks to your final paper:
+1. Add a code chunk that loads the libraries that you are going to use. Make sure that R evaluates the chunk, but that it gives no warnings, no messages, etc..
+2. Add a chunk that downloads the ESS data pipes it into a `transmute()` and performs some initial recodings.
+3. Add a code chunk that adds a figure (histogram or scatter plot) to your final document.
+
+---
+layout: true
+# The YAML header .font60[Meta data for your document]
+---
+
+.push-left[
+
+```yaml
+title: My Title
+subtitle: My subtitle
+author: Merlin Schaeffer
+date: "2021-10-13"
+output: html_document
+```
+
+&lt;img src="./img/rmarkdownoutputformats.png" width="70%" style="display: block; margin: auto;" /&gt;
+
+]
+
+.push-right[
+Among others, the following additional output formats are available:
+
+- `pdf_document` creates a PDF via LaTeX, which you will need to install. RStudio will prompt you if you don’t already have it.
+
+- `word_document` for Microsoft Word documents (.docx).
+
+- `odt_document` for Open Document Text (.odt).
+
+- `rtf_document` for Rich Text Format (.rtf).
+]
+
+---
+
+
+.push-left[
+
+```yaml
+title: My Title
+subtitle: My subtitle
+author: Merlin Schaeffer
+date: "2021-10-13"
+output: ioslides_presentation
+```
+
+&lt;img src="./img/rmarkdownoutputformats.png" width="70%" style="display: block; margin: auto;" /&gt;
+]
+
+.push-right[
+You might even try out Presentations:
+
+- `ioslides_presentation` makes HTML presentation with ioslides.
+- `slidy_presentation` makes HTML presentation with W3C Slidy.
+- `beamer_presentation` makes a PDF presentation with LaTeX Beamer (if you have installed Latex).
+- `powerpoint_presentation` makes an MS PowerPoint presentation.
+
+`---` defines the beginning of a new slide.
+
+.backgrnote[I personally use [Xaringan](https://bookdown.org/yihui/rmarkdown/xaringan.html) to make these slides.]
+]
+
+---
+layout: false
+# Citation
+
+.left-column[
+If you do not work with any software to manage your literature yet, start using (open source) [Zotero](https://www.zotero.org/)!
+
+&lt;img src="https://user-images.githubusercontent.com/45201036/52821337-90ef4f00-30bf-11e9-9087-01734395656a.png" width="100%" style="display: block; margin: auto;" /&gt;
+]
+
+.right-column[
+&lt;img src="./img/Bibtex1.png" width="100%" style="display: block; margin: auto;" /&gt;
+]
+
+---
+layout: true
+# Citation .font60[Export your references as 'Bibtex' file]
+---
+
+&lt;img src="./img/Bibtex2.png" width="40%" style="display: block; margin: auto;" /&gt;
+
+---
+
+&lt;img src="./img/Bibtex3.png" width="70%" style="display: block; margin: auto;" /&gt;
+
+---
+
+&lt;img src="./img/Bibtex4.png" width="50%" style="display: block; margin: auto;" /&gt;
+
+---
+
+&lt;img src="./img/Bibtex5.png" width="75%" style="display: block; margin: auto;" /&gt;
+
+---
+layout: false
+# In-text citation and list of references
+
+.push-left[
+Add Bibtex file as bibliography to your YAML header:
+```yaml
+title: My Title
+subtitle: My subtitle
+author: Merlin Schaeffer
+date: "2021-10-13"
+output: html_document
+bibliography: IntRo.bib
+```
+]
+
+--
+
+.push-right[
+Simple in-text citation in R Markdown:
+```markdown
+This is a claim for which I need a reference 
+[@wilkinson_religiosity_2004]. I continue with my paper.
+
+...
+
+To finally add the list of reference, I simply add:
+
+# References
+```
+
+&lt;img src="./img/Bibtex6.png" width="100%" style="display: block; margin: auto;" /&gt;
+]
+
+---
+background-image: url(https://mareds.github.io/r_course/img_site/Tidyverse_packages.png)
+background-size: contain
+background-position: center
+class: clear center
+
+--
+
+&lt;br&gt;
+.alert[.font200[Thank you for a fun course!]]
+    </textarea>
+<style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
+<script src="libs/remark-latest.min.js"></script>
+<script>var slideshow = remark.create({
+"highlightLanguage": "r",
+"highlightStyle": "zenburn",
+"highlightLines": true,
+"countIncrementalSlides": false,
+"ratio": "16:9"
+});
+if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
+  window.dispatchEvent(new Event('resize'));
+});
+(function(d) {
+  var s = d.createElement("style"), r = d.querySelector(".remark-slide-scaler");
+  if (!r) return;
+  s.type = "text/css"; s.innerHTML = "@page {size: " + r.style.width + " " + r.style.height +"; }";
+  d.head.appendChild(s);
+})(document);
+
+(function(d) {
+  var el = d.getElementsByClassName("remark-slides-area");
+  if (!el) return;
+  var slide, slides = slideshow.getSlides(), els = el[0].children;
+  for (var i = 1; i < slides.length; i++) {
+    slide = slides[i];
+    if (slide.properties.continued === "true" || slide.properties.count === "false") {
+      els[i - 1].className += ' has-continuation';
+    }
+  }
+  var s = d.createElement("style");
+  s.type = "text/css"; s.innerHTML = "@media print { .has-continuation { display: none; } }";
+  d.head.appendChild(s);
+})(document);
+// delete the temporary CSS (for displaying all slides initially) when the user
+// starts to view slides
+(function() {
+  var deleted = false;
+  slideshow.on('beforeShowSlide', function(slide) {
+    if (deleted) return;
+    var sheets = document.styleSheets, node;
+    for (var i = 0; i < sheets.length; i++) {
+      node = sheets[i].ownerNode;
+      if (node.dataset["target"] !== "print-only") continue;
+      node.parentNode.removeChild(node);
+    }
+    deleted = true;
+  });
+})();
+(function() {
+  "use strict"
+  // Replace <script> tags in slides area to make them executable
+  var scripts = document.querySelectorAll(
+    '.remark-slides-area .remark-slide-container script'
+  );
+  if (!scripts.length) return;
+  for (var i = 0; i < scripts.length; i++) {
+    var s = document.createElement('script');
+    var code = document.createTextNode(scripts[i].textContent);
+    s.appendChild(code);
+    var scriptAttrs = scripts[i].attributes;
+    for (var j = 0; j < scriptAttrs.length; j++) {
+      s.setAttribute(scriptAttrs[j].name, scriptAttrs[j].value);
+    }
+    scripts[i].parentElement.replaceChild(s, scripts[i]);
+  }
+})();
+(function() {
+  var links = document.getElementsByTagName('a');
+  for (var i = 0; i < links.length; i++) {
+    if (/^(https?:)?\/\//.test(links[i].getAttribute('href'))) {
+      links[i].target = '_blank';
+    }
+  }
+})();
+// adds .remark-code-has-line-highlighted class to <pre> parent elements
+// of code chunks containing highlighted lines with class .remark-code-line-highlighted
+(function(d) {
+  const hlines = d.querySelectorAll('.remark-code-line-highlighted');
+  const preParents = [];
+  const findPreParent = function(line, p = 0) {
+    if (p > 1) return null; // traverse up no further than grandparent
+    const el = line.parentElement;
+    return el.tagName === "PRE" ? el : findPreParent(el, ++p);
+  };
+
+  for (let line of hlines) {
+    let pre = findPreParent(line);
+    if (pre && !preParents.includes(pre)) preParents.push(pre);
+  }
+  preParents.forEach(p => p.classList.add("remark-code-has-line-highlighted"));
+})(document);</script>
+
+<script>
+slideshow._releaseMath = function(el) {
+  var i, text, code, codes = el.getElementsByTagName('code');
+  for (i = 0; i < codes.length;) {
+    code = codes[i];
+    if (code.parentNode.tagName !== 'PRE' && code.childElementCount === 0) {
+      text = code.textContent;
+      if (/^\\\((.|\s)+\\\)$/.test(text) || /^\\\[(.|\s)+\\\]$/.test(text) ||
+          /^\$\$(.|\s)+\$\$$/.test(text) ||
+          /^\\begin\{([^}]+)\}(.|\s)+\\end\{[^}]+\}$/.test(text)) {
+        code.outerHTML = code.innerHTML;  // remove <code></code>
+        continue;
+      }
+    }
+    i++;
+  }
+};
+slideshow._releaseMath(document);
+</script>
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+(function () {
+  var script = document.createElement('script');
+  script.type = 'text/javascript';
+  script.src  = 'https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML';
+  if (location.protocol !== 'file:' && /^https?:/.test(script.src))
+    script.src  = script.src.replace(/^https?:/, '');
+  document.getElementsByTagName('head')[0].appendChild(script);
+})();
+</script>
+  </body>
+</html>

@@ -1,7 +1,7 @@
 ---
 title: "Intro to R for Social Data Science"
 subtitle: "Linear OLS Regression II"
-author: "Merlin Schaeffer<br> Department of Sociology"
+author: "Merlin Schaeffer & Friedolin Merhout <br> Department of Sociology"
 date: "`r Sys.Date()`"
 output: 
   xaringan::moon_reader:
@@ -509,6 +509,17 @@ ggplot(data = synth_data, aes(y = fit, x = eduyrs)) +
 # Marginal effects 
 
 <iframe src="https://www.rdocumentation.org/packages/margins/versions/0.3.26" height="100%" width="100%" frameBorder="0" style="min-height: 560px;"></iframe>
+
+---
+background-image: url(https://mareds.github.io/r_course/img_site/Tidyverse_packages.png)
+background-size: contain
+background-position: center
+class: clear center
+
+--
+
+<br>
+.alert[.font200[Thank you for a fun course!]]
 
 ---
 class: inverse
