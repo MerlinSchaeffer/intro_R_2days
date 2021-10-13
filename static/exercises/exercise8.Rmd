@@ -1,9 +1,8 @@
 ---
-title: "Web Exercise 10"
-author: Merlin Schaeffer
+title: "Web Exercise 8"
+author: Merlin Schaeffer & Friedolin Merhout
 output: webex::webex_default
-date: 2020-03-04
-publishdate: 2020-03-04
+date: 2021-10-19
 ---
 
 ```{r setup, include = FALSE}

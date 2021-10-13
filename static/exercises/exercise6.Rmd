@@ -1,9 +1,8 @@
 ---
-title: "Web Exercise 6"
-author: Merlin Schaeffer
+title: "Web Exercise 5"
+author: Merlin Schaeffer & Friedolin Merhout
 output: webex::webex_default
-date: 2021-02-22
-publishdate: 2021-01-15
+date: 2021-10-19
 ---
 
 ```{r setup, include = FALSE}
@@ -26,7 +25,7 @@ ESS <- import_rounds(rounds = 9, ess_email = "merlin.schaeffer@uni-koeln.de", fo
 
 Session page: [**Visualization II**](#sessions)
 
-1. Remember Excercise 5 from earlier today; visualize your results of task 2 and 3 in one plot each. Color-highlight the most extreme country in each plot. 
+1. Remember Exercise 5 from earlier today; visualize your results of task 2 and 3 in one plot each. Color-highlight the most extreme country in each plot. 
 `r hide("R solution -> dont' peek to early ;) !")`
 ```{r}
 ESS %>% # Use the ESS, then
@@ -64,9 +63,14 @@ ESS %>% # Use the ESS, then
   ggplot(mapping = aes(y = wperc_rd, x = reorder(cntry, -wperc_rd))) + 
   geom_bar(aes(fill = maxim), stat = "identity") +
   labs(y = "% Persons of immigrant origin \n reporting racial discrimination",
-       x = "Country") +
+       x = "Country",
+       fill = "Level of Discrimination") +
   coord_flip() +
-  theme_minimal()
+  theme_minimal() +
+  theme(legend.position = c(0.87, 0.87),
+        legend.background = 
+          element_rect(fill = NA,
+                       color = NA))
 ```
 `r unhide()`
 
@@ -79,7 +83,7 @@ ESS %>% # Use the ESS, så
     cntry = as_factor(cntry), 
     # Make the following variables numeric:
     pspwght = zap_labels(pspwght),
-    hmsacld = max(zap_labels(hmsacld), na.rm = TRUE) - zap_labels(hmsacld), #<<
+    hmsacld = max(zap_labels(hmsacld), na.rm = TRUE) - zap_labels(hmsacld),
   ) %>%
   group_by(cntry) %>% # Group data by country, så
   dplyr::summarize(
@@ -100,9 +104,11 @@ ESS %>% # Use the ESS, så
   geom_pointrange() +
   coord_flip() +
   labs(y = "Gay men and women should be allowed \n to adopt children (Scale 1 to 5)",
-       x = "Country") +
+       x = "Country",
+       color = "Level of Discrimination",
+       shape = "Level of Discrimination") +
   theme_minimal()
 ```
 `r unhide()`
 
-3. Polish your favorite figure and use the Absalon discussion forum to share it with your classmates.
+3. Polish your favorite figure and share it in the chat.

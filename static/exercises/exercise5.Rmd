@@ -1,8 +1,8 @@
 ---
-title: "Web Exercise 5"
-author: Merlin Schaeffer
+title: "Web Exercise 4"
+author: Merlin Schaeffer & Friedolin Merhout
 output: webex::webex_default
-date: 2021-02-22
+date: 2021-10-19
 publishdate: 2021-01-15
 ---
 
@@ -38,8 +38,8 @@ c(100, 32, 45) %>% scale() %>% as.numeric()
 ```
 `r unhide()`
 
-2. In which among all ESS countries is perceived *racial* discrimination among persons of immigrant origin most prevalent? `r fitb("United Kingdom", width = "14")`
-    + That is, give a country-level summary of the percent of minority respondents who experienced discrimination explicitly based on their group's race. 
+2. In which among all ESS countries is perceived *racial* discrimination among persons of immigrant origin (i.e., persons born abroad or with at least one parent who was born abroad) most prevalent? `r fitb("United Kingdom", width = "14")`
+    + That is, give a country-level summary of the percent of immigrant minority respondents who experienced discrimination explicitly based on their group's race. 
 `r hide("R solution -> dont' peek to early ;) !")`
 ```{r}
 ESS %>% # Use the ESS, then
@@ -78,7 +78,7 @@ ESS %>% # Use the ESS, then
     + That is, give country-level summaries of the average agreement plus its 95% confidence interval. 
     + `wtd.mean()` from the `Hmsic` package estimates weighted means. 
     + Moreover, `wtd.var()` estimates weighted variances, and remember: $\text{SD} = \sqrt{\text{Var}}$.
-    + Beware that I asked for the average agreement.
+    + Beware that we asked for the average agreement.
 `r hide("R solution -> dont' peek to early ;) !")`
 ```{r}
 ESS %>% # Use the ESS, så
