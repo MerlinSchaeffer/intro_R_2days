@@ -195,8 +195,6 @@ library(broom) # Allows us to turn parts of model objects into tibbles.</code></
   gndr = as_factor(gndr),
   facntr = as_factor(facntr), # Father born in cntry
   mocntr = as_factor(mocntr), # Mother born in cntry
-  imbgeco = max(imbgeco, na.rm = TRUE) - zap_labels(imbgeco),
-  imueclt = max(imueclt, na.rm = TRUE) - zap_labels(imueclt),
   imwbcnt = max(imwbcnt, na.rm = TRUE) - zap_labels(imwbcnt),
   # Religion
   rlgblg = as_factor(rlgblg), # Belonging to a religion

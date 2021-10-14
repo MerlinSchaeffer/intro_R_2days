@@ -29,100 +29,69 @@ library(webex)
 ESS <- import_rounds(rounds = 9, ess_email = "merlin.schaeffer@uni-koeln.de", format = "spss")
 
 ESS <- ESS %>% transmute( # Create new variables and keep only those
-    cntry = as_factor(cntry) %>% fct_relevel("Denmark"), # Country of interview
-    gndr = as_factor(gndr), # Gender
-    facntr = as_factor(facntr), # Father born in cntry
-    mocntr = as_factor(mocntr), # Mother born in cntry
-    imbgeco = max(imbgeco, na.rm = TRUE) - zap_labels(imbgeco),
-    imueclt = max(imueclt, na.rm = TRUE) - zap_labels(imueclt),
-    imwbcnt = max(imwbcnt, na.rm = TRUE) - zap_labels(imwbcnt),
-    # Regigion
-    rlgblg = as_factor(rlgblg), # Belonging to a religion
-    rlgdgr = zap_labels(rlgdgr), # How religios
-    rlgatnd = max(rlgatnd, na.rm = TRUE) - zap_labels(rlgatnd), # Service attendance
-    pray = max(pray, na.rm = TRUE) - zap_labels(pray), # PRayer frequency
-    pspwght = zap_labels(pspwght),
-    # Parental education (ISCED) #<<
-    eiscedf = zap_labels(eiscedf), #<<
-    eiscedm = zap_labels(eiscedm), #<<
-    par_edu = case_when( #<<
-      # If father's edu is missing but not mother's, take mother's #<<
-      (eiscedf == 55 | is.na(eiscedf)) & eiscedm != 55 & !is.na(eiscedm) ~ eiscedm, #<<
-      # If mother's edu is missing but not father's, take father's #<<
-      (eiscedm == 55 | is.na(eiscedm)) & eiscedf != 55 & !is.na(eiscedf)  ~ eiscedf, #<<
-      # If both are missing, its missing #<<
-      eiscedf == 55 & eiscedm == 55 ~ as.numeric(NA), #<<
-      # For all others, take the average of both parents #<<
-      TRUE ~ (eiscedm + eiscedf) / 2), #<<
-    eduyrs = case_when( # Education
-      eduyrs > 21 ~ 21, # Recode to max 21 years of edu.
-      eduyrs < 9 ~ 9, # Recode to min 9 years of edu.
-      TRUE ~ zap_labels(eduyrs))) %>% # Make it numeric, then
+  cntry = as_factor(cntry), # Country of interview
+  gndr = as_factor(gndr),
+  facntr = as_factor(facntr), # Father born in cntry
+  mocntr = as_factor(mocntr), # Mother born in cntry
+  imwbcnt = max(imwbcnt, na.rm = TRUE) - zap_labels(imwbcnt),
+  # Religion
+  rlgblg = as_factor(rlgblg), # Belonging to a religion
+  rlgdgr = case_when( # How religious
+    rlgblg == "No" ~ 0,
+    TRUE ~       zap_labels(rlgdgr)),
+  rlgatnd = case_when( # Service attendance
+    rlgblg == "No" ~ 0,
+    TRUE ~ max(rlgatnd, na.rm = TRUE) - zap_labels(rlgatnd)),
+  pray = case_when( # Prayer frequency
+    rlgblg == "No" ~ 0,
+    TRUE ~ max(pray, na.rm = TRUE) - zap_labels(pray)),
+  pspwght = zap_label(pspwght),
+  # Parental education (ISCED) #<<
+  eiscedf = zap_labels(eiscedf), #<<
+  eiscedm = zap_labels(eiscedm), #<<
+  par_edu = case_when( #<<
+    # If father's edu is missing but not mother's, take mother's #<<
+    (eiscedf == 55 | is.na(eiscedf)) & eiscedm != 55 & !is.na(eiscedm) ~ eiscedm, #<<
+    # If mother's edu is missing but not father's, take father's #<<
+    (eiscedm == 55 | is.na(eiscedm)) & eiscedf != 55 & !is.na(eiscedf)  ~ eiscedf, #<<
+    # If both are missing, its missing #<<
+    eiscedf == 55 & eiscedm == 55 ~ as.numeric(NA), #<<
+    # For all others, take the average of both parents #<<
+    TRUE ~ (eiscedm + eiscedf) / 2), #<<
+  eduyrs = case_when( # Education
+    eduyrs > 21 ~ 21, # Recode to max 21 years of edu.
+    eduyrs < 9 ~ 9, # Recode to min 9 years of edu.
+    TRUE ~ zap_labels(eduyrs))) %>% # Make it numeric, then
   dplyr::filter(
     # Keep only respondents with native-born parents,
     facntr == "Yes" & mocntr == "Yes" &
-       (cntry == "Denmark" | cntry == "Sweden" | cntry == "Norway" | cntry == "Germany"))
-
-# Conduct PCA of climate change concerns
-(pca <- ESS %>% prcomp(
-  formula = ~ imbgeco + imueclt + imwbcnt + 
-    rlgdgr + rlgatnd + pray,
-  data = ., na.action = na.exclude,
-  center = TRUE, scale = TRUE))
-
-# Show importance of single components.
-summary(pca) 
-
-# Oblique rotation
-(oblique_solution <- promax(
-  # of first two PCs
-  pca$rotation[, c("PC1", "PC2")]))
-
-# Visualize the results
-pca$rotation <- oblique_solution$loadings
-fviz_pca_var(pca, # Visualize PCA object
-             # Color by contributions to the PC
-             col.var = "contrib",
-             # From blue to red.
-             gradient.cols = c(low = "#00AFBB", 
-                               mid = "#E7B800", 
-                               high = "#FC4E07"))
-
-# Generate new component scores for every respondent based on the 
-# rotated principal components and write the into object "rotated_PCs"
-rotated_PCs <- ESS %>% 
-  dplyr::select(imbgeco, imueclt, imwbcnt, 
-    rlgdgr, rlgatnd, pray) %>% 
-  factor.scores(x = ., f = pca$rotation)
-# Add a "xeno" and "relig" from "rotated_PCs" to our data.
-ESS[, c("xeno", "relig")] <- rotated_PCs$scores
+      (cntry == "Denmark" | cntry == "Sweden" | cntry == "Norway" | cntry == "Germany"))
 ```
 
-1) Use the set-up of exercise 9 (i.e., taks 1 and 2). Z-standardize `xeno`, drop unused factor levels in `cntry`, and make a design matrix like I did in my slides (i.e., keep only `xeno`, `relig`, `cntry`, `par_edu`, `gndr`, `pspwght`, and apply casewise deletion). That design matrix has `r fitb("5197", width = "4")` observations left.
+1) Use the set-up of exercise 6. Drop unused factor levels in `cntry`, and make a design matrix like I did in my slides (i.e., keep only `xeno`, `relig`, `cntry`, `par_edu`, `gndr`, `pspwght`, and apply casewise deletion). That design matrix has `r fitb("5305", width = "4")` observations left.
 `r hide("R solution -> dont' peek to early ;) !")`
 ```{r}
 ESS <- ESS %>%
   mutate(
-    xeno = scale(xeno) %>% as.numeric(),
     cntry = fct_drop(cntry)
   ) %>%
-  select(xeno, relig, eduyrs, par_edu, cntry, gndr, pspwght) %>%
+  select(imwbcnt, rlgdgr, rlgatnd, eduyrs, par_edu, cntry, gndr, pspwght) %>%
   drop_na()
 ```
 `r unhide()`
 
-2) Regress xenophobia on religiosity; does religiosity have a curve-shaped relationship with xenophobia? Make sure to not use orthogonal polynomials for this question. `r mcq(c("Yes, initially religiosity goes along with increased xenophobia, but then that relationship declines in strength", "Yes, religiosity goes along with declining levels of xenophobia, but that relationship vanishes", "Yes, religiosity goes along with declining levels of xenophobia, and that relationship grows exponentially", answer = "No"))`
+2) Regress xenophobia on the importance of religion and frequency of religious service attendance; does the importance of religion have a curve-shaped relationship with xenophobia? Make sure to not use orthogonal polynomials for this question. `r mcq(c("Yes, initially religiosity goes along with increased xenophobia, but then that relationship declines in strength", "Yes, religiosity goes along with declining levels of xenophobia, but that relationship vanishes", "Yes, religiosity goes along with declining levels of xenophobia, and that relationship grows exponentially", answer = "No"))`
 `r hide("R solution -> dont' peek to early ;) !")`
 ```{r}
-ols1 <- lm_robust(xeno ~ poly(relig, 2, raw = TRUE), w = pspwght, data = ESS)
+ols1 <- lm_robust(imwbcnt ~ poly(rlgdgr, 2, raw = TRUE) + rlgatnd, w = pspwght, data = ESS)
 screenreg(ols1, include.ci = FALSE)
 ```
 `r unhide()`
 
-3) Model 3: Add `cntry`, `par_edu`, `agea', and `gndr` as control variables, what happens to our two religiosity estimates? `r mcq(c(answer = "They somewhat change but remain insignificant", "Particularly the main, but also the squared term decline in strength", "The main term declines in strength, but not at all the squared term", "Only the squared term declines in strength"))`
+3) Model 3: Add `cntry`, `eduyrs`, `par_edu`, `agea`, and `gndr` as control variables, what happens to our curv-linear religiosity estimates? `r mcq(c(answer = "They all turn insignificant", "Particularly the main, but also the squared term decline in strength but significance does not change", "The main term declines in strength, but not at all the squared term", "Only the squared term declines in strength"))`
 `r hide("R solution -> dont' peek to early ;) !")`
 ```{r}
-ols2 <- lm_robust(xeno ~ poly(relig, 2, raw = TRUE) + par_edu + cntry + gndr, w = pspwght, data = ESS)
+ols2 <- lm_robust(imwbcnt ~ poly(rlgdgr, 2, raw = TRUE) + rlgatnd + eduyrs + par_edu + cntry + gndr, w = pspwght, data = ESS)
 screenreg(ols2, include.ci = FALSE)
 ```
 `r unhide()`
@@ -135,10 +104,11 @@ screenreg(ols2, include.ci = FALSE)
 synth_data <- ESS %>%
    # Generate theoretically-informative 
    # but artificial tibble for predictions.
-   data_grid(par_edu, gndr, cntry, relig) %>%
+   data_grid(par_edu, gndr, cntry, rlgdgr, rlgatnd) %>%
    mutate( # Set confounders constant at their mean,
      eduyrs = mean(ESS$eduyrs, na.rm = TRUE),
      par_edu = mean(ESS$par_edu, na.rm = TRUE),
+     rlgatnd = mean(ESS$rlgatnd, na.rm = TRUE),
      gndr = "Female",
      cntry = "Denmark") %>% # then
    unique() # Drop duplicates.
@@ -146,27 +116,25 @@ synth_data <- ESS %>%
 # Generate predictions and 95% confidence intervals, then
 synth_data <- predict(ols2, newdata = synth_data,
                       interval = "confidence",
-                      level=0.95)$fit %>%
+                      level = 0.95)$fit %>%
   as_tibble() %>% # Turn into a tibble, then
   bind_cols(synth_data, .) # Add to the synthetic data.
 
 
-ggplot(data = synth_data, 
-       aes(y = fit, x = relig)) +
-  geom_ribbon(aes(ymin = lwr, ymax = upr), 
-              alpha = 0.5) +
+ggplot(data = synth_data, aes(y = fit, x = rlgdgr)) +
+  geom_ribbon(aes(ymin = lwr, ymax = upr), alpha = 0.5) +
   geom_line() +
-  labs(x = "Religiosity",
+  labs(x = "Importance of religion",
   y = "Xenophobia",
   caption = "(Covariates set to: German women at mean levels of (parental) education)") + 
   theme_minimal()
 ```
 `r unhide()`
 
-5) Is the relation between parental education and xenophobia conditional on the country of residence? `r mcq(c("No, it is not statistically different across the countries", answer = "Yes, in Germany parental education is a more important predictor of xenophobia than in Denmark", "Yes, in Sweden and Norway parental education is a less important predictor of xenophobia than in Denmark", "Yes, in Norway parental education is a less important predictor of xenophobia than in Denmark"))`
+5) Is the relation between parental education and xenophobia conditional on the country of residence? Z-standardize parental education using `I()`. `r mcq(c("No, it is not statistically different across the countries", answer = "Yes, in Germany parental education is a more important predictor of xenophobia than in Denmark", "Yes, in Sweden and Norway parental education is a less important predictor of xenophobia than in Denmark", "Yes, in Norway parental education is a less important predictor of xenophobia than in Denmark"))`
 `r hide("R solution -> dont' peek to early ;) !")`
 ```{r}
-ols3 <- lm_robust(xeno ~ poly(relig, 2, raw = TRUE) + par_edu*cntry + gndr, w = pspwght, data = ESS)
+ols3 <- lm_robust(imwbcnt ~ poly(rlgdgr, 2, raw = TRUE) + rlgatnd + eduyrs + I(scale(par_edu))*cntry + gndr, w = pspwght, data = ESS)
 screenreg(ols3, include.ci = FALSE)
 ```
 `r unhide()`
@@ -179,9 +147,10 @@ screenreg(ols3, include.ci = FALSE)
 synth_data <- ESS %>%
    # Generate theoretically-informative 
    # but artificial tibble for predictions.
-   data_grid(par_edu, gndr, cntry, relig) %>%
+   data_grid(par_edu, gndr, cntry, rlgdgr, rlgatnd) %>%
    mutate( # Set confounders constant at their mean,
-     relig = mean(ESS$relig, na.rm = TRUE),
+     rlgdgr = mean(ESS$rlgdgr, na.rm = TRUE),
+     rlgatnd = mean(ESS$rlgatnd, na.rm = TRUE),
      eduyrs = mean(ESS$eduyrs, na.rm = TRUE),
      gndr = "Female") %>% # then
    unique() # Drop duplicates.
@@ -189,18 +158,22 @@ synth_data <- ESS %>%
 # Generate predictions and 95% confidence intervals, then
 synth_data <- predict(ols3, newdata = synth_data,
                       interval = "confidence",
-                      level=0.95)$fit %>%
+                      level = 0.95)$fit %>%
   as_tibble() %>% # Turn into a tibble, then
   bind_cols(synth_data, .) # Add to the synthetic data.
 
 
-ggplot(data = synth_data, 
-       aes(y = fit, x = par_edu)) +
+ggplot(data = synth_data, aes(y = fit, x = par_edu)) +
   geom_ribbon(aes(ymin = lwr, ymax = upr, fill = cntry), alpha = 0.5) +
   geom_line(aes(color = cntry)) +
   labs(x = "Parental education",
-  y = "Xenophobia",
-  caption = "(Covariates set to: Women at mean levels of education and religiosity)") + 
-  theme_minimal()
+       y = "Xenophobia",
+       caption = "(Covariates set to: Women at mean levels of education, religiosity, and religious service attendance)",
+       color = "Country", fill = "Country") + 
+  theme_minimal() +
+  theme(legend.position = c(0.87, 0.8),
+        legend.background = 
+          element_rect(fill = NA,
+                       color = NA))
 ```
 `r unhide()`
