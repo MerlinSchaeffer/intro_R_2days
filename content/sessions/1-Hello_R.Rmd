@@ -1,6 +1,6 @@
 ---
-title: "1 Hello R"
-summary: "In this first lecture you will get a gentle intro to R and the way it works as an objects-oriented stats programming language."
+title: "1 Hello R: Vectors"
+summary: "In this first lecture you will get a gentle intro to R as an objects-oriented statistical programming language and will take your first steps of working with it."
 author: Merlin Schaeffer & Friedolin Merhout
 date: 2021-10-18
 publishdate: 2021-09-03
@@ -13,15 +13,15 @@ knitr::opts_chunk$set(
   warning = FALSE, cache = FALSE,
   comment = "#", strip.white = TRUE)
 
-library(webex)
+# library(webex)
 ```
 
-In this first lecture you will get a gentle intro to R and the way it works as an objects-oriented stats programming language. The lecture is a bit abstract, like this line of code:
+In this first lecture you will get a gentle intro to R as an objects-oriented statistical programming language and will take your first steps of working with it. The lecture is a bit abstract, like this line of code:
 ```{r}
 (I_am_an_object <- seq(from = 2, to = 8))
 ```
-But stay put, you'll get the hang of it soon enough. You will also learn about the workflow of using RStudio, including how to set up a project and how to use R Scripts to organize your research and make it reproducible.
+But stay with it, you'll get the hang of it soon enough. You will also learn about the workflow of using RStudio, including how to set up a project and how to use R Scripts to organize your research and make it reproducible.
 
-Lecture slides: [**Int_R_oduction**](/1-Hello_R/1-Hello_R.html)
+Lecture slides: [**Int_R_oduction**](/1-Hello_R_Vectors/1-Hello_R_Vectors.html)
 
 Today's exercise: [**Web Excercise 1**](/exercises/exercise1.html)
