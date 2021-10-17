@@ -3,7 +3,7 @@
   <head>
     <title>Introduction to R</title>
     <meta charset="utf-8" />
-    <meta name="author" content="Friedolin Merhout &amp; Merlin Schaeffer Department of Sociology" />
+    <meta name="author" content="Merlin Schaeffer &amp; Friedolin Merhout Department of Sociology" />
     <meta name="date" content="2021-10-18" />
     <script src="libs/header-attrs/header-attrs.js"></script>
     <link href="libs/tile-view/tile-view.css" rel="stylesheet" />
@@ -19,7 +19,7 @@ class: center, middle, inverse, title-slide
 
 # Introduction to R
 ## Hello R: Vectors.
-### Friedolin Merhout &amp; Merlin Schaeffer<br>Department of Sociology
+### Merlin Schaeffer &amp; Friedolin Merhout<br>Department of Sociology
 ### 2021-10-18
 
 ---
@@ -27,24 +27,11 @@ class: center, middle, inverse, title-slide
 
 
 
-&lt;!-- class: clear --&gt;
-
-&lt;!-- &lt;iframe src="https://app.sli.do/event/aflvddc2" height="100%" width="100%" frameBorder="0" style="min-height: 560px;"&gt;&lt;/iframe&gt; --&gt;
-
-&lt;!-- --- --&gt;
-
 # Lecturers and Schedule
 
 --
 
 .push-left[
-
-&lt;!-- ```{r, echo=FALSE,out.width="49%",  --&gt;
-&lt;!-- out.height="20%",fig.cap="caption",fig.show='hold',fig.align='center'} --&gt;
-&lt;!-- knitr::include_graphics(c("https://www2.adm.ku.dk/selv/pls/prt_www40.hentindhold_cms?p_personid=608735", --&gt;
-&lt;!-- "https://www2.adm.ku.dk/selv/pls/prt_www40.hentindhold_cms?p_personid=608735")) --&gt;
-&lt;!-- ```  --&gt;
-
 
 ![](https://www2.adm.ku.dk/selv/pls/prt_www40.hentindhold_cms?p_personid=608735)
 ![](https://www2.adm.ku.dk/selv/pls/prt_www40.hentindhold_cms?p_personid=646912)
@@ -213,19 +200,6 @@ If you enjoy coding and working with many or diverse data sources, it is ...
 .center[
 `\(\rightarrow\)` This workshop will introduce you to the central R tools for reproducible data processing and analysis in social science
 ]
-
-
-&lt;!-- --- --&gt;
-&lt;!-- background-image: url(https://www.tidyverse.org/images/tidyverse-default.png) --&gt;
-&lt;!-- background-size: cover --&gt;
-&lt;!-- background-position: center --&gt;
-&lt;!-- class: clear --&gt;
-
-&lt;!-- --- --&gt;
-&lt;!-- background-image: url(https://mareds.github.io/r_course/img_site/Tidyverse_packages.png) --&gt;
-&lt;!-- background-size: contain --&gt;
-&lt;!-- background-position: center --&gt;
-&lt;!-- class: clear --&gt;
 
 ---
 background-image: url(https://upload.wikimedia.org/wikipedia/commons/thumb/1/1b/R_logo.svg/724px-R_logo.svg.png)
@@ -512,6 +486,12 @@ The assignment operator may be used in both *directions*: `&lt;-`, or `-&gt;`. .
 ```
 
 
+???
+
+- For naming:   
+  - R is case-sensitive
+  - No two objects can have the same name (overwriting)
+
 ---
 # First steps with R .font60[Keeping track of objects]
 
@@ -710,11 +690,9 @@ layout:false
 (my_character_vector &lt;- c("Just", "a", "simple",
                           "short", "sentence."))
 # [1] "Just"      "a"         "simple"    "short"     "sentence."
-
 # Check the data type using `typeof()`
 typeof(my_character_vector)
 # [1] "character"
-
 # Return only the first, second, and fifth element.
 my_character_vector[c(1,2,5)]
 # [1] "Just"      "a"         "sentence."
@@ -739,7 +717,6 @@ This is unfortunately beyond our scope, but if you are interested, check out [th
 # and assign it to object "my_logical_vector"
 (my_logical_vector &lt;- c(TRUE, TRUE, FALSE, FALSE, TRUE))
 # [1]  TRUE  TRUE FALSE FALSE  TRUE
-
 # Check the data type using `typeof()`
 typeof(my_logical_vector)
 # [1] "logical"
@@ -770,13 +747,11 @@ my_character_vector[my_logical_vector]
 **Numeric** vectors contain sequences of numbers.
 
 ```r
-
 # Concatenate the sequence 1 2 3 4 5 to a vector
 # assign it to object `my_numeric_vector`, 
 # and print it.
 (my_numeric_vector &lt;- c(1, 2, 3, 4, 5))
 # [1] 1 2 3 4 5
-
 # Check the data type using `typeof()`
 typeof(my_numeric_vector)
 # [1] "double"
@@ -795,13 +770,11 @@ typeof(my_numeric_vector)
 **Numeric** vectors contain sequences of numbers.
 
 ```r
-
 # Concatenate the sequence 1 2 3 4 5 to a vector
 # assign it to object `my_numeric_vector`, 
 # and print it.
 (my_numeric_vector &lt;- c(1, 2, 3, 4, 5))
 # [1] 1 2 3 4 5
-
 # Check the data type using `typeof()`
 *typeof(my_numeric_vector)
 # [1] "double"
@@ -824,7 +797,6 @@ typeof(my_numeric_vector)
 Numeric vectors encompass both **Integer** and **Double** vectors.
 
 ```r
-
 # Concatenate the sequence 1 2 3 4 5 to a vector
 # assign it to object `my_numeric_vector`, 
 # and print it.
@@ -832,7 +804,6 @@ Numeric vectors encompass both **Integer** and **Double** vectors.
 # [1] 1 2 3 4 5
 (my_integer_vector &lt;- c(1L, 2L, 3L, 4L, 5L))
 # [1] 1 2 3 4 5
-
 # Check the data type using `typeof()`
 typeof(my_double_vector)
 # [1] "double"
@@ -894,7 +865,6 @@ table(conti)
 # conti
 #    Africa      Asia    Europe S.America 
 #         2         1         1         1
-
 conti &lt;- factor(
   x = c("Europe", "Africa", "Africa", "Asia", "S.America"),
 * levels = c("Africa", "Asia", "Australia",
@@ -920,8 +890,7 @@ layout:false
 ```r
 # Get the computers current date
 Sys.Date() 
-# [1] "2021-10-16"
-
+# [1] "2021-10-17"
 # Check the data type using `typeof()`
 typeof(Sys.Date())
 # [1] "double"
@@ -962,16 +931,13 @@ Date vectors are complex, because time is not metric `\(\rightarrow\)` advanced 
 # to a numeric vector
 (another_numeric_vector &lt;- seq(1, 4)) 
 # [1] 1 2 3 4
-
 # Replace the third element with the string "test"
 another_numeric_vector[3] &lt;- "test" 
 another_numeric_vector # print x4
 # [1] "1"    "2"    "test" "4"
-
 # What type of object is another_numeric_vector?
 typeof(another_numeric_vector)
 # [1] "character"
-
 # Transform another_numeric_vector back to numeric
 as.numeric(another_numeric_vector) 
 # [1]  1  2 NA  4
@@ -999,7 +965,6 @@ Many functions will try calculations including `NA` by default. To avoid not rec
 # Estimate mean of another_numeric_vector
 mean(another_numeric_vector)
 # [1] NA
-
 # Estimate mean of another_numeric_vector ignoring 
 # the NA (i.e., casewise deletion)
 mean(another_numeric_vector, na.rm = TRUE) 
@@ -1016,11 +981,9 @@ To test whether an element is `NA` we can use the function `is.na()`. It generat
 # Which elements are missing?
 is.na(another_numeric_vector) 
 # [1] FALSE FALSE  TRUE FALSE
-
 # Which elements are not missing?
 !is.na(another_numeric_vector) 
 # [1]  TRUE  TRUE FALSE  TRUE
-
 # Print only non-missing values of another_numeric_vector
 another_numeric_vector[!is.na(another_numeric_vector)] 
 # [1] 1 2 4
@@ -1046,7 +1009,6 @@ The three basic data types form the foundation for many different classes of obj
 # so let's see if this worked
 class(another_numeric_vector) #
 # [1] "numeric"
-
 # We set up my_character_vector as a sequence of
 # strings, so let's check its class
 class(my_character_vector)
@@ -1071,11 +1033,9 @@ In general, functions expect specific classes of objects. If you pass them an ob
 # Create a character vector
 (alphabet_limits &lt;- c("a","z"))
 # [1] "a" "z"
-
 # Check to see its class
 class(alphabet_limits)
 # [1] "character"
-
 # Try to create a sequence of the alpabet
 alphabet &lt;- seq(from = alphabet_limits[1],
                 to = alphabet_limits[2])

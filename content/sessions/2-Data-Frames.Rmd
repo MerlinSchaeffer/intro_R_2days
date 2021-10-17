@@ -1,6 +1,6 @@
 ---
-title: "3 Data Frames and Tibbles"
-summary: "This lecture will introduce you to data frames and tibbles, the best way to organize data in R."
+title: "2 Data Frames and Tibbles"
+summary: "This lecture will introduce you to data frames and tibbles, and how to work with them as well as with atomic vectors."
 author: Merlin Schaeffer & Friedolin Merhout
 date: 2021-10-18
 publishdate: 2021-09-03
@@ -14,14 +14,14 @@ knitr::opts_chunk$set(
   comment = "#", strip.white = TRUE)
 ```
 
-This lecture introduces you to data frames and tibbles, the best way to organize data. The tidyverse package contains, among others, a starwars tibble that neatly organizes information about different characters:
+This lecture will introduce you to data frames and tibbles, and how to work with them as well as with atomic vectors. We will also cover packages - the source of R's versatility - and get to know basic functionality from the collection of packages known as tidyverse. A set of packages containing, among others, a dataset of Star Wars characters:
 ```{r}
 library(tidyverse)
 starwars
 ```
 
-In this session you will learn how to access specific variables or cases from a tibble, how to do complex data transformations and recodes, and finally, how to use an API to import data from the European Social Survey.
+In this session you will also learn how to access specific variables or cases from a tibble, how to do complex data transformations and recodes, and finally, how to use an API to import data from the European Social Survey.
 
-Lecture slides: [**Data Frames and Tibbles**](/3-Data-Frames/3-Data-Frames.html)
+Lecture slides: [**Data Frames and Tibbles**](/2-Data-Frames/2-Data-Frames.html)
 
-Today's exercise: [**Web Excercise 3**](/exercises/exercise3.html)
+Today's exercise: [**Web Excercise 2**](/exercises/exercise2.html)

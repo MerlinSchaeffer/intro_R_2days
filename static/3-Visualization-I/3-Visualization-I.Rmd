@@ -1,7 +1,7 @@
 ---
 title: "Intro to R"
 subtitle: "Visualization 1"
-author: "Friedolin Merhout & Merlin Schaeffer<br>Department of Sociology"
+author: "Merlin Schaeffer & Friedolin Merhout<br>Department of Sociology"
 date: "2021-10-18"
 output: 
   xaringan::moon_reader:
@@ -62,7 +62,7 @@ library(ggplot2) # Allows us to create nice figures. #<<
 ESS <- import_rounds(rounds = 9, ess_email = "YOUR-EMAIL", format = "spss")
 ```
 
-```{r include = FALSE, cache=TRUE}
+```{r include = FALSE}
 # Import the ESS round 9 data via the API
 ESS_raw <- import_rounds(rounds = 9, ess_email = "merlin.schaeffer@uni-koeln.de", format = "spss")
 ```

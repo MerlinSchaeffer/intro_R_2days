@@ -1,5 +1,5 @@
 ---
-title: "4 Visualization I"
+title: "3 Visualization I"
 summary: "This lecture will introduce you to the basics of the grammar of graphics and ggplot2."
 author: Merlin Schaeffer & Friedolin Merhout
 date: 2021-10-18
@@ -53,11 +53,11 @@ ESS <- dplyr::filter(ESS,
 ESS <- drop_na(ESS)
 ```
 
-This lecture introduces you to the basics of "the grammar of graphics", which underlies the R package ggplot2. You will gain a basic understanding of how to visualize your data for exploratory purposes. In particular, you will be able to read and write R code such as the one below, which produces the figure shown beneath the code.
+This lecture introduces you to the basics of "the grammar of graphics", the guiding idea of the R package ggplot2. You will gain a basic understanding of how to visualize your data for exploratory purposes. In particular, you will be able to read and write R code such as the one below, which produces the figure shown beneath the code.
 
-Lecture slides: [**Visualization I**](/4-Visualization-I/4-Visualization-I.html)
+Lecture slides: [**Visualization I**](/3-Visualization-I/3-Visualization-I.html)
 
-Today's exercise: [**Web Excercise 4**](/exercises/exercise4.html)
+Today's exercise: [**Web Excercise 3**](/exercises/exercise3.html)
 
 ```{r fig.width = 8, fig.height = 3.5}
 ggplot(data = ESS, 
@@ -69,8 +69,8 @@ ggplot(data = ESS,
        x = "Years of Education")
 ```
 
-## Homework
-1. Finish web exercise 3 and 4.
+## Homework and further readings
+1. Finish web exercise 1 through 3.
 2. Read Chapter [3 Data Visualization](http://r4ds.had.co.nz/data-visualisation.html).
 3. Read Chapter [7 Exploratory Data Analysis](http://r4ds.had.co.nz/exploratory-data-analysis.html).
 
