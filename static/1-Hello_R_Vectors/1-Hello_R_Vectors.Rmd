@@ -40,24 +40,11 @@ xaringanExtra::use_xaringan_extra(c("tile_view", "tachyons"))
 xaringanExtra::use_panelset()
 ```
 
-<!-- class: clear -->
-
-<!-- <iframe src="https://app.sli.do/event/aflvddc2" height="100%" width="100%" frameBorder="0" style="min-height: 560px;"></iframe> -->
-
-<!-- --- -->
-
 # Lecturers and Schedule
 
 --
 
 .push-left[
-
-<!-- ```{r, echo=FALSE,out.width="49%",  -->
-<!-- out.height="20%",fig.cap="caption",fig.show='hold',fig.align='center'} -->
-<!-- knitr::include_graphics(c("https://www2.adm.ku.dk/selv/pls/prt_www40.hentindhold_cms?p_personid=608735", -->
-<!-- "https://www2.adm.ku.dk/selv/pls/prt_www40.hentindhold_cms?p_personid=608735")) -->
-<!-- ```  -->
-
 
 ![](https://www2.adm.ku.dk/selv/pls/prt_www40.hentindhold_cms?p_personid=608735)
 ![](https://www2.adm.ku.dk/selv/pls/prt_www40.hentindhold_cms?p_personid=646912)
@@ -228,19 +215,6 @@ knitr::include_graphics('https://rstudio-education.github.io/tidyverse-cookbook/
 .center[
 $\rightarrow$ This workshop will introduce you to the central R tools for reproducible data processing and analysis in social science
 ]
-
-
-<!-- --- -->
-<!-- background-image: url(https://www.tidyverse.org/images/tidyverse-default.png) -->
-<!-- background-size: cover -->
-<!-- background-position: center -->
-<!-- class: clear -->
-
-<!-- --- -->
-<!-- background-image: url(https://mareds.github.io/r_course/img_site/Tidyverse_packages.png) -->
-<!-- background-size: contain -->
-<!-- background-position: center -->
-<!-- class: clear -->
 
 ---
 background-image: url(https://upload.wikimedia.org/wikipedia/commons/thumb/1/1b/R_logo.svg/724px-R_logo.svg.png)
@@ -530,6 +504,12 @@ The assignment operator may be used in both *directions*: `<-`, or `->`. .backgr
 5 -> another_test_object # Create another object #<<
 ```
 
+
+???
+
+- For naming:   
+  - R is case-sensitive
+  - No two objects can have the same name (overwriting)
 
 ---
 # First steps with R .font60[Keeping track of objects]
