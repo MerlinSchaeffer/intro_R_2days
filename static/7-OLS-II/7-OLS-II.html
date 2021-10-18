@@ -4,7 +4,7 @@
     <title>Intro to R for Social Data Science</title>
     <meta charset="utf-8" />
     <meta name="author" content="Merlin Schaeffer &amp; Friedolin Merhout   Department of Sociology" />
-    <meta name="date" content="2021-10-13" />
+    <meta name="date" content="2021-10-18" />
     <script src="libs/header-attrs/header-attrs.js"></script>
     <link href="libs/tile-view/tile-view.css" rel="stylesheet" />
     <script src="libs/tile-view/tile-view.js"></script>
@@ -20,7 +20,7 @@ class: center, middle, inverse, title-slide
 # Intro to R for Social Data Science
 ## Linear OLS Regression II
 ### Merlin Schaeffer &amp; Friedolin Merhout <br> Department of Sociology
-### 2021-10-13
+### 2021-10-18
 
 ---
 
@@ -152,7 +152,7 @@ ggplot(data = ESS,
        mapping = aes(y = imwbcnt, x = eduyrs, color = cntry)) +
   geom_jitter(aes(size = pspwght), alpha = 1/7) +
   geom_smooth(aes(weight = pspwght), method = "lm", se = FALSE) +
-  labs(x = "Years of education", y = "imwbcntphobia", size = "Survey \n weight", color = "Country") +
+  labs(x = "Years of education", y = "Xenophobia", size = "Survey \n weight", color = "Country") +
   theme_minimal()
 ```
 ]]
@@ -231,7 +231,7 @@ ggplot(data = ESS,
 *             # draw line beyond observed cases.
 *             fullrange = TRUE) +
 * xlim(c(0, 21)) + # Extend range of x-axis.
-  labs(x = "Years of education", y = "imwbcntphobia", size = "Survey \n weight", color = "Country") +
+  labs(x = "Years of education", y = "Xenophobia", size = "Survey \n weight", color = "Country") +
   theme_minimal()
 ```
 ]]
@@ -257,7 +257,7 @@ ggplot(data = ESS,
   geom_vline(xintercept = 0, color = "#901A1E") + 
   geom_smooth(aes(weight = pspwght), 
               method = "lm", se = FALSE) +
-  labs(x = "Years of education \n (z-standardized)", y = "imwbcntphobia", size = "Survey \n weight", color = "Country") +
+  labs(x = "Years of education \n (z-standardized)", y = "Xenophobia", size = "Survey \n weight", color = "Country") +
   theme_minimal()
 ```
 ]
@@ -485,7 +485,7 @@ ggplot(data = synth_data,
               alpha = 0.5) +
   geom_line() +
   labs(x = "Age",
-  y = "imwbcntphobia",
+  y = "Xenophobia",
   caption = "(Covariates set to: Women in Denmark \n at mean levels of (parental) education)") + 
   theme_minimal()
 ```
@@ -567,7 +567,7 @@ synth_data &lt;- predict(ols6, newdata = synth_data,
 ggplot(data = synth_data, aes(y = fit, x = par_edu)) +
   geom_ribbon(aes(ymin = lwr, ymax = upr), alpha = 0.5) +
   geom_line() +
-  labs(x = "Parental education", y = "imwbcntphobia", 
+  labs(x = "Parental education", y = "Xenophobia", 
        caption = "(Covariates set to: Women at mean levels of parental education)") + 
   theme_minimal()
 ```
@@ -661,7 +661,7 @@ ggplot(data = synth_data, aes(y = fit, x = eduyrs)) +
 *                 fill = cntry),
               alpha = 0.5) +
 * geom_line(aes(color = cntry)) +
-  labs(x = "Years of education", y = "imwbcntphobia", 
+  labs(x = "Years of education", y = "Xenophobia", 
        caption = "(Covariates set to: Women at mean levels of parental education)") + 
   theme_minimal()
 ```

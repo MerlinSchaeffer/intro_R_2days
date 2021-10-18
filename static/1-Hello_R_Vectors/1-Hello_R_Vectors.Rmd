@@ -22,6 +22,7 @@ output:
 library(tidyverse)
 library(RefManageR)
 library(knitr)
+library(emo)
 
 options(htmltools.dir.version = FALSE, servr.interval = 0.5, width = 115, digits = 3)
 knitr::opts_chunk$set(

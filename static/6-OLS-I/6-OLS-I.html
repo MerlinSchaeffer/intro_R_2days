@@ -4,7 +4,7 @@
     <title>Intro to R for Social Data Science</title>
     <meta charset="utf-8" />
     <meta name="author" content="Merlin Schaeffer &amp; Friedolin Merhout   Department of Sociology" />
-    <meta name="date" content="2021-10-13" />
+    <meta name="date" content="2021-10-18" />
     <script src="libs/header-attrs/header-attrs.js"></script>
     <link href="libs/tile-view/tile-view.css" rel="stylesheet" />
     <script src="libs/tile-view/tile-view.js"></script>
@@ -20,7 +20,7 @@ class: center, middle, inverse, title-slide
 # Intro to R for Social Data Science
 ## Linear OLS Regression I
 ### Merlin Schaeffer &amp; Friedolin Merhout <br> Department of Sociology
-### 2021-10-13
+### 2021-10-18
 
 ---
 
@@ -159,7 +159,7 @@ ggplot(data = ESS, mapping = aes(y = imwbcnt, x = eduyrs)) +
   geom_smooth(aes(weight = pspwght), se = FALSE) +
   geom_smooth(aes(weight = pspwght), method = "lm", 
               se = FALSE, color = "red") +
-  labs(y = "imwbcntphobia", x =  "Years of education", 
+  labs(y = "Xenophobia", x =  "Years of education", 
        size = "Survey \n weight") +
   theme_minimal()
 ```
@@ -222,6 +222,7 @@ summary(ols) # Give a summary of the main results.
 $$
 \operatorname{\widehat{imwbcnt}} = 6 - 0.12(\operatorname{eduyrs})
 $$
+
 
 is the line that `\(\min \sum_{i=1}^{n} e_{i}^{2}\)`.
 
@@ -366,7 +367,7 @@ ggplot(data = ESS,
   geom_smooth(aes(weight = pspwght), method = "lm", se = FALSE) +
   scale_x_continuous(breaks = c(0, 1), 
                      labels = c("0 = Denmark", "1 = Sweden")) +
-  labs(x = "Country", y = "imwbcntphobia", 
+  labs(x = "Country", y = "Xenophobia", 
        size = "Survey \n weight") +
   theme_minimal()
 ```
