@@ -150,9 +150,9 @@ ESS <- mutate(ESS,
               ),
               dscrgrp = case_when( # Start complex recode
                 # Older than 80 & Germany ~ "Yes",
-                agea > 80 & cntry == "DE" ~ "Yes", 
+                agea > 80 & cntry == "Germany" ~ "Yes", 
                 # Older than mean & France
-                eduyrs > mean(eduyrs, na.rm = TRUE) & cntry == "FR" ~ "No",
+                eduyrs > mean(eduyrs, na.rm = TRUE) & cntry == "France" ~ "No",
                 # All others ~ as before, need to make it character for type consistency.
                 TRUE ~ as.character(dscrgrp) 
               ),
