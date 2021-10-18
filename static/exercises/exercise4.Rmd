@@ -1,14 +1,15 @@
 ---
-title: "Web Exercise 5"
+title: "Web Exercise 4"
 author: Merlin Schaeffer & Friedolin Merhout
 output: webexercises::webexercises_default
 date: 2021-10-19
+publishdate: 2021-01-15
 ---
 
 ```{r setup, include = FALSE}
 options(htmltools.dir.version = FALSE, servr.interval = 0.5, width = 115, digits = 2)
 knitr::opts_chunk$set(
-  collapse = TRUE, message = FALSE, fig.align='center',
+  collapse = TRUE, message = FALSE, fig.align = 'center',
   warning = FALSE, cache = FALSE, fig.retina = 3,
   comment = "#", strip.white = TRUE)
 
@@ -23,9 +24,22 @@ library(webexercises)
 ESS <- import_rounds(rounds = 9, ess_email = "merlin.schaeffer@uni-koeln.de", format = "spss")
 ```
 
-Session page: [**Visualization II**](#sessions)
+1. Rewrite the following code chunks using the `%>%` operator.
+  + `log(sd(c(5, 13, 89)))`
+  + `as.numeric(scale(c(100, 32, 45)))`
+  
+`r hide("R solution -> dont' peek to early ;) !")`
+```{r}
+log(sd(c(5, 13, 89)))
+c(5, 13, 89) %>% sd() %>% log()
 
-1. Remember Exercise 5 from earlier today; visualize your results of task 2 and 3 in one plot each. Color-highlight the most extreme country in each plot. 
+as.numeric(scale(c(100, 32, 45)))
+c(100, 32, 45) %>% scale() %>% as.numeric()
+```
+`r unhide()`
+
+2. In which among all ESS countries is perceived *racial* discrimination among persons of immigrant origin (i.e., persons born abroad or with at least one parent who was born abroad) most prevalent? `r fitb("United Kingdom", width = "14")`
+    + That is, give a country-level summary of the percent of immigrant minority respondents who experienced discrimination explicitly based on their group's race. 
 `r hide("R solution -> dont' peek to early ;) !")`
 ```{r}
 ESS %>% # Use the ESS, then
@@ -55,26 +69,16 @@ ESS %>% # Use the ESS, then
     # Weighted number of persons who see their group face racial discrimination.
     wn_rd = sum(racial_discr * pspwght, na.rm = TRUE), 
     # Weighted percent who see their group face racial discrimination.
-    wperc_rd = (wn_rd / wn)  * 100 
-  ) %>%
-  mutate(
-    maxim = case_when(wperc_rd == max(wperc_rd) ~ "Maximum",
-                      TRUE ~ "Other")) %>%
-  ggplot(mapping = aes(y = wperc_rd, x = reorder(cntry, -wperc_rd))) + 
-  geom_bar(aes(fill = maxim), stat = "identity") +
-  labs(y = "% Persons of immigrant origin \n reporting racial discrimination",
-       x = "Country",
-       fill = "Level of Discrimination") +
-  coord_flip() +
-  theme_minimal() +
-  theme(legend.position = c(0.87, 0.87),
-        legend.background = 
-          element_rect(fill = NA,
-                       color = NA))
+    wperc_rd = (wn_rd / wn)  * 100) %>%
+  arrange(desc(wperc_rd))
 ```
 `r unhide()`
 
-2. Use another way (apart from color) to also emphasize, the *least* extreme case in plot two.
+3. In which among all ESS countries do people on average show the highest *agreement* to the statement that gay women and men should be allowed to adopt children? `r fitb("Iceland", width = "7")`
+    + That is, give country-level summaries of the average agreement plus its 95% confidence interval. 
+    + `wtd.mean()` from the `Hmsic` package estimates weighted means. 
+    + Moreover, `wtd.var()` estimates weighted variances, and remember: $\text{SD} = \sqrt{\text{Var}}$.
+    + Beware that we asked for the average agreement.
 `r hide("R solution -> dont' peek to early ;) !")`
 ```{r}
 ESS %>% # Use the ESS, så
@@ -83,7 +87,7 @@ ESS %>% # Use the ESS, så
     cntry = as_factor(cntry), 
     # Make the following variables numeric:
     pspwght = zap_labels(pspwght),
-    hmsacld = max(zap_labels(hmsacld), na.rm = TRUE) - zap_labels(hmsacld),
+    hmsacld = max(zap_labels(hmsacld), na.rm = TRUE) - zap_labels(hmsacld), #<<
   ) %>%
   group_by(cntry) %>% # Group data by country, så
   dplyr::summarize(
@@ -92,23 +96,7 @@ ESS %>% # Use the ESS, så
     sd_hmsacld = wtd.var(hmsacld, weights = pspwght, na.rm = TRUE) %>% sqrt(),
     se_hmsacld = sd_hmsacld / sqrt(n),
     min95 = mean_hmsacld - se_hmsacld * qt(p = 0.975, df = n),
-    max95 = mean_hmsacld + se_hmsacld * qt(p = 0.975, df = n)
-  ) %>%
-  mutate(maxim = case_when(mean_hmsacld == max(mean_hmsacld) ~ "Maximum", #<<
-                           TRUE ~ "Other"),
-         minim = case_when(mean_hmsacld == min(mean_hmsacld) ~ "Minimum", #<<
-                           TRUE ~ "Other")) %>%
-  ggplot(aes(y = mean_hmsacld, x = reorder(cntry, mean_hmsacld), 
-             ymin = min95, ymax = max95,
-             color = maxim, shape = minim)) + #<<
-  geom_pointrange() +
-  coord_flip() +
-  labs(y = "Gay men and women should be allowed \n to adopt children (Scale 1 to 5)",
-       x = "Country",
-       color = "Level of Discrimination",
-       shape = "Level of Discrimination") +
-  theme_minimal()
+    max95 = mean_hmsacld + se_hmsacld * qt(p = 0.975, df = n)) %>%
+  arrange(desc(mean_hmsacld))
 ```
 `r unhide()`
-
-3. Polish your favorite figure and share it in the chat.

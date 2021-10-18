@@ -247,7 +247,8 @@ knitr::include_graphics('https://d33wubrfki0l68.cloudfront.net/8a64bb047429d7ae0
 
 .left-column[
 Set these preferences to improve *reproducibility*!
-  + $\rightarrow$ RStudio/Preferences
+  + Mac: $\rightarrow$ RStudio/Preferences
+  + Windows: Tools\Global options\
 ]
 
 .right-column[
