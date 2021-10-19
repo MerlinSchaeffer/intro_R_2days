@@ -173,11 +173,11 @@ screenreg(ols4, include.ci = FALSE)
 
 .left-column[.content-box-green[
 
-1. How do we interpret the estimates correctly?
+1. How do we interpret the estimate `eduyrs:cntrySweden` correctly?
 
-2. Why is $\beta_{\text{eduyrs}}$ smaller than in model 3?
+2. Why is $\beta_{\text{eduyrs}}$ more negative than in model 3?
 
-3. Why do Bulgarians suddenly seem to have *lower* levels of imwbcntphobia, whereas before they had higher ones?
+3. Why do Bulgarians suddenly seem to have *lower* levels of xenophobia, whereas before they had higher ones?
 ]]
 
 ---
@@ -252,7 +252,7 @@ ggplot(data = ESS,
 .font70[
 ```{r}
 ols4 <- lm_robust(formula = imwbcnt ~ par_edu + gndr +
-                    I(scale(eduyrs))*cntry,
+                    I(scale(eduyrs))*cntry, ##<
                   data = ESS, weights = pspwght)
 screenreg(ols4, include.ci = FALSE) 
 ```
