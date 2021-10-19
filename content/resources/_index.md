@@ -3,7 +3,7 @@ title = "Resources"
 weight = 1
 +++
 
-Here you find a couple of further useful links. And don't forget: If you get stuck, I am sure someone else had the same problem before --- so hit [Google](www.google.com)!
+Here you find a couple of further useful links. And don't forget: If you get stuck, someone else has likely had the same problem before --- so hit [Google](https://google.com)!
 
 ## Tutorials
 - Data Carpentry’s [R for Social Scientists](https://datacarpentry.org/r-socialsci/)
@@ -16,6 +16,7 @@ Here you find a couple of further useful links. And don't forget: If you get stu
 
 ## Coding
 - [R Style Guide](http://adv-r.had.co.nz/Style.html)
+- [RStudio Keyboard Shortcuts](https://support.rstudio.com/hc/en-us/articles/200711853-Keyboard-Shortcuts)
 
 ## Cheat Sheets
 - [R Studio's Cheat Sheets](https://rstudio.com/resources/cheatsheets/)

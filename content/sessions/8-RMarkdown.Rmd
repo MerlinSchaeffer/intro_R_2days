@@ -29,4 +29,4 @@ Dynamic documents combine analysis script and final report, presentation or webs
 
 ## Homework
 1. Read [Chapter 27 R Markdown](http://r4ds.had.co.nz/r-markdown.html)
-2. Check out R Studio's: [R Markdown Cheat Sheet](https://www.rstudio.com/wp-content/uploads/2016/03/rmarkdown-cheatsheet-2.0.pdf)
+2. Check out R Studio's: [R Markdown Cheat Sheet](https://raw.githubusercontent.com/rstudio/cheatsheets/master/rmarkdown.pdf)
