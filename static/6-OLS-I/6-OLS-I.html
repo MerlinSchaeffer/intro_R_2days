@@ -4,7 +4,7 @@
     <title>Intro to R for Social Data Science</title>
     <meta charset="utf-8" />
     <meta name="author" content="Merlin Schaeffer &amp; Friedolin Merhout   Department of Sociology" />
-    <meta name="date" content="2021-10-18" />
+    <meta name="date" content="2021-10-19" />
     <script src="libs/header-attrs/header-attrs.js"></script>
     <link href="libs/tile-view/tile-view.css" rel="stylesheet" />
     <script src="libs/tile-view/tile-view.js"></script>
@@ -20,7 +20,7 @@ class: center, middle, inverse, title-slide
 # Intro to R for Social Data Science
 ## Linear OLS Regression I
 ### Merlin Schaeffer &amp; Friedolin Merhout <br> Department of Sociology
-### 2021-10-18
+### 2021-10-19
 
 ---
 
@@ -34,8 +34,6 @@ library(tidyverse) # Add the tidyverse package to my current library.
 library(haven) # Handle labelled data.
 library(essurvey) # Add ESS API package.
 library(ggplot2) # Allows us to create nice figures.
-library(factoextra) # Allows us to visualize PCAs.
-library(psych) # Supports PCA &amp; factor analysis with several useful functions.
 *library(estimatr) # Allows us to estimate (cluster-)robust standard errors.
 *library(texreg) # Allows us to make nicely-formatted Html &amp; Latex regression tables.
 *library(broom) # Allows us to turn model objects into tibbles.
@@ -600,7 +598,7 @@ tidy(ols3)
                             "Norway" = "cntryNorway",
                             "Sweden" = "cntrySweden"),
           predictor = case_when( # Identify explanatry and confounding variables
-            term == "Years of Education" | term == "Years of education^2" ~ "Predictor",
+            term == "Years of Education" ~ "Predictor",
             TRUE ~ "Potential confounder"))) %&gt;% 
   select(term, estimate, conf.low, conf.high, predictor) # keep only some of all the info.
 #                 term estimate conf.low conf.high            predictor

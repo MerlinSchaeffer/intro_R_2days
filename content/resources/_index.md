@@ -6,11 +6,13 @@ weight = 1
 Here you find a couple of further useful links. And don't forget: If you get stuck, I am sure someone else had the same problem before --- so hit [Google](www.google.com)!
 
 ## Tutorials
+- Data Carpentry’s [R for Social Scientists](https://datacarpentry.org/r-socialsci/)
 - [Tidy Tuesday](https://www.tidytuesday.com/)! Fun weekly tasks of analyzing Movies, Nuclear Explosions, Songs, Passwords, The Simpsons, and data sets on all kinds of other data.
 - [Swirlstats](https://swirlstats.com/)
 - [Data Skills for Reproducible Science](https://psyteachr.github.io/msc-data-skills/)
 - Kelly Black's [R Tutorial](https://www.cyclismo.org/tutorial/R/)
 - Peter Haschke's [An Introduction to R](http://www.sas.rochester.edu/psc/thestarlab/help/rcourse/R-Course.pdf)
+- Software Carpentry's [R for programming](https://swcarpentry.github.io/r-novice-inflammation/)
 
 ## Coding
 - [R Style Guide](http://adv-r.had.co.nz/Style.html)
