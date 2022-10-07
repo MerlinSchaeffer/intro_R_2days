@@ -4,6 +4,8 @@
 
 # Session Data files
 .RData
+.dta
+.sav
 
 # User-specific files
 .Ruserdata
