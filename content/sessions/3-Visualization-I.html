@@ -2,29 +2,26 @@
 title: "3 Visualization I"
 summary: "This lecture will introduce you to the basics of the grammar of graphics and ggplot2."
 author: Merlin Schaeffer & Friedolin Merhout
-date: 2021-10-18
+date: 2022-10-19
 publishdate: 2021-09-03
 ---
 
-<script src="/rmarkdown-libs/header-attrs/header-attrs.js"></script>
 
 
 <p>This lecture introduces you to the basics of “the grammar of graphics”, the guiding idea of the R package ggplot2. You will gain a basic understanding of how to visualize your data for exploratory purposes. In particular, you will be able to read and write R code such as the one below, which produces the figure shown beneath the code.</p>
 <p>Lecture slides: <a href="/3-Visualization-I/3-Visualization-I.html"><strong>Visualization I</strong></a></p>
-<p>Today’s exercise: <a href="/exercises/exercise3.html"><strong>Web Excercise 4</strong></a></p>
+<p>Today’s exercise: <a href="/exercises/exercise3.html"><strong>Web Excercise 3</strong></a></p>
 <pre class="r"><code>ggplot(data = ESS, 
        mapping = aes(y = imwbcnt, x = factor(eduyrs), weight = pspwght)) +
   geom_boxplot() +
   geom_smooth(mapping = aes(group = 1)) +
-  facet_wrap( ~ cntry, nrow = 1) + 
   labs(y = &quot;Immigrants make country \n worse place to live&quot;, 
-       x = &quot;Years of Education&quot;)</code></pre>
+       x = &quot;Years of Education&quot;) +
+  theme_minimal()</code></pre>
 <p><img src="/sessions/3-Visualization-I_files/figure-html/unnamed-chunk-1-1.png" width="768" /></p>
 <div id="homework-and-further-readings" class="section level2">
 <h2>Homework and further readings</h2>
 <ol style="list-style-type: decimal">
 <li>Finish web exercise 1 through 3.</li>
-<li>Read Chapter <a href="http://r4ds.had.co.nz/data-visualisation.html">3 Data Visualization</a>.</li>
-<li>Read Chapter <a href="http://r4ds.had.co.nz/exploratory-data-analysis.html">7 Exploratory Data Analysis</a>.</li>
 </ol>
 </div>

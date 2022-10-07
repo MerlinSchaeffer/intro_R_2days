@@ -1,0 +1,33 @@
+---
+title: "9 Interaction Effects and Polynomials"
+summary: "In this session you will learn how estimate conditional and non-linear and communicate their results visualizations of the model."
+author: Merlin Schaeffer & Friedolin Merhout
+date: 2021-10-21
+publishdate: 2021-09-03
+---
+
+```{r setup, include = FALSE}
+library(RefManageR)
+options(htmltools.dir.version = FALSE, servr.interval = 0.5, width = 115, digits = 2)
+knitr::opts_chunk$set(
+  collapse = TRUE, message = FALSE, fig.retina = 3, error = TRUE,
+  warning = FALSE, cache = FALSE, fig.align='center',
+  comment = "#", strip.white = TRUE)
+
+BibOptions(check.entries = FALSE, 
+           bib.style = "authoryear", 
+           style = "markdown",
+           hyperlink = FALSE,
+           no.print.fields = c("doi", "url", "ISSN", "urldate", "language", "note", "isbn", "volume"))
+myBib <- ReadBib("./../../intRo.bib", check = FALSE)
+```
+
+Lecture slides: [**Interaction Effects**](/9-Inter/9-Inter.html)
+
+Today's exercise: [**Web Excercise 9**](/exercises/exercise9.html)
+
+![](/9-Inter/9-Inter_files/figure-html/unnamed-chunk-28-1.png)
+
+Linear OLS regression is the backbone of statistical modeling/data science. One of the reasons for that is that it is actually more versatile than its name suggests. That is, although it is linear, it allows us to estimate non-linear and conditional associations, such as the one shown above. In this session you will learn how to specify conditional and non-linear associations and how to visualize them to ease the interpretability of your complex linear OLS regression models.
+
+

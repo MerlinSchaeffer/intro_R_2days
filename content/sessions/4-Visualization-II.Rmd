@@ -1,0 +1,71 @@
+---
+title: "4 Visualization II"
+summary: "This lecture will continue your introduction to the basics of the grammar of graphics and ggplot2."
+author: Merlin Schaeffer & Friedolin Merhout
+date: 2022-10-20
+publishdate: 2021-09-03
+---
+
+```{r setup, include = FALSE}
+options(htmltools.dir.version = FALSE, servr.interval = 0.5, width = 115, digits = 2)
+knitr::opts_chunk$set(
+  collapse = TRUE, message = FALSE, 
+  warning = FALSE, cache = FALSE, fig.retina = 3,
+  comment = "#", strip.white = TRUE)
+
+# Add packages to library
+library(tidyverse) # Add the tidyverse package to my current library.
+library(haven) # Handle labelled data.
+library(essurvey) # Add ESS API package to library.
+library(ggplot2) # Allows us to create nice figures.
+
+# Read ESS round 10 data
+ESS <- read_spss("./../../assets/ESS10.sav")
+
+ESS <- transmute(ESS, # Recode several variables & keep only the recoded ones (i.e., transmute vs mutate). #<<
+                 idno = zap_labels(idno),
+                 # Make the following variables factors:
+                 cntry = as_factor(cntry), 
+                 gndr = as_factor(gndr),
+                 facntr = as_factor(facntr),
+                 mocntr = as_factor(mocntr),
+                 # Make the following variables numeric:
+                 imbgeco = max(imbgeco, na.rm = TRUE) - zap_labels(imbgeco), # Also turn scale around.
+                 imueclt = max(imueclt, na.rm = TRUE) - zap_labels(imueclt), # Also turn scale around.
+                 imwbcnt = max(imwbcnt, na.rm = TRUE) - zap_labels(imwbcnt), # Also turn scale around.
+                 agea = zap_labels(agea),
+                 pspwght = pweight*dweight,
+                 eduyrs = case_when(
+                   eduyrs > 21 ~ 21, # Recode to max 21 years of edu.
+                   eduyrs < 9 ~ 9, # Recode to min 9 years of edu.
+                   TRUE ~ zap_labels(eduyrs) # Make it numeric.
+                 ),
+)
+
+ESS <- dplyr::filter(ESS,
+                     # Only respondents whose parents were born in country of interview.
+                     facntr == "Yes" & mocntr == "Yes" &
+                       # Only Eastern European countries:
+                       (cntry == "Slovakia" | cntry == "Hungary" | cntry == "Czechia" | cntry == "Slovenia")
+)
+
+# Casewise deletion of missing values
+ESS <- drop_na(ESS)
+```
+
+This lecture introduces you to the basics of "the grammar of graphics", the guiding idea of the R package ggplot2. You will gain a basic understanding of how to visualize your data for exploratory purposes. In particular, you will be able to read and write R code such as the one below, which produces the figure shown beneath the code.
+
+Lecture slides: [**Visualization II**](/4-Visualization-II/4-Visualization-II.html)
+
+Today's exercise: [**Web Excercise 4**](/exercises/exercise4.html)
+
+```{r fig.width = 8, fig.height = 3.5}
+ggplot(data = ESS, 
+       mapping = aes(y = imwbcnt, x = factor(eduyrs), weight = pspwght)) +
+  geom_boxplot() +
+  geom_smooth(mapping = aes(group = 1)) +
+  facet_wrap( ~ cntry, nrow = 1) + 
+  labs(y = "Immigrants make country \n worse place to live", 
+       x = "Years of Education")
+```
+

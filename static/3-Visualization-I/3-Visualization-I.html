@@ -11,16 +11,24 @@
     <link href="libs/tachyons/tachyons.min.css" rel="stylesheet" />
     <link href="libs/panelset/panelset.css" rel="stylesheet" />
     <script src="libs/panelset/panelset.js"></script>
-    <link rel="stylesheet" href="libs/Merlin169.css" type="text/css" />
+    <link rel="stylesheet" href="../template/Merlin169.css" type="text/css" />
   </head>
   <body>
     <textarea id="source">
 class: center, middle, inverse, title-slide
 
+.title[
 # Intro to R
+]
+.subtitle[
 ## Visualization 1
+]
+.author[
 ### Merlin Schaeffer &amp; Friedolin Merhout<br>Department of Sociology
+]
+.date[
 ### 2021-10-18
+]
 
 ---
 
@@ -40,11 +48,10 @@ name: setup
 # Add packages to library
 library(tidyverse) # Add the tidyverse package to my current library.
 library(haven) # Read and handle SPSS, Stata &amp; SAS data (no need to install)
-library(essurvey) # Add ESS API package to library.
 *library(ggplot2) # Allows us to create nice figures.
 
-# Import the ESS round 9 data via the API
-ESS &lt;- import_rounds(rounds = 9, ess_email = "YOUR-EMAIL", format = "spss")
+# Import the ESS round 10
+ESS &lt;- read_spss("ESS10.sav")
 ```
 
 
@@ -65,7 +72,7 @@ ESS &lt;- import_rounds(rounds = 9, ess_email = "YOUR-EMAIL", format = "spss")
                  imueclt = max(imueclt, na.rm = TRUE) - zap_labels(imueclt), # Also turn scale around.
                  imwbcnt = max(imwbcnt, na.rm = TRUE) - zap_labels(imwbcnt), # Also turn scale around.
                  agea = zap_labels(agea),
-                 pspwght = zap_labels(pspwght),
+                 pspwght = pweight*dweight,
                  eduyrs = case_when(
                    eduyrs &gt; 21 ~ 21, # Recode to max 21 years of edu.
                    eduyrs &lt; 9 ~ 9, # Recode to min 9 years of edu.
@@ -94,28 +101,26 @@ class: clear middle
 ESS &lt;- dplyr::filter(ESS,
                      # Only respondents whose parents were born in country of interview.
                      facntr == "Yes" &amp; mocntr == "Yes" &amp;
-                       # Only respondents from Germany and land-boarder neighbors:
-                       (cntry %in% c("Germany", "Denmark",  "Poland",
-                                     "Austria", "Switzerland", "Belgium",
-                                     "France", "Czechia", "Netherlands")
+                       # Only respondents from Eastern European countries:
+                       (cntry %in% c("Slovakia", "Hungary", "Czechia", "Slovenia")
 ))
 
 # Casewise deletion of missing values
 (ESS &lt;- drop_na(ESS))
-# # A tibble: 12,853 × 11
+# # A tibble: 5,734 × 11
 #     idno cntry   gndr   facntr mocntr imbgeco imueclt imwbcnt  agea pspwght eduyrs
 #    &lt;dbl&gt; &lt;fct&gt;   &lt;fct&gt;  &lt;fct&gt;  &lt;fct&gt;    &lt;dbl&gt;   &lt;dbl&gt;   &lt;dbl&gt; &lt;dbl&gt;   &lt;dbl&gt;  &lt;dbl&gt;
-#  1    27 Austria Male   Yes    Yes          5       4      10    43   0.218     12
-#  2   137 Austria Male   Yes    Yes          5       6       5    67   0.413     12
-#  3   194 Austria Female Yes    Yes          4       4       5    40   2.27      12
-#  4   208 Austria Male   Yes    Yes          7       3       5    63   0.386     11
-#  5   220 Austria Female Yes    Yes          5       7       5    71   1.03       9
-#  6   254 Austria Male   Yes    Yes          4       3       5    64   0.576     13
-#  7   290 Austria Male   Yes    Yes          4       6       5    56   0.721     12
-#  8   305 Austria Male   Yes    Yes         10      10      10    37   1.77      12
-#  9   400 Austria Female Yes    Yes          3       3       5    22   0.743     12
-# 10   413 Austria Male   Yes    Yes          0       0       0    48   0.160     12
-# # … with 12,843 more rows
+#  1 10004 Czechia Male   Yes    Yes          5       6       6    60   0.374     13
+#  2 10009 Czechia Male   Yes    Yes         10       9       2    74   0.187     17
+#  3 10019 Czechia Female Yes    Yes          3       3       3    22   0.187     12
+#  4 10038 Czechia Male   Yes    Yes          7      10      10    61   0.374     12
+#  5 10052 Czechia Male   Yes    Yes          3       8       8    56   0.187     12
+#  6 10053 Czechia Male   Yes    Yes          0       5       6    38   0.374     13
+#  7 10055 Czechia Female Yes    Yes          5       4       4    82   0.187     13
+#  8 10062 Czechia Female Yes    Yes          3       6       3    81   0.187     12
+#  9 10064 Czechia Female Yes    Yes          5       5       5    64   0.374     13
+# 10 10065 Czechia Male   Yes    Yes          3       3       3    39   0.187     13
+# # … with 5,724 more rows
 ```
 
 
@@ -719,7 +724,7 @@ class: inverse
 1. `transmute()`: Similar to mutate, but only keeps variables created within it.
     </textarea>
 <style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
-<script src="libs/remark-latest.min.js"></script>
+<script src="../template/remark-latest.min.js"></script>
 <script>var slideshow = remark.create({
 "highlightLanguage": "r",
 "highlightStyle": "zenburn",
@@ -766,6 +771,19 @@ if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
     deleted = true;
   });
 })();
+// add `data-at-shortcutkeys` attribute to <body> to resolve conflicts with JAWS
+// screen reader (see PR #262)
+(function(d) {
+  let res = {};
+  d.querySelectorAll('.remark-help-content table tr').forEach(tr => {
+    const t = tr.querySelector('td:nth-child(2)').innerText;
+    tr.querySelectorAll('td:first-child .key').forEach(key => {
+      const k = key.innerText;
+      if (/^[a-z]$/.test(k)) res[k] = t;  // must be a single letter (key)
+    });
+  });
+  d.body.setAttribute('data-at-shortcutkeys', JSON.stringify(res));
+})(document);
 (function() {
   "use strict"
   // Replace <script> tags in slides area to make them executable

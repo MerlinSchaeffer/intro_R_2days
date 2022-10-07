@@ -11,16 +11,24 @@
     <link href="libs/tachyons/tachyons.min.css" rel="stylesheet" />
     <link href="libs/panelset/panelset.css" rel="stylesheet" />
     <script src="libs/panelset/panelset.js"></script>
-    <link rel="stylesheet" href="libs/Merlin169.css" type="text/css" />
+    <link rel="stylesheet" href="../template/Merlin169.css" type="text/css" />
   </head>
   <body>
     <textarea id="source">
 class: center, middle, inverse, title-slide
 
+.title[
 # Intro to R
+]
+.subtitle[
 ## Data Frames &amp; Tibbles
+]
+.author[
 ### Merlin Schaeffer &amp; Friedolin Merhout<br>Department of Sociology
+]
+.date[
 ### 2021-10-18
+]
 
 ---
 
@@ -266,7 +274,6 @@ table(conti)
 # Add packages for this session to library
 library(tidyverse) # Add the tidyverse package to my current library.
 library(haven) # Read and handle SPSS, Stata &amp; SAS data (installed with tidyverse)
-*library(essurvey) # Add ESS API package to library. (needs to be installed first)
 
 # Now create a couple of vectors.
 (age &lt;- c(34, 22, 42, 12, 76))
@@ -707,9 +714,9 @@ layout:false
 *   TRUE ~ NA                           # 3. and all others ~ NA
   ) # close case_when's bracket.
 )) # close mutate's (and the print) bracket.
-# Error: Problem with `mutate()` column `conti`.
-# ℹ `conti = case_when(...)`.
-# x must be a character vector, not a logical vector.
+# Error in `mutate()`:
+# ! Problem while computing `conti = case_when(...)`.
+# Caused by error in `case_when()`:
 ```
 
 When working with missing data in `case_when`, we also need to be cognizant of the type of the data. When look into the documentation for `NA` by writing `?NA`, you will learn:
@@ -749,7 +756,7 @@ background-position: center
 
 .push-left[
 &lt;br&gt;
-Please register as a user for the API of&lt;br&gt; the European Social Survey [here](https://www.europeansocialsurvey.org/user/new)
+Please register as a user and download the [European Social Survey 10](https://ess-search.nsd.no/en/study/172ac431-2a06-41df-9dab-c1fd8f3877e7) to the folder in which you have your RStudio-Project.
 &lt;br&gt;&lt;br&gt;
 &lt;img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQc8K5da5GSR5c4x4lJBIaBheKgcqfNjFfihonLBJWqbzUYVitp&amp;s" width="70%" style="display: block; margin: auto auto auto 0;" /&gt;
 ]
@@ -757,7 +764,7 @@ Please register as a user for the API of&lt;br&gt; the European Social Survey [h
 ---
 # Importing Data .font60[Local data]
 
-The classic way to work with actual data, is to download them to some folder and to then import them to your software environment. The tidyverse contains three packages for importing local data from your machine:
+The classic way to work with actual data, is to download them to the folder of your RStudio-project and to then import them to R. The tidyverse contains three packages for importing local data from your machine:
 
 --
 
@@ -768,10 +775,12 @@ The classic way to work with actual data, is to download them to some folder and
 
 ```r
 # Create an object ESS and assign the
-# imported ESS.dta to it, if you have
+# imported ESS.sav to it, if you have
 # downloaded it into your intro_r folder
-ESS &lt;- read_dta("ESS8e02_1.dta")
+ESS &lt;- read_spss("ESS10.sav")
 ```
+
+
 ]
 
 --
@@ -787,6 +796,8 @@ ESS &lt;- read_dta("ESS8e02_1.dta")
 ]
 .white[vcdv]
 - The `readr` package allows you to import csv, tsv and fwf files.&lt;br&gt; .backgrnote[See the `readr` website [here](https://readr.tidyverse.org/) and this [cheat sheet](https://rawgit.com/rstudio/cheatsheets/master/data-import.pdf) for details.]
+
+
 - The `readxl` package allows you to read in Excel's xlsx files. .backgrnote[See the  `readxl` website for more [here](https://readxl.tidyverse.org/).]
 ]
 
@@ -795,47 +806,31 @@ ESS &lt;- read_dta("ESS8e02_1.dta")
 - In this workshop, we will use a non-traditional approach and access the data directly from their online repository
 
 ---
-# Importing Data .font60[Using the ESS API]
-
---
-
-The `essurvey` package, allows us to download ESS data directly into our R session using the `import_rounds()` function. .backgrnote[If you did not install and load the package yet, run `install.packages("essurvey")` in your Console, then add `library(essurvey)` to your script)
-
-
-```r
-# Import the ESS round 9 data via the API
-ESS &lt;- import_rounds(rounds = 9, ess_email = "YOUR-EMAIL", format = "spss")
-```
-
---
-
-Note: .alert[using an API requires internet access!] So, consider placing data import and transformation in a dedicate R script.
-
-
+# The ESS
 
 
 ```r
 ESS
-# # A tibble: 49,519 × 572
-#    name      essround edition proddate  idno cntry    nwspol netusoft netustm ppltrst pplfair pplhlp polintr psppsgva
-#    &lt;chr&gt;        &lt;dbl&gt; &lt;chr&gt;   &lt;chr&gt;    &lt;dbl&gt; &lt;chr+lb&gt; &lt;dbl+&gt; &lt;dbl+lb&gt; &lt;dbl+l&gt; &lt;dbl+l&gt; &lt;dbl+l&gt; &lt;dbl+&gt; &lt;dbl+l&gt; &lt;dbl+lb&gt;
-#  1 ESS9e03_1        9 3.1     17.02.2…    27 AT [Aus…     60 5 [Ever…     180   2 [2]   2 [2]  2 [2] 3 [Har… 3 [Some]
-#  2 ESS9e03_1        9 3.1     17.02.2…   137 AT [Aus…     10 5 [Ever…      20   7 [7]   8 [8]  7 [7] 2 [Qui… 3 [Some]
-#  3 ESS9e03_1        9 3.1     17.02.2…   194 AT [Aus…     60 4 [Most…     180   5 [5]   7 [7]  7 [7] 4 [Not… 2 [Very…
-#  4 ESS9e03_1        9 3.1     17.02.2…   208 AT [Aus…     45 5 [Ever…     120   3 [3]   9 [9]  5 [5] 3 [Har… 2 [Very…
-#  5 ESS9e03_1        9 3.1     17.02.2…   220 AT [Aus…     30 1 [Neve…      NA   5 [5]   8 [8]  4 [4] 2 [Qui… 1 [Not …
-#  6 ESS9e03_1        9 3.1     17.02.2…   254 AT [Aus…     45 2 [Only…      NA   8 [8]   7 [7]  6 [6] 2 [Qui… 2 [Very…
-#  7 ESS9e03_1        9 3.1     17.02.2…   290 AT [Aus…     60 1 [Neve…      NA   6 [6]   1 [1]  3 [3] 4 [Not… 2 [Very…
-#  8 ESS9e03_1        9 3.1     17.02.2…   301 AT [Aus…     30 1 [Neve…      NA   7 [7]   7 [7]  7 [7] 3 [Har… 1 [Not …
-#  9 ESS9e03_1        9 3.1     17.02.2…   305 AT [Aus…     30 5 [Ever…     120   2 [2]   9 [9]  9 [9] 3 [Har… 1 [Not …
-# 10 ESS9e03_1        9 3.1     17.02.2…   400 AT [Aus…     25 4 [Most…     360   7 [7]   4 [4]  4 [4] 4 [Not… 2 [Very…
-# # … with 49,509 more rows, and 558 more variables: actrolga &lt;dbl+lbl&gt;, psppipla &lt;dbl+lbl&gt;, cptppola &lt;dbl+lbl&gt;,
-# #   trstprl &lt;dbl+lbl&gt;, trstlgl &lt;dbl+lbl&gt;, trstplc &lt;dbl+lbl&gt;, trstplt &lt;dbl+lbl&gt;, trstprt &lt;dbl+lbl&gt;,
-# #   trstep &lt;dbl+lbl&gt;, trstun &lt;dbl+lbl&gt;, vote &lt;dbl+lbl&gt;, prtvtcat &lt;dbl+lbl&gt;, prtvtdbe &lt;dbl+lbl&gt;,
-# #   prtvtdbg &lt;dbl+lbl&gt;, prtvtgch &lt;dbl+lbl&gt;, prtvtbcy &lt;dbl+lbl&gt;, prtvtecz &lt;dbl+lbl&gt;, prtvede1 &lt;dbl+lbl&gt;,
-# #   prtvede2 &lt;dbl+lbl&gt;, prtvtddk &lt;dbl+lbl&gt;, prtvtgee &lt;dbl+lbl&gt;, prtvtees &lt;dbl+lbl&gt;, prtvtdfi &lt;dbl+lbl&gt;,
-# #   prtvtdfr &lt;dbl+lbl&gt;, prtvtcgb &lt;dbl+lbl&gt;, prtvtahr &lt;dbl+lbl&gt;, prtvtfhu &lt;dbl+lbl&gt;, prtvtcie &lt;dbl+lbl&gt;,
-# #   prtvtcis &lt;dbl+lbl&gt;, prtvtcit &lt;dbl+lbl&gt;, prtvblt1 &lt;dbl+lbl&gt;, prtvblt2 &lt;dbl+lbl&gt;, prtvblt3 &lt;dbl+lbl&gt;, …
+# # A tibble: 18,060 × 513
+#    name       essround edition prodd…¹  idno cntry    pweight dweight nwspol netus…² netustm ppltrst pplfair pplhlp
+#    &lt;chr&gt;         &lt;dbl&gt; &lt;chr&gt;   &lt;chr&gt;   &lt;dbl&gt; &lt;chr+lb&gt;   &lt;dbl&gt;   &lt;dbl&gt; &lt;dbl+&gt; &lt;dbl+l&gt; &lt;dbl+l&gt; &lt;dbl+l&gt; &lt;dbl+l&gt; &lt;dbl+&gt;
+#  1 ESS10e01_3       10 1.3     4.10.2… 10002 BG [Bul…   0.218   1.03   80    1 [Nev…  NA     5 [5]   5 [5]   1 [1] 
+#  2 ESS10e01_3       10 1.3     4.10.2… 10006 BG [Bul…   0.218   0.879  63    5 [Eve… 180     0 [You… 6 [6]   2 [2] 
+#  3 ESS10e01_3       10 1.3     4.10.2… 10009 BG [Bul…   0.218   1.01  390    5 [Eve… 405     5 [5]   3 [3]   4 [4] 
+#  4 ESS10e01_3       10 1.3     4.10.2… 10024 BG [Bul…   0.218   0.955  60    5 [Eve…  80     5 [5]   5 [5]   3 [3] 
+#  5 ESS10e01_3       10 1.3     4.10.2… 10027 BG [Bul…   0.218   0.841 120    5 [Eve… 120     4 [4]   4 [4]   2 [2] 
+#  6 ESS10e01_3       10 1.3     4.10.2… 10048 BG [Bul…   0.218   0.946  60    5 [Eve…  60     3 [3]   3 [3]   3 [3] 
+#  7 ESS10e01_3       10 1.3     4.10.2… 10053 BG [Bul…   0.218   1.01   30    5 [Eve… 120     3 [3]   5 [5]   5 [5] 
+#  8 ESS10e01_3       10 1.3     4.10.2… 10055 BG [Bul…   0.218   1.03   70    5 [Eve… 260     4 [4]   4 [4]   6 [6] 
+#  9 ESS10e01_3       10 1.3     4.10.2… 10059 BG [Bul…   0.218   0.991  60    1 [Nev…  NA     5 [5]   7 [7]   4 [4] 
+# 10 ESS10e01_3       10 1.3     4.10.2… 10061 BG [Bul…   0.218   1.05   60    1 [Nev…  NA     0 [You… 1 [1]   2 [2] 
+# # … with 18,050 more rows, 499 more variables: polintr &lt;dbl+lbl&gt;, psppsgva &lt;dbl+lbl&gt;, actrolga &lt;dbl+lbl&gt;,
+# #   psppipla &lt;dbl+lbl&gt;, cptppola &lt;dbl+lbl&gt;, trstprl &lt;dbl+lbl&gt;, trstlgl &lt;dbl+lbl&gt;, trstplc &lt;dbl+lbl&gt;,
+# #   trstplt &lt;dbl+lbl&gt;, trstprt &lt;dbl+lbl&gt;, trstep &lt;dbl+lbl&gt;, trstun &lt;dbl+lbl&gt;, trstsci &lt;dbl+lbl&gt;, vote &lt;dbl+lbl&gt;,
+# #   prtvtebg &lt;dbl+lbl&gt;, prtvtbhr &lt;dbl+lbl&gt;, prtvtecz &lt;dbl+lbl&gt;, prtvthee &lt;dbl+lbl&gt;, prtvtefi &lt;dbl+lbl&gt;,
+# #   prtvtefr &lt;dbl+lbl&gt;, prtvtghu &lt;dbl+lbl&gt;, prtvclt1 &lt;dbl+lbl&gt;, prtvclt2 &lt;dbl+lbl&gt;, prtvclt3 &lt;dbl+lbl&gt;,
+# #   prtvtfsi &lt;dbl+lbl&gt;, prtvtesk &lt;dbl+lbl&gt;, contplt &lt;dbl+lbl&gt;, donprty &lt;dbl+lbl&gt;, badge &lt;dbl+lbl&gt;,
+# #   sgnptit &lt;dbl+lbl&gt;, pbldmna &lt;dbl+lbl&gt;, bctprd &lt;dbl+lbl&gt;, pstplonl &lt;dbl+lbl&gt;, volunfp &lt;dbl+lbl&gt;, …
 ```
 
 ---
@@ -851,7 +846,7 @@ ESS
 table(ESS$dscrgrp)
 # 
 #     1     2 
-#  3697 45379
+#  1315 16476
 ```
 ]
 
@@ -889,7 +884,7 @@ If you want to use a variable as categorical, use `as_factor()` to make the labe
 table(ESS$dscrgrp)
 # 
 #        Yes         No    Refusal Don't know  No answer 
-#       3697      45379          0          0          0
+#       1315      16476          0          0          0
 ```
 ]
 
@@ -907,7 +902,7 @@ If you want to use a variable as numeric, use `zap_labels()` to prevent problems
 # to get a first impression of the variable.
 summary(ESS$agea)
 #    Min. 1st Qu.  Median    Mean 3rd Qu.    Max.    NA's 
-#    15.0    36.0    52.0    51.1    66.0    90.0     222
+#    15.0    36.0    51.0    50.9    66.0    90.0     120
 ```
 
 ]
@@ -944,7 +939,7 @@ class: inverse
 9. `zap_labels()`: Turn a labelled Stata/SPSS variable into a numeric vector.
     </textarea>
 <style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
-<script src="libs/remark-latest.min.js"></script>
+<script src="../template/remark-latest.min.js"></script>
 <script>var slideshow = remark.create({
 "highlightLanguage": "r",
 "highlightStyle": "zenburn",
@@ -991,6 +986,19 @@ if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
     deleted = true;
   });
 })();
+// add `data-at-shortcutkeys` attribute to <body> to resolve conflicts with JAWS
+// screen reader (see PR #262)
+(function(d) {
+  let res = {};
+  d.querySelectorAll('.remark-help-content table tr').forEach(tr => {
+    const t = tr.querySelector('td:nth-child(2)').innerText;
+    tr.querySelectorAll('td:first-child .key').forEach(key => {
+      const k = key.innerText;
+      if (/^[a-z]$/.test(k)) res[k] = t;  // must be a single letter (key)
+    });
+  });
+  d.body.setAttribute('data-at-shortcutkeys', JSON.stringify(res));
+})(document);
 (function() {
   "use strict"
   // Replace <script> tags in slides area to make them executable

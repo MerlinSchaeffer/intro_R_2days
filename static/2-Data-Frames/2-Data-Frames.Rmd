@@ -5,8 +5,8 @@ author: "Merlin Schaeffer & Friedolin Merhout<br>Department of Sociology"
 date: "2021-10-18"
 output:
   xaringan::moon_reader:
-    chakra: libs/remark-latest.min.js
-    css: ["libs/Merlin169.css"]
+    chakra: "../template/remark-latest.min.js"
+    css: ["../template/Merlin169.css"]
     lib_dir: libs
     nature:
       highlightLanguage: r
@@ -14,6 +14,7 @@ output:
       highlightLines: true
       countIncrementalSlides: false
       ratio: '16:9'
+
 ---
 # Processing atomic vectors .font60[Numeric vectors]
 
@@ -275,7 +276,6 @@ table(conti)
 # Add packages for this session to library
 library(tidyverse) # Add the tidyverse package to my current library.
 library(haven) # Read and handle SPSS, Stata & SAS data (installed with tidyverse)
-library(essurvey) # Add ESS API package to library. (needs to be installed first) #<<
 
 # Now create a couple of vectors.
 (age <- c(34, 22, 42, 12, 76))
@@ -642,7 +642,7 @@ background-position: center
 
 .push-left[
 <br>
-Please register as a user for the API of<br> the European Social Survey [here](https://www.europeansocialsurvey.org/user/new)
+Please register as a user and download the [European Social Survey 10](https://ess-search.nsd.no/en/study/172ac431-2a06-41df-9dab-c1fd8f3877e7) to the folder in which you have your RStudio-Project.
 <br><br>
 ```{r, echo = FALSE, out.width='70%', fig.align='left'}
 knitr::include_graphics('https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQc8K5da5GSR5c4x4lJBIaBheKgcqfNjFfihonLBJWqbzUYVitp&s')
@@ -652,7 +652,7 @@ knitr::include_graphics('https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ
 ---
 # Importing Data .font60[Local data]
 
-The classic way to work with actual data, is to download them to some folder and to then import them to your software environment. The tidyverse contains three packages for importing local data from your machine:
+The classic way to work with actual data, is to download them to the folder of your RStudio-project and to then import them to R. The tidyverse contains three packages for importing local data from your machine:
 
 --
 
@@ -664,9 +664,13 @@ knitr::include_graphics('https://haven.tidyverse.org/logo.png')
 - The `haven` package allows you to import Stata, SPSS, and SAS files. .backgrnote[See the `haven` website for details [here](https://haven.tidyverse.org/).]
 ```{r eval = FALSE}
 # Create an object ESS and assign the
-# imported ESS.dta to it, if you have
+# imported ESS.sav to it, if you have
 # downloaded it into your intro_r folder
-ESS <- read_dta("ESS8e02_1.dta")
+ESS <- read_spss("ESS10.sav")
+```
+
+```{r include = FALSE}
+ESS <- read_spss("./../../assets/ESS10.sav")
 ```
 ]
 
@@ -687,6 +691,8 @@ knitr::include_graphics('https://readxl.tidyverse.org/logo.png')
 ]
 .white[vcdv]
 - The `readr` package allows you to import csv, tsv and fwf files.<br> .backgrnote[See the `readr` website [here](https://readr.tidyverse.org/) and this [cheat sheet](https://rawgit.com/rstudio/cheatsheets/master/data-import.pdf) for details.]
+
+
 - The `readxl` package allows you to read in Excel's xlsx files. .backgrnote[See the  `readxl` website for more [here](https://readxl.tidyverse.org/).]
 ]
 
@@ -695,27 +701,7 @@ knitr::include_graphics('https://readxl.tidyverse.org/logo.png')
 - In this workshop, we will use a non-traditional approach and access the data directly from their online repository
 
 ---
-# Importing Data .font60[Using the ESS API]
-
---
-
-The `essurvey` package, allows us to download ESS data directly into our R session using the `import_rounds()` function. .backgrnote[If you did not install and load the package yet, run `install.packages("essurvey")` in your Console, then add `library(essurvey)` to your script)
-
-```{r eval = FALSE}
-# Import the ESS round 9 data via the API
-ESS <- import_rounds(rounds = 9, ess_email = "YOUR-EMAIL", format = "spss")
-```
-
---
-
-Note: .alert[using an API requires internet access!] So, consider placing data import and transformation in a dedicate R script.
-
-```{r include = FALSE}
-library(essurvey) # Add ESS API package to library.
-
-# Import the ESS round 9 data via the API
-ESS <- import_rounds(rounds = 9, ess_email = "merlin.schaeffer@uni-koeln.de", format = "spss")
-```
+# The ESS
 
 ```{r}
 ESS

@@ -2,13 +2,13 @@
 title: "Introduction to R"
 subtitle: "Hello R: Vectors."
 author: "Merlin Schaeffer & Friedolin Merhout<br>Department of Sociology"
-date: "2021-10-18"
+date: "2022-10-19"
 # date: "`r Sys.Date()`"
 mathjax: "https://cdn.bootcss.com/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_HTMLorMML"
 output:
   xaringan::moon_reader:
-    chakra: libs/remark-latest.min.js
-    css: ["libs/Merlin169.css"]
+    chakra: "../template/remark-latest.min.js"
+    css: ["../template/Merlin169.css"]
     lib_dir: libs
     nature:
       highlightLanguage: r
@@ -41,37 +41,18 @@ xaringanExtra::use_xaringan_extra(c("tile_view", "tachyons"))
 xaringanExtra::use_panelset()
 ```
 
-# Lecturers and Schedule
+# Lecturers
 
 --
 
-.push-left[
+.center[
 
 ![](https://www2.adm.ku.dk/selv/pls/prt_www40.hentindhold_cms?p_personid=608735)
 ![](https://www2.adm.ku.dk/selv/pls/prt_www40.hentindhold_cms?p_personid=646912)
 <!-- Need to use &nbsp; to force spaces for formatting -->
 .caption[
 &nbsp; Merlin Schaeffer &nbsp;&nbsp;&nbsp;&nbsp; Friedolin Merhout
-]
-
-]
-
---
-
-.push-right[
-    Day|Time|Content
-    ---|---|---
-    1|**10**-12| Hello R: Vectors
-     |12-13| `r emo::ji("plate")`
-     |13-15| Data Frames and Tibbles
-     |15-**17**| Visualization I
-    2|**9**-11| Piping and Grouped Operations
-     |11-13| Visualization II
-     |13-14| `r emo::ji("plate")`
-     |14-16| Linear OLS Regression I
-     |16-**18**| Linear OLS Regression II
-    
-]
+]]
 
 ---
 

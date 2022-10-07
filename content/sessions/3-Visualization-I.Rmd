@@ -19,8 +19,8 @@ library(haven) # Handle labelled data.
 library(essurvey) # Add ESS API package to library.
 library(ggplot2) # Allows us to create nice figures.
 
-# Import the ESS round 9 data via the API
-ESS <- import_rounds(rounds = 9, ess_email = "merlin.schaeffer@uni-koeln.de", format = "spss")
+# Read ESS round 10 data
+ESS <- read_spss("./../../assets/ESS10.sav")
 
 ESS <- transmute(ESS, # Recode several variables & keep only the recoded ones (i.e., transmute vs mutate). #<<
                  idno = zap_labels(idno),
@@ -34,7 +34,7 @@ ESS <- transmute(ESS, # Recode several variables & keep only the recoded ones (i
                  imueclt = max(imueclt, na.rm = TRUE) - zap_labels(imueclt), # Also turn scale around.
                  imwbcnt = max(imwbcnt, na.rm = TRUE) - zap_labels(imwbcnt), # Also turn scale around.
                  agea = zap_labels(agea),
-                 pspwght = zap_labels(pspwght),
+                 pspwght = pweight*dweight,
                  eduyrs = case_when(
                    eduyrs > 21 ~ 21, # Recode to max 21 years of edu.
                    eduyrs < 9 ~ 9, # Recode to min 9 years of edu.
@@ -44,10 +44,7 @@ ESS <- transmute(ESS, # Recode several variables & keep only the recoded ones (i
 
 ESS <- dplyr::filter(ESS,
                      # Only respondents whose parents were born in country of interview.
-                     facntr == "Yes" & mocntr == "Yes" &
-                       # Only respondents from direct neighbors of Denmark:
-                       (cntry == "Denmark" | cntry == "Germany" | cntry == "Sweden" | cntry == "Norway")
-)
+                     facntr == "Yes" & mocntr == "Yes" & cntry == "Czechia")
 
 # Casewise deletion of missing values
 ESS <- drop_na(ESS)
@@ -64,13 +61,11 @@ ggplot(data = ESS,
        mapping = aes(y = imwbcnt, x = factor(eduyrs), weight = pspwght)) +
   geom_boxplot() +
   geom_smooth(mapping = aes(group = 1)) +
-  facet_wrap( ~ cntry, nrow = 1) + 
   labs(y = "Immigrants make country \n worse place to live", 
-       x = "Years of Education")
+       x = "Years of Education") +
+  theme_minimal()
 ```
 
 ## Homework and further readings
 1. Finish web exercise 1 through 3.
-2. Read Chapter [3 Data Visualization](http://r4ds.had.co.nz/data-visualisation.html).
-3. Read Chapter [7 Exploratory Data Analysis](http://r4ds.had.co.nz/exploratory-data-analysis.html).
 

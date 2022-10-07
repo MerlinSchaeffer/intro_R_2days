@@ -5,8 +5,8 @@ author: "Merlin Schaeffer & Friedolin Merhout<br>Department of Sociology"
 date: "2021-10-18"
 output: 
   xaringan::moon_reader:
-    chakra: libs/remark-latest.min.js
-    css: ["libs/Merlin169.css"]
+    chakra: "../template/remark-latest.min.js"
+    css: ["../template/Merlin169.css"]
     lib_dir: libs
     nature:
       highlightLanguage: r
@@ -55,16 +55,15 @@ xaringanExtra::use_panelset()
 # Add packages to library
 library(tidyverse) # Add the tidyverse package to my current library.
 library(haven) # Read and handle SPSS, Stata & SAS data (no need to install)
-library(essurvey) # Add ESS API package to library.
 library(ggplot2) # Allows us to create nice figures. #<<
 
-# Import the ESS round 9 data via the API
-ESS <- import_rounds(rounds = 9, ess_email = "YOUR-EMAIL", format = "spss")
+# Import the ESS round 10
+ESS <- read_spss("ESS10.sav")
 ```
 
 ```{r include = FALSE}
 # Import the ESS round 9 data via the API
-ESS_raw <- import_rounds(rounds = 9, ess_email = "merlin.schaeffer@uni-koeln.de", format = "spss")
+ESS_raw <- read_spss("./../../assets/ESS10.sav")
 ```
 
 --
@@ -82,7 +81,7 @@ ESS <- transmute(ESS_raw, # Recode several variables & keep only the recoded one
                  imueclt = max(imueclt, na.rm = TRUE) - zap_labels(imueclt), # Also turn scale around.
                  imwbcnt = max(imwbcnt, na.rm = TRUE) - zap_labels(imwbcnt), # Also turn scale around.
                  agea = zap_labels(agea),
-                 pspwght = zap_labels(pspwght),
+                 pspwght = pweight*dweight,
                  eduyrs = case_when(
                    eduyrs > 21 ~ 21, # Recode to max 21 years of edu.
                    eduyrs < 9 ~ 9, # Recode to min 9 years of edu.
@@ -110,10 +109,8 @@ class: clear middle
 ESS <- dplyr::filter(ESS,
                      # Only respondents whose parents were born in country of interview.
                      facntr == "Yes" & mocntr == "Yes" &
-                       # Only respondents from Germany and land-boarder neighbors:
-                       (cntry %in% c("Germany", "Denmark",  "Poland",
-                                     "Austria", "Switzerland", "Belgium",
-                                     "France", "Czechia", "Netherlands")
+                       # Only respondents from Eastern European countries:
+                       (cntry %in% c("Slovakia", "Hungary", "Czechia", "Slovenia")
 ))
 
 # Casewise deletion of missing values
