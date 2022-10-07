@@ -2,7 +2,7 @@
 title: "Web Exercise 2"
 author: Merlin Schaeffer & Friedolin Merhout
 output: webexercises::webexercises_default
-date: 2021-10-18
+date: 2022-10-19
 publishdate: 2021-01-25
 ---
 
@@ -95,27 +95,25 @@ table(conti)
 # Add packages to library
 library(tidyverse) # Add the tidyverse package to my current library.
 library(haven) # Handle labelled data.
-library(essurvey) # Add ESS API package to library.
 
-# Import the ESS round 9 data via the API
-ESS <- import_rounds(rounds = 9, ess_email = "YOUR-EMAIL", format = "spss")
+# Import the ESS round 10
+ESS <- read_spss("ESS10.sav")
 ```
 
 ```{r include = FALSE}
 # Add packages to library
 library(tidyverse) # Add the tidyverse package to my current library.
 library(haven) # Handle labelled data.
-library(essurvey) # Add ESS API package to library.
 
-# Import the ESS round 9 data via the API
-ESS <- import_rounds(rounds = 9, ess_email = "merlin.schaeffer@uni-koeln.de", format = "spss")
+# Import the ESS round 10
+ESS <- read_spss("./../../assets/ESS10.sav")
 ```
 `r unhide()`
 
 6. Keep only a person and a country identifier, the post-stratification weights, `eduyrs`, `agea`, `dscrgrp`, and three variables indicating homophobia `freehms`, `hmsfmlsh`, `hmsacld.` The function that allows you to do that is called `r fitb("select()", width = "8")`.
 `r hide("R solution -> dont' peak to early ;) !")`
 ```{r}
-(ESS <- select(ESS, idno, cntry, pspwght,
+(ESS <- select(ESS, idno, cntry, pweight, dweight,
                eduyrs, agea, dscrgrp, 
                freehms, hmsfmlsh, hmsacld))
 ```
@@ -127,7 +125,7 @@ ESS <- import_rounds(rounds = 9, ess_email = "merlin.schaeffer@uni-koeln.de", fo
 ESS <- mutate(ESS,
               idno = zap_labels(idno),
               cntry = as_factor(cntry),
-              pspwght = zap_labels(pspwght),
+              pspwght = pweight*dweight,
               eduyrs = zap_labels(eduyrs),
               agea = zap_labels(agea),
               dscrgrp = as_factor(dscrgrp),

@@ -2,7 +2,7 @@
 title: "Intro to R"
 subtitle: "Visualization 1"
 author: "Merlin Schaeffer & Friedolin Merhout<br>Department of Sociology"
-date: "2021-10-18"
+date: "2022-10-19"
 output: 
   xaringan::moon_reader:
     chakra: "../template/remark-latest.min.js"
@@ -62,7 +62,7 @@ ESS <- read_spss("ESS10.sav")
 ```
 
 ```{r include = FALSE}
-# Import the ESS round 9 data via the API
+# Import the ESS round 10
 ESS_raw <- read_spss("./../../assets/ESS10.sav")
 ```
 
@@ -110,8 +110,8 @@ ESS <- dplyr::filter(ESS,
                      # Only respondents whose parents were born in country of interview.
                      facntr == "Yes" & mocntr == "Yes" &
                        # Only respondents from Eastern European countries:
-                       (cntry %in% c("Slovakia", "Hungary", "Czechia", "Slovenia")
-))
+                       (cntry %in% c("Slovakia", "Hungary", "Czechia", "Slovenia"))
+)
 
 # Casewise deletion of missing values
 (ESS <- drop_na(ESS))
@@ -124,7 +124,7 @@ ESS <- dplyr::filter(ESS,
 - continued set up
   - case selection:
     - only respondents with native parents
-    - only respondents from Germany and landboarder neighbors
+    - only respondents from GEuropean countries
   - removing cases with any missing data
 
 ---
@@ -271,9 +271,10 @@ ggplot(data = <DATA>) +         # Create a coordinate system for <DATA>, and add
   <GEOM_FUNCTION>(              # a layer of (geometric) information, which #<<
      mapping = aes(<MAPPINGS>), # maps our data to aesthetics, and #<<
      stat = <STAT>,             # may depend on statistical transformations.
+     position = <POSITION>      # Positioning may be adjusted.
   ) +
   <COORDINATE_FUNCTION> +       # Change the default coordinate system.
-  <FACET_FUNCTION>              # Draw sub-plots by categorical variables. #<<
+  <FACET_FUNCTION>              # Draw sub-plots by categorical variables.
 ```
 .center[.backgrnote[*Source*: Wickham & Grolemund ["R for Data Science"](http://r4ds.had.co.nz/data-visualisation.html)]]
 
@@ -373,16 +374,17 @@ layout:true
 .center[.content-box-green[
 How are these two plots similar?
 ]]
+<br>
 
 .push-left[
-```{r out.width='75%', fig.width = 4.5, fig.height = 4}
+```{r out.width='70%', fig.width = 4.5, fig.height = 4}
 ggplot(data = ESS) +
   geom_point(mapping = aes(y = imwbcnt, x = eduyrs))
 ```
 ]
 
 .push-right[
-```{r out.width='75%', fig.width = 4.5, fig.height = 4}
+```{r out.width='70%', fig.width = 4.5, fig.height = 4}
 ggplot(data = ESS) +
   geom_smooth(mapping = aes(y = imwbcnt, x = eduyrs))
 ```
@@ -554,93 +556,7 @@ ggplot(data = ESS, mapping = aes(y = imwbcnt, x = eduyrs)) +
 - Local smooth y: age (18-90)
 
 ---
-layout:false
-# Putting it all together
-```{r out.width='65%', fig.width = 8, fig.height = 4}
-ggplot(data = ESS, # Coordinate system, add ...
-       mapping = aes(y = imwbcnt, x = factor(eduyrs))) +  # define global aesthetics, add ...
-  geom_boxplot() + # a layer of boxplots, add
-  geom_smooth(mapping = aes(color = cntry, group = cntry)) # Add smooth for each country.
-```
-
-???
-
-- Now we've got all the ingredients for an informative plot
-- But you might say, trends for different countries are hard to read
-
----
-layout:true
-# Facets .font60[Sub-plots by categorical data]
----
-
-Layering and using many aesthetics can create overwhelming plots. In this case smaller replicates (facets) of the same plot might be useful.
-```{r out.width='75%', fig.width = 8, fig.height = 3}
-ggplot(data = ESS, mapping = aes(y = imwbcnt, x = factor(eduyrs))) +
-  geom_boxplot() +
-  geom_smooth(mapping = aes(group = 1)) +
-  facet_wrap( ~ cntry, nrow = 1) # Make sub-plots by cntry. #<<
-```
-
-???
-
-- Consider whether faceting helps to see the comparisons you are interested in!
-- Note that with facets, it becomes crucial to find appropriate dimensions
-
----
-
-
-Replicate plots can also be arranged in a grid for two categorical variables.
-```{r out.width='85%', fig.width = 8, fig.height = 3}
-ggplot(data = ESS, mapping = aes(y = imwbcnt, x = factor(eduyrs))) +
-  geom_boxplot() +
-  geom_smooth(mapping = aes(group = 1)) +
-  facet_grid(gndr ~ cntry) # Make sub-plots by gender (row) ~ country (column). #<<
-```
-
----
-layout:false
-# Exporting plots .font60[`ggsave()`]
-
-To enable you to use your plot outside R, `ggplot` provides functionality to export them using the function `ggsave()`. 
-
-You can export your plot to various file types, including pdf, jpeg, png, and many more. `ggsave()` will determine the type from the extension of the name you give to the file (e.g., "MyPlot.pdf").
-
-```{r}
-# Make our plot and assign it to object my_plot.
-my_plot <- ggplot(data = ESS, mapping = aes(y = imwbcnt, x = factor(eduyrs))) +
-  geom_boxplot() +
-  geom_smooth(mapping = aes(group = 1)) +
-  facet_grid(gndr ~ cntry)
-
-# Save the plot into the working directory as pdf with the dimensions 9 inches by 4.5 inches.
-ggsave(filename = "myplot1.pdf", plot = my_plot, width = 8, height = 3) #<<
-```
-
---
-
-```{r}
-# Save the plot but with different dimensions
-ggsave(filename = "myplot2.pdf", plot = my_plot, width = 16, height = 9)
-```
-
---
-
-```{r}
-# Save the plot as jpeg, with yet different dimensions and very low resolution to reduce the file size.
-ggsave(filename = "myplot1.jpeg", plot = my_plot, width = 4.5, height = 9, dpi = 50)
-```
-
-???
-
-- Key syntax:
-  - filename
-  - plot (defaults to most recent)
-  - dimensions are optional
-
-- PDFs do not need the dpi argument, because they are vector-based graphics.
-
-
----
+layout: false
 class: inverse
 # General lesson
 
@@ -652,7 +568,7 @@ ggplot(data = <DATA>) +         # Create a coordinate system for <DATA>, and add
      stat = <STAT>,             # may depend on statistical transformations.
   ) +
   <COORDINATE_FUNCTION> +       # Change the default coordinate system.
-  <FACET_FUNCTION>              # Draw sub-plots by categorical variables. #<<
+  <FACET_FUNCTION>              # Draw sub-plots by categorical variables.
 ```
 .font70[*Source*: Wickham & Grolemund ["R for Data Science"](http://r4ds.had.co.nz/data-visualisation.html)]
 

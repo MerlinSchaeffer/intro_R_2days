@@ -2,7 +2,7 @@
 title: "Web Exercise 3"
 author: Merlin Schaeffer & Friedolin Merhout
 output: webexercises::webexercises_default
-date: 2021-10-18
+date: 2022-10-19
 publishdate: 2021-02-12
 ---
 
@@ -27,14 +27,13 @@ knitr::opts_chunk$set(
 # Add packages to library
 library(tidyverse) # Add the tidyverse package to my current library.
 library(haven) # Handle labelled data.
-library(essurvey) # Add ESS API package to library.
 library(ggplot2) # Allows us to create nice figures.
 library(webexercises) # Create interactive web pages that students can use in self-guided learning.
 ```
 
 ```{r include  = FALSE}
-# Import the ESS round 9 data via the API
-ESS <- import_rounds(rounds = 9, ess_email = "merlin.schaeffer@uni-koeln.de", format = "spss")
+# Import the ESS round 10
+ESS <- read_spss("./../../assets/ESS10.sav")
 ```
 
 ```{r}
@@ -54,7 +53,7 @@ ESS <- transmute(ESS, # Recode several variables & keep only the recoded ones (i
                  hmsfmlsh = as_factor(hmsfmlsh),
                  hmsacld = as_factor(hmsacld),
                  agea = zap_labels(agea),
-                 pspwght = zap_labels(pspwght),
+                 pspwght = pweight*dweight,
                  eduyrs = zap_labels(eduyrs))
 ```
 
@@ -67,7 +66,7 @@ ESS <- dplyr::filter(ESS,
                      # Now keep respondents of immigrant origin!
                      # facntr == "Yes" & mocntr == "Yes" & # Keep respondents of immigrant origin #<<
                        # Only respondents from direct neighbors of Denmark:
-                       (cntry == "Denmark" | cntry == "Germany" | cntry == "Sweden" | cntry == "Norway")
+                       (cntry %in% c("Slovakia", "Hungary", "Czechia", "Slovenia"))
 )
 
 # Casewise deletion of missing values
