@@ -2,7 +2,7 @@
 title: "3 Visualization I"
 summary: "This lecture will introduce you to the basics of the grammar of graphics and ggplot2."
 author: Merlin Schaeffer & Friedolin Merhout
-date: 2021-10-18
+date: 2022-10-19
 publishdate: 2021-09-03
 ---
 

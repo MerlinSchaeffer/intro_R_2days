@@ -2,30 +2,30 @@
 title: "2 Data Frames and Tibbles"
 summary: "This lecture will introduce you to data frames and tibbles, and how to work with them as well as with atomic vectors."
 author: Merlin Schaeffer & Friedolin Merhout
-date: 2021-10-18
+date: 2022-10-19
 publishdate: 2021-09-03
 ---
 
-<script src="/rmarkdown-libs/header-attrs/header-attrs.js"></script>
 
 
 <p>This lecture will introduce you to data frames and tibbles, and how to work with them as well as with atomic vectors. We will also cover packages - the source of R’s versatility - and get to know basic functionality from the collection of packages known as tidyverse. A set of packages containing, among others, a dataset of Star Wars characters:</p>
 <pre class="r"><code>library(tidyverse)
 starwars
 # # A tibble: 87 × 14
-#    name     height  mass hair_color  skin_color  eye_color birth_year sex   gender homeworld species films vehicles
-#    &lt;chr&gt;     &lt;int&gt; &lt;dbl&gt; &lt;chr&gt;       &lt;chr&gt;       &lt;chr&gt;          &lt;dbl&gt; &lt;chr&gt; &lt;chr&gt;  &lt;chr&gt;     &lt;chr&gt;   &lt;lis&gt; &lt;list&gt;  
-#  1 Luke Sk…    172    77 blond       fair        blue            19   male  mascu… Tatooine  Human   &lt;chr… &lt;chr [2…
-#  2 C-3PO       167    75 &lt;NA&gt;        gold        yellow         112   none  mascu… Tatooine  Droid   &lt;chr… &lt;chr [0…
-#  3 R2-D2        96    32 &lt;NA&gt;        white, blue red             33   none  mascu… Naboo     Droid   &lt;chr… &lt;chr [0…
-#  4 Darth V…    202   136 none        white       yellow          41.9 male  mascu… Tatooine  Human   &lt;chr… &lt;chr [0…
-#  5 Leia Or…    150    49 brown       light       brown           19   fema… femin… Alderaan  Human   &lt;chr… &lt;chr [1…
-#  6 Owen La…    178   120 brown, grey light       blue            52   male  mascu… Tatooine  Human   &lt;chr… &lt;chr [0…
-#  7 Beru Wh…    165    75 brown       light       blue            47   fema… femin… Tatooine  Human   &lt;chr… &lt;chr [0…
-#  8 R5-D4        97    32 &lt;NA&gt;        white, red  red             NA   none  mascu… Tatooine  Droid   &lt;chr… &lt;chr [0…
-#  9 Biggs D…    183    84 black       light       brown           24   male  mascu… Tatooine  Human   &lt;chr… &lt;chr [0…
-# 10 Obi-Wan…    182    77 auburn, wh… fair        blue-gray       57   male  mascu… Stewjon   Human   &lt;chr… &lt;chr [1…
-# # … with 77 more rows, and 1 more variable: starships &lt;list&gt;</code></pre>
+#    name             height  mass hair_…¹ skin_…² eye_c…³ birth…⁴ sex   gender homew…⁵ species films vehic…⁶ stars…⁷
+#    &lt;chr&gt;             &lt;int&gt; &lt;dbl&gt; &lt;chr&gt;   &lt;chr&gt;   &lt;chr&gt;     &lt;dbl&gt; &lt;chr&gt; &lt;chr&gt;  &lt;chr&gt;   &lt;chr&gt;   &lt;lis&gt; &lt;list&gt;  &lt;list&gt; 
+#  1 Luke Skywalker      172    77 blond   fair    blue       19   male  mascu… Tatooi… Human   &lt;chr&gt; &lt;chr&gt;   &lt;chr&gt;  
+#  2 C-3PO               167    75 &lt;NA&gt;    gold    yellow    112   none  mascu… Tatooi… Droid   &lt;chr&gt; &lt;chr&gt;   &lt;chr&gt;  
+#  3 R2-D2                96    32 &lt;NA&gt;    white,… red        33   none  mascu… Naboo   Droid   &lt;chr&gt; &lt;chr&gt;   &lt;chr&gt;  
+#  4 Darth Vader         202   136 none    white   yellow     41.9 male  mascu… Tatooi… Human   &lt;chr&gt; &lt;chr&gt;   &lt;chr&gt;  
+#  5 Leia Organa         150    49 brown   light   brown      19   fema… femin… Aldera… Human   &lt;chr&gt; &lt;chr&gt;   &lt;chr&gt;  
+#  6 Owen Lars           178   120 brown,… light   blue       52   male  mascu… Tatooi… Human   &lt;chr&gt; &lt;chr&gt;   &lt;chr&gt;  
+#  7 Beru Whitesun l…    165    75 brown   light   blue       47   fema… femin… Tatooi… Human   &lt;chr&gt; &lt;chr&gt;   &lt;chr&gt;  
+#  8 R5-D4                97    32 &lt;NA&gt;    white,… red        NA   none  mascu… Tatooi… Droid   &lt;chr&gt; &lt;chr&gt;   &lt;chr&gt;  
+#  9 Biggs Darklight…    183    84 black   light   brown      24   male  mascu… Tatooi… Human   &lt;chr&gt; &lt;chr&gt;   &lt;chr&gt;  
+# 10 Obi-Wan Kenobi      182    77 auburn… fair    blue-g…    57   male  mascu… Stewjon Human   &lt;chr&gt; &lt;chr&gt;   &lt;chr&gt;  
+# # … with 77 more rows, and abbreviated variable names ¹​hair_color, ²​skin_color, ³​eye_color, ⁴​birth_year,
+# #   ⁵​homeworld, ⁶​vehicles, ⁷​starships</code></pre>
 <p>In this session you will also learn how to access specific variables or cases from a tibble, how to do complex data transformations and recodes, and finally, how to use an API to import data from the European Social Survey.</p>
 <p>Lecture slides: <a href="/2-Data-Frames/2-Data-Frames.html"><strong>Data Frames and Tibbles</strong></a></p>
 <p>Today’s exercise: <a href="/exercises/exercise2.html"><strong>Web Excercise 2</strong></a></p>

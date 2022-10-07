@@ -24,4 +24,4 @@ cta_note:
   label: 18 & 19 October 2021
 ---
 
-**a two day GESIS workshop**
+**a three-day GESIS workshop**

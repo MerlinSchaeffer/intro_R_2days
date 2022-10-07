@@ -2,7 +2,7 @@
 title: "2 Data Frames and Tibbles"
 summary: "This lecture will introduce you to data frames and tibbles, and how to work with them as well as with atomic vectors."
 author: Merlin Schaeffer & Friedolin Merhout
-date: 2021-10-18
+date: 2022-10-19
 publishdate: 2021-09-03
 ---
 

@@ -12,4 +12,4 @@ title = "About this Course"
 author = "admin"
 +++
 
-<iframe src="https://training.gesis.org/?site=pDetails&child=full&pID=0xD7C752CADDF749DE868832293F316B98" height="100%" width="100%" frameBorder="0" style="min-height: 560px;"></iframe>
+<iframe src="https://training.gesis.org/?site=pDetails&child=full&pID=0x5ECFBB6781F7435B91AA73DA9A0B5C80" height="100%" width="100%" frameBorder="0" style="min-height: 560px;"></iframe>
