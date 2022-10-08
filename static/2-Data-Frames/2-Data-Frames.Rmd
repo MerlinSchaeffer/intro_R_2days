@@ -2,7 +2,7 @@
 title: "Intro to R"
 subtitle: "Data Frames & Tibbles"
 author: "Merlin Schaeffer & Friedolin Merhout<br>Department of Sociology"
-date: "2021-10-18"
+date: "2021-10-19"
 output:
   xaringan::moon_reader:
     chakra: "../template/remark-latest.min.js"

@@ -1,0 +1,675 @@
+<!DOCTYPE html>
+<html lang="" xml:lang="">
+  <head>
+    <title>Intro to R for Social Data Science</title>
+    <meta charset="utf-8" />
+    <meta name="author" content="Merlin Schaeffer &amp; Friedolin Merhout   Department of Sociology" />
+    <meta name="date" content="2022-10-08" />
+    <script src="libs/header-attrs/header-attrs.js"></script>
+    <link href="libs/tile-view/tile-view.css" rel="stylesheet" />
+    <script src="libs/tile-view/tile-view.js"></script>
+    <link href="libs/tachyons/tachyons.min.css" rel="stylesheet" />
+    <link href="libs/panelset/panelset.css" rel="stylesheet" />
+    <script src="libs/panelset/panelset.js"></script>
+    <link rel="stylesheet" href="../template/Merlin169.css" type="text/css" />
+  </head>
+  <body>
+    <textarea id="source">
+class: center, middle, inverse, title-slide
+
+.title[
+# Intro to R for Social Data Science
+]
+.subtitle[
+## 9 Interaction Effects and Polynomials
+]
+.author[
+### Merlin Schaeffer &amp; Friedolin Merhout <br> Department of Sociology
+]
+.date[
+### 2022-10-08
+]
+
+---
+
+
+# Let's get ready
+
+
+```r
+# Add packages to library
+library(tidyverse) # Add the tidyverse package to my current library.
+library(haven) # Handle labelled data.
+library(ggplot2) # Allows us to create nice figures.
+library(estimatr) # Allows us to estimate (cluster-)robust standard errors.
+library(texreg) # Allows us to make nicely-formatted Html &amp; Latex regression tables.
+library(broom) # Allows us to turn parts of model objects into tibbles.
+*library(modelr) # Model predictions (can also do resampling).
+```
+
+
+
+---
+class: clear
+
+
+```r
+ESS &lt;- ESS %&gt;% transmute( # Create new variables and keep only those
+*   cntry = as_factor(cntry) %&gt;% fct_relevel("France"), # Country of interview
+    gndr = as_factor(gndr), # Gender
+*   agea = zap_labels(agea), # Age
+    facntr = as_factor(facntr), # Father born in cntry
+    mocntr = as_factor(mocntr), # Mother born in cntry
+    imwbcnt = max(imwbcnt, na.rm = TRUE) - zap_labels(imwbcnt),
+    pspwght = zap_labels(pspwght),
+    # Parental education (ISCED)
+    eiscedf = zap_labels(eiscedf),
+    eiscedm = zap_labels(eiscedm),
+    par_edu = case_when(
+      # If father's edu is missing but not mother's, take mother's
+      (eiscedf == 55 | is.na(eiscedf)) &amp; eiscedm != 55 &amp; !is.na(eiscedm) ~ eiscedm,
+      # If mother's edu is missing but not father's, take father's
+      (eiscedm == 55 | is.na(eiscedm)) &amp; eiscedf != 55 &amp; !is.na(eiscedf)  ~ eiscedf,
+      # If both are missing, its missing
+      eiscedf == 55 &amp; eiscedm == 55 ~ as.numeric(NA),
+      # For all others, take the average of both parents
+      TRUE ~ (eiscedm + eiscedf) / 2),
+    eduyrs = case_when( # Education
+      eduyrs &gt; 21 ~ 21, # Recode to max 21 years of edu.
+      eduyrs &lt; 9 ~ 9, # Recode to min 9 years of edu.
+      TRUE ~ zap_labels(eduyrs))) %&gt;% # Make it numeric, then
+  dplyr::filter(
+    facntr == "Yes" &amp; mocntr == "Yes")
+# Error in `transmute()`:
+# ! Problem while computing `pspwght = zap_labels(pspwght)`.
+# Caused by error in `zap_labels()`:
+# ! object 'pspwght' not found
+```
+
+---
+# Design matrix
+
+
+```r
+# Design matrix (i.e., tibble of the vars going into out model)
+ESS &lt;- ESS %&gt;%
+  select(cntry, imwbcnt, eduyrs, par_edu, gndr, agea, pspwght) %&gt;%
+  mutate(cntry = fct_drop(cntry)) %&gt;% # Drop unused cntry factor levels, then
+  drop_na() # Casewise deletion.
+# Error in `select()`:
+# ! Can't subset columns that don't exist.
+# ✖ Column `par_edu` doesn't exist.
+```
+
+---
+# OLS I `\(\rightarrow\)` OLS II
+
+.left-column[
+**OLS I**: OLS allows us to express a continuous outcome as *linear* function of continuous or categorical predictors. We can adjust/control for multiple confounding variables. The estimated linear association is *not conditional* on the level of the control/confounding variables.
+
+**OLS II**: Conditional and non-linear relationships!
+]
+
+.right-column[
+.font80[
+
+```r
+# Run a series of three post-stratification weighted linear OLS models.
+ols1 &lt;- lm_robust(formula = imwbcnt ~ eduyrs, data = ESS, weights = pspwght)
+# Error in eval_tidy(mfargs[[da]], data = data): object 'pspwght' not found
+ols2 &lt;- lm_robust(formula = imwbcnt ~ eduyrs + par_edu, data = ESS, weights = pspwght)
+# Error in eval_tidy(mfargs[[da]], data = data): object 'pspwght' not found
+ols3 &lt;- lm_robust(formula = imwbcnt ~ eduyrs + par_edu + gndr + cntry, data = ESS, weights = pspwght)
+# Error in eval_tidy(mfargs[[da]], data = data): object 'pspwght' not found
+# Report results in a regression table.
+screenreg(list(ols1, ols2, ols3), include.ci = FALSE) 
+# Error in "list" %in% class(l)[1]: object 'ols1' not found
+```
+]]
+
+---
+# Conditional relations .font60[Aka interaction effects]
+
+.panelset[
+.panel[.panel-name[Plot]
+
+```
+# Error in FUN(X[[i]], ...): object 'pspwght' not found
+```
+]
+
+.panel[.panel-name[Code]
+
+```r
+ggplot(data = ESS, 
+       mapping = aes(y = imwbcnt, x = eduyrs, color = cntry)) +
+  geom_jitter(aes(size = pspwght), alpha = 1/7) +
+  geom_smooth(aes(weight = pspwght), method = "lm", se = FALSE) +
+  labs(x = "Years of education", y = "Xenophobia", size = "Survey \n weight", color = "Country") +
+  theme_minimal()
+# Error in FUN(X[[i]], ...): object 'pspwght' not found
+```
+]]
+
+---
+class: clear
+# Interaction effects .font60[Specify them as what they are: *multiplicative* terms]
+
+.right-column[
+.font70[
+
+```r
+ols4 &lt;- lm_robust(formula = imwbcnt ~ par_edu + gndr +
+*                   eduyrs*cntry,
+                  data = ESS, weights = pspwght)
+# Error in eval_tidy(mfargs[[da]], data = data): object 'pspwght' not found
+screenreg(ols4, include.ci = FALSE) 
+# Error in "list" %in% class(l)[1]: object 'ols4' not found
+```
+]]
+
+--
+
+.left-column[.content-box-green[
+
+1. How do we interpret the estimate `eduyrs:cntrySweden` correctly?
+
+2. Why is `\(\beta_{\text{eduyrs}}\)` more negative than in model 3?
+
+3. Why do Bulgarians suddenly seem to have *lower* levels of xenophobia, whereas before they had higher ones?
+]]
+
+---
+# Interaction effects .font60[Beware of the scaling of the Xs!]
+
+.panelset[
+.panel[.panel-name[Plot]
+
+```
+# Error in FUN(X[[i]], ...): object 'pspwght' not found
+```
+]
+.panel[.panel-name[Code]
+
+```r
+ggplot(data = ESS, 
+       mapping = aes(y = imwbcnt, x = eduyrs, color = cntry)) +
+  geom_jitter(aes(size = pspwght), alpha = 1/7) +
+  geom_smooth(aes(weight = pspwght), method = "lm", se = FALSE,
+*             # draw line beyond observed cases.
+*             fullrange = TRUE) +
+* xlim(c(0, 21)) + # Extend range of x-axis.
+  labs(x = "Years of education", y = "Xenophobia", size = "Survey \n weight", color = "Country") +
+  theme_minimal()
+# Error in FUN(X[[i]], ...): object 'pspwght' not found
+```
+]]
+
+---
+# Solution: Rescale .font60[(e.g., z-standardization)]
+
+.panelset[
+.panel[.panel-name[Code]
+
+```r
+ESS &lt;- ESS %&gt;% mutate( 
+  # create z-standardized version of continuous predictor.
+  z_eduyrs = scale(eduyrs) %&gt;% as.numeric()
+)
+```
+
+
+```r
+ggplot(data = ESS, 
+       mapping = aes(y = imwbcnt, x = z_eduyrs, color = cntry)) +
+  geom_jitter(aes(size = pspwght), alpha = 1/7) +
+  geom_vline(xintercept = 0, color = "#901A1E") + 
+  geom_smooth(aes(weight = pspwght), 
+              method = "lm", se = FALSE) +
+  labs(x = "Years of education \n (z-standardized)", y = "Xenophobia", size = "Survey \n weight", color = "Country") +
+  theme_minimal()
+# Error in FUN(X[[i]], ...): object 'pspwght' not found
+```
+]
+.panel[.panel-name[Plot]
+
+```
+# Error in FUN(X[[i]], ...): object 'pspwght' not found
+```
+]]
+
+---
+# Interaction effects .font60[Improved interpretability]
+
+.push-right[
+.font70[
+
+```r
+ols4 &lt;- lm_robust(formula = imwbcnt ~ par_edu + gndr +
+                    I(scale(eduyrs))*cntry, ##&lt;
+                  data = ESS, weights = pspwght)
+# Error in eval_tidy(mfargs[[da]], data = data): object 'pspwght' not found
+screenreg(ols4, include.ci = FALSE) 
+# Error in "list" %in% class(l)[1]: object 'ols4' not found
+```
+]]
+
+.push-left[
+
+```
+# Error in FUN(X[[i]], ...): object 'pspwght' not found
+```
+]
+
+---
+# Non-linearities? .font60[Transform using `I()` and `poly()`]
+
+.push-left[
+`I()` allows you to perform any transformation without a need to change the underlying tibble/design matrix. Really helpful for predictions!
+
+`poly()` introduces *orthogonal* polynomials (e.g., squared terms). If you don't want them to be orthogonal, you can use the option `raw = TRUE`.
+
+.alert[Beware of over-fitting!]
+
+```r
+ols6 &lt;- lm_robust(
+  formula = imwbcnt ~ gndr + cntry + eduyrs +
+*   poly(agea, 2, raw = TRUE) +
+*   I(log(par_edu)),
+  data = ESS, weights = pspwght)
+# Error in eval_tidy(mfargs[[da]], data = data): object 'pspwght' not found
+```
+]
+
+.push-right[
+.font80[
+
+```r
+screenreg(ols6, include.ci = FALSE, digits = 4) 
+# Error in "list" %in% class(l)[1]: object 'ols6' not found
+```
+]]
+
+---
+# Model visualization .font60[Especially for lay audiences!]
+
+.push-left[
+**Step 1**: Generate a synthetic tibble with theoretically-informative values containing all variables of the model you want to visualize. `modelr::data_grid()` generates a tibble with all combinations of the variables you feed to it.
+.font80[
+
+```r
+(synth_data &lt;- ESS %&gt;%
+   # Generate theoretically-informative 
+   # but artificial tibble for predictions.
+*  data_grid(eduyrs, par_edu, gndr, agea, cntry))
+# Error in eval_tidy(dot, data = mask): object 'par_edu' not found
+```
+]]
+
+--
+
+.push-right[
+.font80[
+**Step 2**: Alter your new tibble, so that only one predictor of interest varies. Set all others to an informative constant value.
+
+```r
+(synth_data &lt;- synth_data %&gt;%
+   mutate( # Set variables constant that you don't want to vidualize,
+     eduyrs = mean(ESS$eduyrs, na.rm = TRUE),
+     par_edu = mean(ESS$par_edu, na.rm = TRUE),
+     gndr = "Female",
+     cntry = "Denmark") %&gt;% # then
+   unique()) # Drop duplicates.
+# Error in mutate(., eduyrs = mean(ESS$eduyrs, na.rm = TRUE), par_edu = mean(ESS$par_edu, : object 'synth_data' not found
+```
+]]
+
+---
+# Model predictions
+
+.push-left[
+**Step 3**: Add predictions, that is, apply the estimated model to the synthetic data. Given the synthetic data, what `\(\hat{y}\)` does your model predict?
+
+```r
+# Generate predictions and 95% CI, then
+*(synth_data &lt;- predict(ols6, newdata = synth_data,
+*                      interval = "confidence",
+*                      level = 0.95)$fit %&gt;%
+   as_tibble() %&gt;% # Turn into a tibble, then
+   # Add to the synthetic data.
+   bind_cols(synth_data, .)) 
+```
+]
+
+.push-right[
+.font80[
+
+```
+# Error in list2(...): object 'synth_data' not found
+```
+]]
+
+---
+# Visualize model predictions
+
+.push-left[
+.panelset[
+.panel[.panel-name[Plot]
+
+```
+# Error in ggplot(data = synth_data, aes(y = fit, x = agea)): object 'synth_data' not found
+```
+]
+.panel[.panel-name[Code]
+
+```r
+ggplot(data = synth_data, 
+       aes(y = fit, x = agea)) +
+  geom_ribbon(aes(ymin = lwr, ymax = upr), 
+              alpha = 0.5) +
+  geom_line() +
+  labs(x = "Age",
+  y = "Xenophobia",
+  caption = "(Covariates set to: Women in Denmark \n at mean levels of (parental) education)") + 
+  theme_minimal()
+# Error in ggplot(data = synth_data, aes(y = fit, x = agea)): object 'synth_data' not found
+```
+]]]
+.push-right[
+.font80[
+
+```r
+screenreg(ols6, include.ci = FALSE, digits = 4) 
+# Error in "list" %in% class(l)[1]: object 'ols6' not found
+```
+]]
+
+---
+# One more time ...
+
+.push-left[
+.font90[
+
+```r
+# Generate synthetic data to visualize parental education
+synth_data &lt;- ESS %&gt;%
+   # Generate theoretically-informative 
+   # but artificial tibble for predictions.
+   data_grid(eduyrs, par_edu, gndr, agea, cntry) %&gt;%
+   mutate( # Set confounders constant at their mean,
+     eduyrs = mean(ESS$eduyrs, na.rm = TRUE),
+     agea = mean(ESS$agea, na.rm = TRUE),
+     gndr = "Female",
+     cntry = "Denmark") %&gt;% # then
+   unique() # Drop duplicates.
+# Error in eval_tidy(dot, data = mask): object 'par_edu' not found
+# Generate predictions and 95% confidence intervals, then
+synth_data &lt;- predict(ols6, newdata = synth_data,
+                      interval = "confidence",
+                      level=0.95)$fit %&gt;%
+  as_tibble() %&gt;% # Turn into a tibble, then
+  bind_cols(synth_data, .) # Add to the synthetic data.
+# Error in list2(...): object 'synth_data' not found
+```
+]]
+
+.push-right[
+.panelset[
+.panel[.panel-name[Plot]
+
+```
+# Error in ggplot(data = synth_data, aes(y = fit, x = par_edu)): object 'synth_data' not found
+```
+]
+.panel[.panel-name[Code]
+.font90[
+
+```r
+ggplot(data = synth_data, aes(y = fit, x = par_edu)) +
+  geom_ribbon(aes(ymin = lwr, ymax = upr), alpha = 0.5) +
+  geom_line() +
+  labs(x = "Parental education", y = "Xenophobia", 
+       caption = "(Covariates set to: Women at mean levels of parental education)") + 
+  theme_minimal()
+# Error in ggplot(data = synth_data, aes(y = fit, x = par_edu)): object 'synth_data' not found
+```
+]]]]
+---
+# Visualizing interactions
+
+.push-left[
+.font90[
+
+```r
+# Estimate linear OLS with interaction effect;
+# no z-standardization if you visualize.
+ols7 &lt;- lm_robust(formula = imwbcnt ~ log(par_edu) + gndr + poly(agea, 2) +
+*                   eduyrs*cntry,
+                  data = ESS, weights = pspwght)
+# Error in eval_tidy(mfargs[[da]], data = data): object 'pspwght' not found
+# Generate synthetic data to 
+# visualize parental education
+synth_data &lt;- ESS %&gt;%
+   # Generate theoretically-informative 
+   # but artificial tibble for predictions.
+   data_grid(par_edu, gndr, cntry, eduyrs, agea) %&gt;%
+   mutate( # Set confounders constant at their mean,
+*    # but let both cntry and eduyrs vary.
+     par_edu = mean(ESS$par_edu, na.rm = TRUE),
+     agea = mean(ESS$agea, na.rm = TRUE),
+     gndr = "Female") %&gt;% # then
+   unique() # Drop duplicates.
+# Error in eval_tidy(dot, data = mask): object 'par_edu' not found
+# Generate predictions and 95% confidence intervals, then
+synth_data &lt;- predict(ols7, newdata = synth_data,
+                      interval = "confidence",
+                      level=0.95)$fit %&gt;%
+  as_tibble() %&gt;% # Turn into a tibble, then
+  bind_cols(synth_data, .) # Add to the synthetic data.
+# Error in list2(...): object 'synth_data' not found
+```
+]]
+
+.push-right[
+.font80[
+
+```
+# Error in print(synth_data, n = 28): object 'synth_data' not found
+```
+]]
+
+---
+# Visualizing interactions
+
+.panelset[
+.panel[.panel-name[Plot]
+
+```
+# Error in ggplot(data = synth_data, aes(y = fit, x = eduyrs)): object 'synth_data' not found
+```
+]
+.panel[.panel-name[Code]
+
+```r
+ggplot(data = synth_data, aes(y = fit, x = eduyrs)) +
+  geom_ribbon(aes(ymin = lwr, ymax = upr, 
+*                 fill = cntry),
+              alpha = 0.5) +
+* geom_line(aes(color = cntry)) +
+  labs(x = "Years of education", y = "Xenophobia", 
+       caption = "(Covariates set to: Women at mean levels of parental education)") + 
+  theme_minimal()
+# Error in ggplot(data = synth_data, aes(y = fit, x = eduyrs)): object 'synth_data' not found
+```
+]]
+
+---
+# Marginal effects 
+
+&lt;iframe src="https://www.rdocumentation.org/packages/margins/versions/0.3.26" height="100%" width="100%" frameBorder="0" style="min-height: 560px;"&gt;&lt;/iframe&gt;
+
+---
+background-image: url(https://mareds.github.io/r_course/img_site/Tidyverse_packages.png)
+background-size: contain
+background-position: center
+class: clear center
+
+--
+
+&lt;br&gt;
+.alert[.font200[Thank you for a fun course!]]
+
+---
+class: inverse
+# General lessons
+
+1. Linear OLS models are very versatile and can approximate very complex relationships. Theoretically, interaction effects, transformed variables and polynomials allow us to *linearize* any relationship/functional form.
+2. You can formulate conditional and non-linear relationships directly in your model's formula.
+3. It is important to visualize such complex relationships, because regression coefficients alone are hard to interpret. You can do that by making predictions from your model for synthetic data.
+
+---
+class: inverse
+# Important functions
+
+1. `I()` allows you to transform predictors in the formula argument of your regression model.
+2. `poly()` allows you to introduce orthogonal polynomials to your model.
+3. `predict()` generates predictions from your model for a tibble that you feed to it.
+4. `modelr::data_grid()` generates synthetic data sets that contain all combinations of variables you feed to it.
+    </textarea>
+<style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
+<script src="../template/remark-latest.min.js"></script>
+<script>var slideshow = remark.create({
+"highlightLanguage": "r",
+"highlightStyle": "zenburn",
+"highlightLines": true,
+"countIncrementalSlides": false,
+"ratio": "16:9"
+});
+if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
+  window.dispatchEvent(new Event('resize'));
+});
+(function(d) {
+  var s = d.createElement("style"), r = d.querySelector(".remark-slide-scaler");
+  if (!r) return;
+  s.type = "text/css"; s.innerHTML = "@page {size: " + r.style.width + " " + r.style.height +"; }";
+  d.head.appendChild(s);
+})(document);
+
+(function(d) {
+  var el = d.getElementsByClassName("remark-slides-area");
+  if (!el) return;
+  var slide, slides = slideshow.getSlides(), els = el[0].children;
+  for (var i = 1; i < slides.length; i++) {
+    slide = slides[i];
+    if (slide.properties.continued === "true" || slide.properties.count === "false") {
+      els[i - 1].className += ' has-continuation';
+    }
+  }
+  var s = d.createElement("style");
+  s.type = "text/css"; s.innerHTML = "@media print { .has-continuation { display: none; } }";
+  d.head.appendChild(s);
+})(document);
+// delete the temporary CSS (for displaying all slides initially) when the user
+// starts to view slides
+(function() {
+  var deleted = false;
+  slideshow.on('beforeShowSlide', function(slide) {
+    if (deleted) return;
+    var sheets = document.styleSheets, node;
+    for (var i = 0; i < sheets.length; i++) {
+      node = sheets[i].ownerNode;
+      if (node.dataset["target"] !== "print-only") continue;
+      node.parentNode.removeChild(node);
+    }
+    deleted = true;
+  });
+})();
+// add `data-at-shortcutkeys` attribute to <body> to resolve conflicts with JAWS
+// screen reader (see PR #262)
+(function(d) {
+  let res = {};
+  d.querySelectorAll('.remark-help-content table tr').forEach(tr => {
+    const t = tr.querySelector('td:nth-child(2)').innerText;
+    tr.querySelectorAll('td:first-child .key').forEach(key => {
+      const k = key.innerText;
+      if (/^[a-z]$/.test(k)) res[k] = t;  // must be a single letter (key)
+    });
+  });
+  d.body.setAttribute('data-at-shortcutkeys', JSON.stringify(res));
+})(document);
+(function() {
+  "use strict"
+  // Replace <script> tags in slides area to make them executable
+  var scripts = document.querySelectorAll(
+    '.remark-slides-area .remark-slide-container script'
+  );
+  if (!scripts.length) return;
+  for (var i = 0; i < scripts.length; i++) {
+    var s = document.createElement('script');
+    var code = document.createTextNode(scripts[i].textContent);
+    s.appendChild(code);
+    var scriptAttrs = scripts[i].attributes;
+    for (var j = 0; j < scriptAttrs.length; j++) {
+      s.setAttribute(scriptAttrs[j].name, scriptAttrs[j].value);
+    }
+    scripts[i].parentElement.replaceChild(s, scripts[i]);
+  }
+})();
+(function() {
+  var links = document.getElementsByTagName('a');
+  for (var i = 0; i < links.length; i++) {
+    if (/^(https?:)?\/\//.test(links[i].getAttribute('href'))) {
+      links[i].target = '_blank';
+    }
+  }
+})();
+// adds .remark-code-has-line-highlighted class to <pre> parent elements
+// of code chunks containing highlighted lines with class .remark-code-line-highlighted
+(function(d) {
+  const hlines = d.querySelectorAll('.remark-code-line-highlighted');
+  const preParents = [];
+  const findPreParent = function(line, p = 0) {
+    if (p > 1) return null; // traverse up no further than grandparent
+    const el = line.parentElement;
+    return el.tagName === "PRE" ? el : findPreParent(el, ++p);
+  };
+
+  for (let line of hlines) {
+    let pre = findPreParent(line);
+    if (pre && !preParents.includes(pre)) preParents.push(pre);
+  }
+  preParents.forEach(p => p.classList.add("remark-code-has-line-highlighted"));
+})(document);</script>
+
+<script>
+slideshow._releaseMath = function(el) {
+  var i, text, code, codes = el.getElementsByTagName('code');
+  for (i = 0; i < codes.length;) {
+    code = codes[i];
+    if (code.parentNode.tagName !== 'PRE' && code.childElementCount === 0) {
+      text = code.textContent;
+      if (/^\\\((.|\s)+\\\)$/.test(text) || /^\\\[(.|\s)+\\\]$/.test(text) ||
+          /^\$\$(.|\s)+\$\$$/.test(text) ||
+          /^\\begin\{([^}]+)\}(.|\s)+\\end\{[^}]+\}$/.test(text)) {
+        code.outerHTML = code.innerHTML;  // remove <code></code>
+        continue;
+      }
+    }
+    i++;
+  }
+};
+slideshow._releaseMath(document);
+</script>
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+(function () {
+  var script = document.createElement('script');
+  script.type = 'text/javascript';
+  script.src  = 'https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML';
+  if (location.protocol !== 'file:' && /^https?:/.test(script.src))
+    script.src  = script.src.replace(/^https?:/, '');
+  document.getElementsByTagName('head')[0].appendChild(script);
+})();
+</script>
+  </body>
+</html>

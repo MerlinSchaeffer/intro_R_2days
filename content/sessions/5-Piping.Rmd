@@ -3,7 +3,7 @@ title: "5 Piping and Grouped Operations"
 summary: "This lecture introduces you the %>% operator as neat way to organize your code."
 author: Merlin Schaeffer & Friedolin Merhout
 date: 2022-10-20
-publishdate: 2021-09-03
+publishdate: 2022-10-20
 ---
 
 ```{r setup, include = FALSE}
@@ -42,7 +42,7 @@ ESS <- read_spss("./../../assets/ESS10.sav") %>%
       eduyrs < 9 ~ 9, # Recode to min 9 years of edu.
       TRUE ~ zap_labels(eduyrs)) # Make it numeric.
   ) %>% # finish transmute, then (pipe result into) #<<
-  dplyr::filter(# Keep only respondents of immigrant origin,
+  dplyr::filter( # Keep only respondents of immigrant origin,
     facntr == "No" & mocntr == "No")  
 ```
 

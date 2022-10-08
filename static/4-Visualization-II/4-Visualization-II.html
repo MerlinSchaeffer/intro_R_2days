@@ -4,7 +4,7 @@
     <title>Intro to R</title>
     <meta charset="utf-8" />
     <meta name="author" content="Merlin Schaeffer &amp; Friedolin Merhout Department of Sociology" />
-    <meta name="date" content="2022-10-21" />
+    <meta name="date" content="2022-10-20" />
     <script src="libs/header-attrs/header-attrs.js"></script>
     <link href="libs/tile-view/tile-view.css" rel="stylesheet" />
     <script src="libs/tile-view/tile-view.js"></script>
@@ -27,7 +27,7 @@ class: center, middle, inverse, title-slide
 ### Merlin Schaeffer &amp; Friedolin Merhout<br>Department of Sociology
 ]
 .date[
-### 2022-10-21
+### 2022-10-20
 ]
 
 ---
@@ -61,10 +61,10 @@ ESS &lt;- read_spss("ESS10.sav")
 
 
 ```r
-*ESS &lt;- transmute(ESS_raw, # Recode several variables &amp; keep only the recoded ones (i.e., transmute vs mutate).
+ESS &lt;- transmute(ESS_raw, # Recode several variables &amp; keep only the recoded ones (i.e., transmute vs mutate).
                  idno = zap_labels(idno),
                  # Make the following variables factors:
-                 cntry = as_factor(cntry),
+                 cntry = as_factor(cntry) %&gt;% fct_drop(),
                  gndr = as_factor(gndr),
                  facntr = as_factor(facntr),
                  mocntr = as_factor(mocntr),
@@ -79,7 +79,7 @@ ESS &lt;- read_spss("ESS10.sav")
                    eduyrs &lt; 9 ~ 9, # Recode to min 9 years of edu.
                    TRUE ~ zap_labels(eduyrs) # Make it numeric.
                  ),
-*) 
+)
 ```
 
 ???
@@ -102,8 +102,8 @@ class: clear middle
 ESS &lt;- dplyr::filter(ESS,
                      # Only respondents whose parents were born in country of interview.
                      facntr == "Yes" &amp; mocntr == "Yes" &amp;
-                       # Only respondents from Germany and land-boarder neighbors:
-                       (cntry %in% c("Slovakia", "Hungary", "Czechia", "Slovenia"))
+                     # Only respondents from Eastern Europe:
+                    (cntry %in% c("Slovakia", "Hungary", "Czechia", "Slovenia"))
 )
 
 # Casewise deletion of missing values
@@ -157,13 +157,7 @@ ggplot(data = &lt;DATA&gt;) +         # Create a coordinate system for &lt;DATA&
 --
 
 - Geom functions depend on the `mapping` argument, which maps/connects variables to elements in your plot. To do this mapping, we use the `aes()` function, which stands for "**aesthetics**". Aesthetics are the _variable_ visual properties of your plot. 
-
---
-
 - The most central aesthetics of any graph is a data points location in the coordinate system. In `aes()`, we use the arguments `x` and `y` to specify which variable to map to the x-axis and y-axis respectively.
-
---
-
 - Any variable visual property (color, shape, size, etc.) can be an aesthetic.
 
 ---

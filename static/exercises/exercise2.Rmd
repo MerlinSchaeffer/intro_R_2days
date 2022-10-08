@@ -21,25 +21,6 @@ knitr::opts_chunk$set(
   collapse = TRUE, message = FALSE, 
   warning = FALSE, cache = FALSE,
   comment = "#", strip.white = TRUE)
-
-# # Concatenate argument "x" to a factor and give it a
-# # comprehensive list "levels" of all potential categories.
-# conti <- factor(
-#   x = c("Europe", "Africa", "Africa", "Asia", "S.America"),
-#   levels = c("Africa", "Asia", "Australia",
-#              "Europe", "N.America", "S.America")
-# )
-# 
-# # Recode conti to Danish. Watch out: first the new, then the old value...
-# conti <- fct_recode(conti,
-#                     "Europa" = "Europe",
-#                     "Afrika" = "Africa",
-#                     "Asien" = "Asia",
-#                     "Suedamerika" = "S. America",
-#                     "Nordamerika" = "N. America",
-#                     "Australien" = "Australia") 
-# 
-# conti <- fct_drop(conti) # Drop unused levels.
 ```
 
 
@@ -89,7 +70,7 @@ table(conti)
 ```  
 `r unhide()`
 
-5. Import the ESS round 9 data using the API.
+5. Import the ESS round 10 data.
 `r hide("R solution -> dont' peak to early ;) !")`
 ```{r eval = FALSE}
 # Add packages to library
@@ -119,12 +100,12 @@ ESS <- read_spss("./../../assets/ESS10.sav")
 ```
 `r unhide()`
 
-7. Change the variables into numeric and factors appropriately. For that, you need the two functions `r fitb("zap_labels()", width = "12")` for numeric and `r fitb("as_factor()", width = "11")` for categorical variables.
+7. Change the variables into numeric and factors appropriately. For that, you need the two functions `r fitb("zap_labels()", width = "12")` for numeric and `r fitb("as_factor()", width = "11")` for categorical variables. Also use `fct_drop()` to drop factor levels from `ctnry` that have no observations yet.
 `r hide("R solution -> dont' peak to early ;) !")`
 ```{r}
 ESS <- mutate(ESS,
               idno = zap_labels(idno),
-              cntry = as_factor(cntry),
+              cntry = as_factor(cntry) %>% fct_drop(),
               pspwght = pweight*dweight,
               eduyrs = zap_labels(eduyrs),
               agea = zap_labels(agea),
@@ -136,7 +117,7 @@ ESS <- mutate(ESS,
 ```
 `r unhide()`
 
-8. Top code `eduyrs` to maximum 21 and bottom code it to minimum 9 years. Then recode `dscrgrp` to "Yes" for all persons older than 80 in Germany, and to "No" for all respondents with more than average years of education in France. Use the `table()` function to show the frequency of `dscrgrp` by country. After the recode, `r fitb("166", width = "3")` respondents from Germany answered that they belong to a discriminated minority, and `r fitb("263", width = "3")` from France.
+8. Top code `eduyrs` to maximum 21 and bottom code it to minimum 9 years. Then recode `dscrgrp` to "Yes" for all persons older than 80 in Bulgaria, and to "No" for all respondents with more than average years of education in France. Use the `table()` function to show the frequency of `dscrgrp` by country. After the recode, `r fitb("324", width = "3")` respondents from Bulgaria answered that they belong to a discriminated minority, and `r fitb("136", width = "3")` from France.
 `r hide("R solution -> dont' peak to early ;) !")`
 ```{r error = TRUE}
 ESS <- mutate(ESS,
@@ -148,7 +129,7 @@ ESS <- mutate(ESS,
               ),
               dscrgrp = case_when( # Start complex recode
                 # Older than 80 & Germany ~ "Yes",
-                agea > 80 & cntry == "Germany" ~ "Yes", 
+                agea > 80 & cntry == "Bulgaria" ~ "Yes", 
                 # Older than mean & France
                 eduyrs > mean(eduyrs, na.rm = TRUE) & cntry == "France" ~ "No",
                 # All others ~ as before, need to make it character for type consistency.
@@ -167,7 +148,7 @@ table(ESS$dscrgrp, ESS$cntry) # Israel, no surprise 20% are Arab in this contest
 
 9. Now check out `prop.table()` and find out how to use it. In which country do most people report discrimination (apart from Germany and France, which we messed up ...)?
 
-`r mcq(c("Belgium followed by Austria", "Serbia followed by Hungary", answer = "The UK followed by Serbia", "Czech Republic followed by Finland"))`
+`r mcq(c("Czechia followed by Croatia", "Croatia followed by Hungary", answer = "Bulgaria followed by Finland", "Hungary followed by Bulgaria"))`
 
 `r hide("R solution -> dont' peak to early ;) !")`
 ```{r}

@@ -2,217 +2,112 @@
 title: "Web Exercise 6"
 author: Merlin Schaeffer & Friedolin Merhout
 output: webexercises::webexercises_default
-date: 2021-10-19
+date: 2021-10-20
 ---
 
 ```{r setup, include = FALSE}
 options(htmltools.dir.version = FALSE, servr.interval = 0.5, width = 115, digits = 2)
 knitr::opts_chunk$set(
-  collapse = TRUE, message = FALSE, 
-  warning = FALSE, cache = FALSE,
+  collapse = TRUE, message = FALSE, fig.align='center',
+  warning = FALSE, cache = FALSE, fig.retina = 3,
   comment = "#", strip.white = TRUE)
 
-library(webexercises)
-```
-
-1) Use the set-up from our OLS I slides but add variables on religiosity: `rlgblg`, `rlgdgr`, `rlgatnd`, `pray`. Specifically, among religious respondents, the ESS contains three questions on their degree of religiosity: Prayer frequency, attendance of religious services, and general importance of religion. Be a cheat and assign the non-religious the minimum value on each of these three variables. Also make sure that larger values indicate higher religiosity. The tibble has `r fitb("5561", width = "4")` observations.
-`r hide("R solution -> dont' peek to early ;) !")`
-```{r}
 # Add packages to library
 library(tidyverse) # Add the tidyverse package to my current library.
 library(haven) # Handle labelled data.
-library(essurvey) # Add ESS API package.
-library(ggplot2) # Allows us to create nice figures.
-library(estimatr) # Allows us to estimate (cluster-)robust standard errors
-library(texreg) # Allows us to make nicely-formatted Html & Latex regression tables.
-library(broom) # Allows us to turn parts of model objects into tibbles.
+library(Hmisc) # Weighted statistics
+library(webexercises)
+
+# Import the ESS round 10
+ESS <- read_spss("./../../assets/ESS10.sav")
 ```
 
-```{r include = FALSE}
-# Import the ESS round 9 data via the API
-ESS <- import_rounds(rounds = 9, ess_email = "merlin.schaeffer@uni-koeln.de", format = "spss")
-```
+Session page: [**Visualization III**](#sessions)
 
-```{r}
-ESS <- ESS %>% transmute( # Create new variables and keep only those
-  cntry = as_factor(cntry), # Country of interview
-  gndr = as_factor(gndr),
-  facntr = as_factor(facntr), # Father born in cntry
-  mocntr = as_factor(mocntr), # Mother born in cntry
-  imwbcnt = max(imwbcnt, na.rm = TRUE) - zap_labels(imwbcnt),
-  # Religion
-  rlgblg = as_factor(rlgblg), # Belonging to a religion
-  rlgdgr = case_when( # How religious
-    rlgblg == "No" ~ 0,
-    TRUE ~ zap_labels(rlgdgr)),
-  rlgatnd = case_when( # Service attendance
-    rlgblg == "No" ~ 0,
-    TRUE ~ max(rlgatnd, na.rm = TRUE) - zap_labels(rlgatnd)),
-  pray = case_when( # Prayer frequency
-    rlgblg == "No" ~ 0,
-    TRUE ~ max(pray, na.rm = TRUE) - zap_labels(pray)),
-  pspwght = zap_label(pspwght),
-  # Parental education (ISCED) #<<
-  eiscedf = zap_labels(eiscedf), #<<
-  eiscedm = zap_labels(eiscedm), #<<
-  par_edu = case_when( #<<
-    # If father's edu is missing but not mother's, take mother's #<<
-    (eiscedf == 55 | is.na(eiscedf)) & eiscedm != 55 & !is.na(eiscedm) ~ eiscedm, #<<
-    # If mother's edu is missing but not father's, take father's #<<
-    (eiscedm == 55 | is.na(eiscedm)) & eiscedf != 55 & !is.na(eiscedf)  ~ eiscedf, #<<
-    # If both are missing, its missing #<<
-    eiscedf == 55 & eiscedm == 55 ~ as.numeric(NA), #<<
-    # For all others, take the average of both parents #<<
-    TRUE ~ (eiscedm + eiscedf) / 2), #<<
-  eduyrs = case_when( # Education
-    eduyrs > 21 ~ 21, # Recode to max 21 years of edu.
-    eduyrs < 9 ~ 9, # Recode to min 9 years of edu.
-    TRUE ~ zap_labels(eduyrs))) %>% # Make it numeric, then
-  dplyr::filter(
-    # Keep only respondents with native-born parents,
-    facntr == "Yes" & mocntr == "Yes" &
-      (cntry == "Denmark" | cntry == "Sweden" | 
-         cntry == "Norway" | cntry == "Germany"))
-```
-`r unhide()`
-
-2) Model 1: Regress xenophobia (i.e., `imwbcnt`) on the importance of religion (i.e., `rlgdgr`); $\beta$ = `r fitb("0.0239", width = "7")` and the relation is statistically `r mcq(c("Insignificant", "Interesting", "Important", answer = "Significant"))`.
+1. Remember Exercise 5 from earlier today; visualize your results of task 2 and 3 in one plot each. Color-highlight the most extreme country in each plot. 
 `r hide("R solution -> dont' peek to early ;) !")`
 ```{r}
-ols1 <- lm_robust(imwbcnt ~ rlgdgr, w = pspwght, data = ESS)
-summary(ols1)
-```
-`r unhide()`
-
-2) Model 2: Add religious service attendance to the model: $\beta$ = `r fitb("-0.1055", width = "7")` and the relation is statistically `r mcq(c("Insignificant", "Interesting", "Important", answer = "Significant"))`.
-`r hide("R solution -> dont' peek to early ;) !")`
-```{r}
-ols2 <- lm_robust(imwbcnt ~ rlgdgr + rlgatnd, w = pspwght, data = ESS)
-summary(ols2)
-```
-`r unhide()`
-
-4) Model 2: Add `cntry`, `par_edu`, `eduyrs`, and `gndr` as control variables, what happens to our religiosity estimates? `r mcq(c("They do not change", "They both turn more negative", "They both turn significantly positive", answer = "The coefficients decline in absolute size and turn insignificant"))`
-`r hide("R solution -> dont' peek to early ;) !")`
-```{r}
-ols3 <- lm_robust(imwbcnt ~ rlgdgr + rlgatnd + eduyrs + par_edu + cntry + gndr, w = pspwght, data = ESS)
-summary(ols3)
-```
-`r unhide()`
-
-5) Make Denmark the refernce category (i.e., the first category) in the `cntry` variable.
-`r hide("R solution -> dont' peek to early ;) !")`
-```{r}
-ESS$cntry <- fct_relevel(ESS$cntry, "Denmark")
-```
-`r unhide()`
-
-6) Re-estimate Model 3. What changed and why? Discuss among each other.
-`r hide("R solution -> dont' peek to early ;) !")`
-```{r}
-ols3 <- lm_robust(imwbcnt ~ rlgdgr + rlgatnd + eduyrs + par_edu + cntry + gndr, w = pspwght, data = ESS)
-summary(ols3)
-```
-`r unhide()`
-
-7) Make a regression table of all three models.
-`r hide("R solution -> dont' peek to early ;) !")`
-```{r}
-screenreg(list(ols1, ols2, ols3), include.ci = FALSE,
-          custom.coef.names = c("Intercept", 
-                                "Importance of religion",
-                                "Frequency of religious service attendance",
-                                "Years of education",
-                                "Parental education", 
-                                "Germany", "Norway", "Sweden", 
-                                "Women"),
-          caption = "My regression table", 
-          caption.above = TRUE)
-```
-`r unhide()`
-
-6) Make a coefficient plot of the results of Model 2 and 3, and emphasize the two religiosity variables as predictors of interest.
-`r hide("R solution -> dont' peek to early ;) !")`
-```{r}
-bind_rows(tidy(ols2), tidy(ols3), # Stack the data of model objects into one tibble.
-          .id = "model") %>% # Identify which model the data came from, then
+ESS %>% # Use the ESS, then
+  transmute( # Create new variables and only keep these new ones
+    # Make the following variables factors:
+    cntry = as_factor(cntry) %>% fct_drop(), 
+    facntr = as_factor(facntr),
+    mocntr = as_factor(mocntr),
+    # Make the following variables numeric:
+    pspwght = pweight*dweight,
+    # Experienced racial discrimination #<<
+    # Turn vars into factors:
+    dscrgrp = as_factor(dscrgrp), # Belonging to discriminated group.
+    dscrrce = as_factor(dscrrce), # Discriminated because of race.
+    racial_discr = case_when(
+      dscrgrp == "Yes" & dscrrce == "Marked" ~ 1, # Only racial discrimination counts as 1 #<<
+      dscrgrp == "No" | (dscrgrp == "Yes" & dscrrce != "Marked") ~ 0, # No, or all other forms of discr. count as 0 #<<
+      TRUE ~ as.numeric(NA) # all others missing
+    ) 
+  ) %>% # then
+  dplyr::filter( # Keep only respondents of immigrant origin,
+    facntr == "No" & mocntr == "No") %>% # then
+  group_by(cntry) %>% # Group data by country, then
+  dplyr::summarize(
+    # Weighted number of cases.
+    wn = sum(pspwght, na.rm = TRUE), 
+    # Weighted number of persons who see their group face racial discrimination.
+    wn_rd = sum(racial_discr * pspwght, na.rm = TRUE), 
+    # Weighted percent who see their group face racial discrimination.
+    wperc_rd = (wn_rd / wn)  * 100 
+  ) %>%
   mutate(
-    model = case_when(model == 1 ~ "Model 1", # Rename model identifyer.
-                      model == 2 ~ "Model 2"),
-    term = fct_recode(factor(term), # Recode predictor names, then
-                      "Intercept" = "(Intercept)",
-                      "Importance of religion" = "rlgdgr",
-                      "Frequency of religious service attendance" = "rlgatnd",
-                      "Years of Education" = "eduyrs",
-                      "Parental education" = "par_edu",
-                      "Germany" = "cntryGermany",
-                      "Norway" = "cntryNorway",
-                      "Sweden" = "cntrySweden",
-                      "Women" = "gndrFemale"),
-    predictor = case_when(
-      term == "Importance of religion" | 
-        term == "Frequency of religious service attendance" ~ "Predictor",
-      TRUE ~ "Potential confounder")) %>% 
-  select(term, estimate, conf.low, conf.high, model, predictor) %>% # keep only some of all the info, then
-  ggplot(aes(x = reorder(term, estimate),
-             y = estimate, 
-             ymin = conf.low, ymax = conf.high,
-             shape = model,
-             color = predictor)) +
-  geom_hline(yintercept = 0, # Null-hypothesis line.
-             color = "#901A1E", lty = "dashed") + 
-  geom_pointrange(# Coefs & 95% CI. #<<
-    position = position_dodge(width=0.5)) + #<<
-  coord_flip() + 
+    maxim = case_when(wperc_rd == max(wperc_rd) ~ "Maximum",
+                      TRUE ~ "Other")) %>%
+  ggplot(mapping = aes(y = wperc_rd, x = reorder(cntry, -wperc_rd))) + 
+  geom_bar(aes(fill = maxim), stat = "identity") +
+  labs(y = "% Persons of immigrant origin \n reporting racial discrimination",
+       x = "Country",
+       fill = "Level of Discrimination") +
+  coord_flip() +
   theme_minimal() +
-  labs(y = expression(beta), # Axis title: greek beta.
-       x = "") +
-  theme(legend.position = "bottom",
-        legend.title = element_blank(),
-        legend.box = 'vertical')
+  theme(legend.position = c(0.87, 0.87),
+        legend.background = 
+          element_rect(fill = NA,
+                       color = NA))
 ```
 `r unhide()`
 
-7) Drop the two intercepts and the Sweden dummy from the coefficients plot (for no good reason really ;)), but mention this in the plot's caption.
+2. Use another way (apart from color) to also emphasize, the *least* extreme case in plot two.
 `r hide("R solution -> dont' peek to early ;) !")`
 ```{r}
-bind_rows(tidy(ols2), tidy(ols3), # Stack the data of model objects into one tibble.
-          .id = "model") %>% # Identify which model the data came from, then
-  dplyr::filter(term != "(Intercept)" & term != "cntrySweden") %>% # drop the two intercepts and Sweden dummy, then
-  mutate(
-    model = case_when(model == 1 ~ "Model 1", # Rename model identifyer.
-                      model == 2 ~ "Model 2"),
-    term = fct_recode(factor(term), # Recode predictor names, then
-                      "Intercept" = "(Intercept)",
-                      "Importance of religion" = "rlgdgr",
-                      "Frequency of religious service attendance" = "rlgatnd",
-                      "Years of Education" = "eduyrs",
-                      "Parental education" = "par_edu",
-                      "Germany" = "cntryGermany",
-                      "Norway" = "cntryNorway",
-                      "Sweden" = "cntrySweden",
-                      "Women" = "gndrFemale"),
-    predictor = case_when(
-      term == "Importance of religion" | 
-        term == "Frequency of religious service attendance" ~ "Predictor",
-      TRUE ~ "Potential confounder")) %>% 
-  select(term, estimate, conf.low, conf.high, model, predictor) %>% # keep only some of all the info, then
-  ggplot(aes(x = reorder(term, estimate),
-             y = estimate, 
-             ymin = conf.low, ymax = conf.high,
-             shape = model, 
-             color = predictor)) +
-  geom_hline(yintercept = 0, # Null-hypothesis line.
-             color = "#901A1E", lty = "dashed") + 
-  geom_pointrange(# Coefs & 95% CI. #<<
-    position = position_dodge(width = 0.5)) + #<<
-  coord_flip() + 
-  theme_minimal() +
-  labs(y = expression(beta), # Axis title: greek beta.
-       x = "",
-       caption = "(Estimates of the intercept and a Sweden dummy are not shown)") +
-  theme(legend.position="bottom",
-        legend.title=element_blank(),
-        legend.box = 'vertical')
+ESS %>% # Use the ESS, then
+  transmute( # Create new variables and only keep these new ones
+    # Make the following variables factors:
+    cntry = as_factor(cntry) %>% fct_drop(), 
+    # Make the following variables numeric:
+    pspwght = pweight*dweight,
+    hmsacld = max(zap_labels(hmsacld), na.rm = TRUE) - zap_labels(hmsacld),
+  ) %>%
+  group_by(cntry) %>% # Group data by country, så
+  dplyr::summarize(
+    n = sum(pspwght, na.rm = TRUE),
+    mean_hmsacld = wtd.mean(hmsacld, weights = pspwght, na.rm = TRUE),
+    sd_hmsacld = wtd.var(hmsacld, weights = pspwght, na.rm = TRUE) %>% sqrt(),
+    se_hmsacld = sd_hmsacld / sqrt(n),
+    min95 = mean_hmsacld - se_hmsacld * qt(p = 0.975, df = n),
+    max95 = mean_hmsacld + se_hmsacld * qt(p = 0.975, df = n)
+  ) %>%
+  mutate(maxim = case_when(mean_hmsacld == max(mean_hmsacld) ~ "Maximum", #<<
+                           TRUE ~ "Other"),
+         minim = case_when(mean_hmsacld == min(mean_hmsacld) ~ "Minimum", #<<
+                           TRUE ~ "Other")) %>%
+  ggplot(aes(y = mean_hmsacld, x = reorder(cntry, mean_hmsacld), 
+             ymin = min95, ymax = max95,
+             color = maxim, shape = minim)) + #<<
+  geom_pointrange() +
+  coord_flip() +
+  labs(y = "Gay men and women should be allowed \n to adopt children (Scale 1 to 5)",
+       x = "Country",
+       color = "Level of Discrimination",
+       shape = "Level of Discrimination") +
+  theme_minimal()
 ```
 `r unhide()`
+
+3. Polish your favorite figure and share it in the chat.

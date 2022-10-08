@@ -25,7 +25,7 @@ ESS <- read_spss("./../../assets/ESS10.sav")
 ESS <- transmute(ESS, # Recode several variables & keep only the recoded ones (i.e., transmute vs mutate). #<<
                  idno = zap_labels(idno),
                  # Make the following variables factors:
-                 cntry = as_factor(cntry), 
+                 cntry = as_factor(cntry) %>% fct_drop(), 
                  gndr = as_factor(gndr),
                  facntr = as_factor(facntr),
                  mocntr = as_factor(mocntr),

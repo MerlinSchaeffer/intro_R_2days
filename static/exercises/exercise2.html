@@ -508,7 +508,7 @@ table(conti)
 #           0           2           1           0           1           0           1</code></pre>
 </div>
 <ol start="5" style="list-style-type: decimal">
-<li>Import the ESS round 9 data using the API.</li>
+<li>Import the ESS round 10 data.</li>
 </ol>
 <div class="webex-solution">
 <button>
@@ -557,7 +557,9 @@ that, you need the two functions
 <input class="webex-solveme nospaces" size="12" data-answer="[&quot;zap_labels()&quot;]"></input>
 for numeric and
 <input class="webex-solveme nospaces" size="11" data-answer="[&quot;as_factor()&quot;]"></input>
-for categorical variables.</li>
+for categorical variables. Also use <code>fct_drop()</code> to drop
+factor levels from <code>ctnry</code> that have no observations
+yet.</li>
 </ol>
 <div class="webex-solution">
 <button>
@@ -565,7 +567,7 @@ R solution -&gt; dont&#39; peak to early ;) !
 </button>
 <pre class="r"><code>ESS &lt;- mutate(ESS,
               idno = zap_labels(idno),
-              cntry = as_factor(cntry),
+              cntry = as_factor(cntry) %&gt;% fct_drop(),
               pspwght = pweight*dweight,
               eduyrs = zap_labels(eduyrs),
               agea = zap_labels(agea),
@@ -578,14 +580,14 @@ R solution -&gt; dont&#39; peak to early ;) !
 <ol start="8" style="list-style-type: decimal">
 <li>Top code <code>eduyrs</code> to maximum 21 and bottom code it to
 minimum 9 years. Then recode <code>dscrgrp</code> to &quot;Yes&quot; for all
-persons older than 80 in Germany, and to &quot;No&quot; for all respondents with
+persons older than 80 in Bulgaria, and to &quot;No&quot; for all respondents with
 more than average years of education in France. Use the
 <code>table()</code> function to show the frequency of
 <code>dscrgrp</code> by country. After the recode,
-<input class="webex-solveme nospaces" size="3" data-answer="[&quot;166&quot;]"></input>
-respondents from Germany answered that they belong to a discriminated
+<input class="webex-solveme nospaces" size="3" data-answer="[&quot;324&quot;]"></input>
+respondents from Bulgaria answered that they belong to a discriminated
 minority, and
-<input class="webex-solveme nospaces" size="3" data-answer="[&quot;263&quot;]"></input>
+<input class="webex-solveme nospaces" size="3" data-answer="[&quot;136&quot;]"></input>
 from France.</li>
 </ol>
 <div class="webex-solution">
@@ -601,7 +603,7 @@ R solution -&gt; dont&#39; peak to early ;) !
               ),
               dscrgrp = case_when( # Start complex recode
                 # Older than 80 &amp; Germany ~ &quot;Yes&quot;,
-                agea &gt; 80 &amp; cntry == &quot;Germany&quot; ~ &quot;Yes&quot;, 
+                agea &gt; 80 &amp; cntry == &quot;Bulgaria&quot; ~ &quot;Yes&quot;, 
                 # Older than mean &amp; France
                 eduyrs &gt; mean(eduyrs, na.rm = TRUE) &amp; cntry == &quot;France&quot; ~ &quot;No&quot;,
                 # All others ~ as before, need to make it character for type consistency.
@@ -616,28 +618,20 @@ R solution -&gt; dont&#39; peak to early ;) !
 # Absolute frequencies cross-table.
 table(ESS$dscrgrp, ESS$cntry) # Israel, no surprise 20% are Arab in this contested state.
 #      
-#       Austria Belgium Bulgaria Switzerland Cyprus Czechia Germany Denmark Estonia Spain Finland France
-#   No        0       0     2440           0      0    2302       0       0    1427     0    1404   1831
-#   Yes       0       0      197           0      0     151       0       0     113     0     169    136
-#      
-#       United Kingdom Greece Croatia Hungary Ireland Iceland Italy Lithuania Latvia Montenegro North Macedonia
-#   No               0      0    1467    1728       0       0     0      1520      0          0               0
-#   Yes              0      0     114      76       0       0     0       114      0          0               0
-#      
-#       Netherlands Norway Poland Portugal Serbia Sweden Slovenia Slovakia
-#   No            0      0      0        0      0      0     1190     1297
-#   Yes           0      0      0        0      0      0       53       67</code></pre>
+#       Bulgaria Czechia Estonia Finland France Croatia Hungary Lithuania Slovenia Slovakia
+#   No      2322    2302    1427    1404   1831    1467    1728      1520     1190     1297
+#   Yes      324     151     113     169    136     114      76       114       53       67</code></pre>
 </div>
 <ol start="9" style="list-style-type: decimal">
 <li>Now check out <code>prop.table()</code> and find out how to use it.
 In which country do most people report discrimination (apart from
 Germany and France, which we messed up ...)?</li>
 </ol>
-<p><select class="webex-select"><option value="blank"></option><option value>Belgium
-followed by Austria</option><option value>Serbia followed by
-Hungary</option><option value="answer">The UK followed by
-Serbia</option><option value>Czech Republic followed by
-Finland</option></select></p>
+<p><select class="webex-select"><option value="blank"></option><option value>Czechia
+followed by Croatia</option><option value>Croatia followed by
+Hungary</option><option value="answer">Bulgaria followed by
+Finland</option><option value>Hungary followed by
+Bulgaria</option></select></p>
 <div class="webex-solution">
 <button>
 R solution -&gt; dont&#39; peak to early ;) !
@@ -645,17 +639,9 @@ R solution -&gt; dont&#39; peak to early ;) !
 <pre class="r"><code># Relative frequencies cross-table.
 prop.table(table(ESS$dscrgrp, ESS$cntry), margin = 1) # Relative frequencies. With 24.6% it is still Israel, followed by the UK.
 #      
-#       Austria Belgium Bulgaria Switzerland Cyprus Czechia Germany Denmark Estonia Spain Finland France
-#   No    0.000   0.000    0.147       0.000  0.000   0.139   0.000   0.000   0.086 0.000   0.085  0.110
-#   Yes   0.000   0.000    0.166       0.000  0.000   0.127   0.000   0.000   0.095 0.000   0.142  0.114
-#      
-#       United Kingdom Greece Croatia Hungary Ireland Iceland Italy Lithuania Latvia Montenegro North Macedonia
-#   No           0.000  0.000   0.088   0.104   0.000   0.000 0.000     0.092  0.000      0.000           0.000
-#   Yes          0.000  0.000   0.096   0.064   0.000   0.000 0.000     0.096  0.000      0.000           0.000
-#      
-#       Netherlands Norway Poland Portugal Serbia Sweden Slovenia Slovakia
-#   No        0.000  0.000  0.000    0.000  0.000  0.000    0.072    0.078
-#   Yes       0.000  0.000  0.000    0.000  0.000  0.000    0.045    0.056</code></pre>
+#       Bulgaria Czechia Estonia Finland France Croatia Hungary Lithuania Slovenia Slovakia
+#   No     0.141   0.140   0.087   0.085  0.111   0.089   0.105     0.092    0.072    0.079
+#   Yes    0.246   0.115   0.086   0.128  0.103   0.087   0.058     0.087    0.040    0.051</code></pre>
 </div>
 <ol start="10" style="list-style-type: decimal">
 <li>Show the frequency table only for respondents who are older than
@@ -670,39 +656,18 @@ prop.table(table(ESS$cntry[ESS$agea &gt; 45], ESS$dscrgrp))
 # Error in table(ESS$cntry[ESS$agea &gt; 45], ESS$dscrgrp): all arguments must have the same length
 # You need to make sure to select the same cases for both variables!
 prop.table(table(ESS$cntry[ESS$agea &gt; 45], ESS$dscrgrp[ESS$agea &gt; 45]))
-#                  
-#                       No    Yes
-#   Austria         0.0000 0.0000
-#   Belgium         0.0000 0.0000
-#   Bulgaria        0.1456 0.0106
-#   Switzerland     0.0000 0.0000
-#   Cyprus          0.0000 0.0000
-#   Czechia         0.1183 0.0089
-#   Germany         0.0000 0.0000
-#   Denmark         0.0000 0.0000
-#   Estonia         0.0821 0.0050
-#   Spain           0.0000 0.0000
-#   Finland         0.0833 0.0086
-#   France          0.1010 0.0061
-#   United Kingdom  0.0000 0.0000
-#   Greece          0.0000 0.0000
-#   Croatia         0.0782 0.0064
-#   Hungary         0.0987 0.0035
-#   Ireland         0.0000 0.0000
-#   Iceland         0.0000 0.0000
-#   Italy           0.0000 0.0000
-#   Lithuania       0.0884 0.0071
-#   Latvia          0.0000 0.0000
-#   Montenegro      0.0000 0.0000
-#   North Macedonia 0.0000 0.0000
-#   Netherlands     0.0000 0.0000
-#   Norway          0.0000 0.0000
-#   Poland          0.0000 0.0000
-#   Portugal        0.0000 0.0000
-#   Serbia          0.0000 0.0000
-#   Sweden          0.0000 0.0000
-#   Slovenia        0.0647 0.0022
-#   Slovakia        0.0783 0.0031</code></pre>
+#            
+#                 No    Yes
+#   Bulgaria  0.1345 0.0224
+#   Czechia   0.1182 0.0089
+#   Estonia   0.0820 0.0050
+#   Finland   0.0832 0.0086
+#   France    0.1009 0.0061
+#   Croatia   0.0782 0.0064
+#   Hungary   0.0986 0.0035
+#   Lithuania 0.0884 0.0071
+#   Slovenia  0.0646 0.0021
+#   Slovakia  0.0783 0.0031</code></pre>
 </div>
 <ol start="11" style="list-style-type: decimal">
 <li>How did you filter the cases; would there have been another
@@ -716,39 +681,18 @@ R solution -&gt; dont&#39; peak to early ;) !
 ESS_46Plus &lt;- filter(ESS, agea &gt; 45)
 
 prop.table(table(ESS_46Plus$cntry, ESS_46Plus$dscrgrp))
-#                  
-#                       No    Yes
-#   Austria         0.0000 0.0000
-#   Belgium         0.0000 0.0000
-#   Bulgaria        0.1456 0.0106
-#   Switzerland     0.0000 0.0000
-#   Cyprus          0.0000 0.0000
-#   Czechia         0.1183 0.0089
-#   Germany         0.0000 0.0000
-#   Denmark         0.0000 0.0000
-#   Estonia         0.0821 0.0050
-#   Spain           0.0000 0.0000
-#   Finland         0.0833 0.0086
-#   France          0.1010 0.0061
-#   United Kingdom  0.0000 0.0000
-#   Greece          0.0000 0.0000
-#   Croatia         0.0782 0.0064
-#   Hungary         0.0987 0.0035
-#   Ireland         0.0000 0.0000
-#   Iceland         0.0000 0.0000
-#   Italy           0.0000 0.0000
-#   Lithuania       0.0884 0.0071
-#   Latvia          0.0000 0.0000
-#   Montenegro      0.0000 0.0000
-#   North Macedonia 0.0000 0.0000
-#   Netherlands     0.0000 0.0000
-#   Norway          0.0000 0.0000
-#   Poland          0.0000 0.0000
-#   Portugal        0.0000 0.0000
-#   Serbia          0.0000 0.0000
-#   Sweden          0.0000 0.0000
-#   Slovenia        0.0647 0.0022
-#   Slovakia        0.0783 0.0031</code></pre>
+#            
+#                 No    Yes
+#   Bulgaria  0.1345 0.0224
+#   Czechia   0.1182 0.0089
+#   Estonia   0.0820 0.0050
+#   Finland   0.0832 0.0086
+#   France    0.1009 0.0061
+#   Croatia   0.0782 0.0064
+#   Hungary   0.0986 0.0035
+#   Lithuania 0.0884 0.0071
+#   Slovenia  0.0646 0.0021
+#   Slovakia  0.0783 0.0031</code></pre>
 </div>
 
 <script>

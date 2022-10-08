@@ -72,7 +72,7 @@ ESS_raw <- read_spss("./../../assets/ESS10.sav")
 ESS <- transmute(ESS_raw, # Recode several variables & keep only the recoded ones (i.e., transmute vs mutate). #<<
                  idno = zap_labels(idno),
                  # Make the following variables factors:
-                 cntry = as_factor(cntry),
+                 cntry = as_factor(cntry) %>% fct_drop(),
                  gndr = as_factor(gndr),
                  facntr = as_factor(facntr),
                  mocntr = as_factor(mocntr),
@@ -271,7 +271,6 @@ ggplot(data = <DATA>) +         # Create a coordinate system for <DATA>, and add
   <GEOM_FUNCTION>(              # a layer of (geometric) information, which #<<
      mapping = aes(<MAPPINGS>), # maps our data to aesthetics, and #<<
      stat = <STAT>,             # may depend on statistical transformations.
-     position = <POSITION>      # Positioning may be adjusted.
   ) +
   <COORDINATE_FUNCTION> +       # Change the default coordinate system.
   <FACET_FUNCTION>              # Draw sub-plots by categorical variables.

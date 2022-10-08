@@ -63,7 +63,7 @@ ESS &lt;- read_spss("ESS10.sav")
 *ESS &lt;- transmute(ESS_raw, # Recode several variables &amp; keep only the recoded ones (i.e., transmute vs mutate).
                  idno = zap_labels(idno),
                  # Make the following variables factors:
-                 cntry = as_factor(cntry),
+                 cntry = as_factor(cntry) %&gt;% fct_drop(),
                  gndr = as_factor(gndr),
                  facntr = as_factor(facntr),
                  mocntr = as_factor(mocntr),
@@ -273,7 +273,6 @@ layout:false
 * &lt;GEOM_FUNCTION&gt;(              # a layer of (geometric) information, which
 *    mapping = aes(&lt;MAPPINGS&gt;), # maps our data to aesthetics, and
      stat = &lt;STAT&gt;,             # may depend on statistical transformations.
-     position = &lt;POSITION&gt;      # Positioning may be adjusted.
   ) +
   &lt;COORDINATE_FUNCTION&gt; +       # Change the default coordinate system.
   &lt;FACET_FUNCTION&gt;              # Draw sub-plots by categorical variables.

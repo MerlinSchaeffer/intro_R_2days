@@ -21,7 +21,7 @@ design:
     text_color_light: false
 
 cta_note:
-  label: 18 & 19 October 2021
+  label: 19 to 21 October 2022
 ---
 
 **a three-day GESIS workshop**

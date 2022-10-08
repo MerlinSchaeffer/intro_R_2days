@@ -14,7 +14,7 @@ knitr::opts_chunk$set(
   comment = "#", strip.white = TRUE)
 ```
 
-This lecture will introduce you to data frames and tibbles, and how to work with them as well as with atomic vectors. We will also cover packages - the source of R's versatility - and get to know basic functionality from the collection of packages known as tidyverse. A set of packages containing, among others, a dataset of Star Wars characters:
+This lecture will introduce you to data frames and tibbles, and how to work with them as well as with atomic vectors. We will also cover packages - the source of R's versatility - and get to know basic functionality from the collection of packages known as tidyverse. A set of packages containing, among others, data of Star Wars characters:
 ```{r}
 library(tidyverse)
 starwars
