@@ -1,0 +1,129 @@
+---
+title: "Web Exercise 7"
+author: Merlin Schaeffer & Friedolin Merhout
+output: webexercises::webexercises_default
+date: 2022-10-21
+---
+
+```{r setup, include = FALSE}
+options(htmltools.dir.version = FALSE, servr.interval = 0.5, width = 115, digits = 2)
+knitr::opts_chunk$set(
+  collapse = TRUE, message = FALSE, 
+  warning = FALSE, cache = FALSE,
+  comment = "#", strip.white = TRUE)
+
+library(webexercises)
+```
+
+1) Use the set-up from our OLS I slides but instead of `imwbcnt` and `eduyrs`, add the following variables: `agea`, `gndr`, `rlgdgr`. Check whether larger values on `rlgdgr` indicate higher religiosity. Only keep complete cases by using `drop_na()`. The tibble has `r fitb("5968", width = "4")` observations.
+`r hide("R solution -> dont' peek to early ;) !")`
+```{r}
+# Add packages to library
+library(tidyverse) # Add the tidyverse package to my current library.
+library(haven) # Handle labelled data.
+library(ggplot2) # Allows us to create nice figures.
+library(estimatr) # Allows us to estimate (cluster-)robust standard errors
+library(texreg) # Allows us to make nicely-formatted Html & Latex regression tables.
+library(broom) # Allows us to turn parts of model objects into tibbles.
+```
+
+```{r include = FALSE}
+# Load the previously downloaded ESS round 10 data
+ESS <- read_spss("./../../assets/ESS10.sav")
+```
+
+```{r}
+ESS <- ESS %>% transmute( # Create new variables and keep only those
+  idno = zap_labels(idno),
+  cntry = as_factor(cntry) %>% fct_drop(), # Country of interview
+  facntr = as_factor(facntr), # Father born in cntry
+  mocntr = as_factor(mocntr), # Mother born in cntry
+  imwbcnt = max(imwbcnt, na.rm = TRUE) - zap_labels(imwbcnt),
+  pspwght = dweight*pweight,
+  gndr = as_factor(gndr), # Gender
+  agea = zap_labels(agea), # Age
+  # How religious
+  rlgdgr = zap_labels(rlgdgr)) %>% 
+  dplyr::filter(
+    # Keep only respondents with native-born parents,
+    facntr == "Yes" & mocntr == "Yes" &
+      (cntry %in% c("Slovakia", "Hungary", "Czechia", "Slovenia"))) %>%
+  drop_na() # Keep only complete cases.
+
+nrow(ESS)
+```
+`r unhide()`
+
+```{r ols1, inlcude = FALSE}
+ols1 <- lm_robust(rlgdgr ~ agea, weights = pspwght, data = ESS)
+screenreg(ols1, digits = 3, include.ci = FALSE)
+```
+
+2) Regress religiosity on age and make a regression table that displays 3 digits and standard errors in parentheses using `texreg::screenreg()`; $\beta$ = `r fitb(coef(ols1)["agea"], width = "4")` and the relation is statistically `r mcq(c("Insignificant", "Interesting", "Important", answer = "Significant"))`.
+`r hide("R solution -> dont' peek to early ;) !")`
+```{r ref.label = "ols1"}
+```
+`r unhide()`
+
+3) Visualize the implied relationship from year 0 to 100 by using model predictions. Mark the range of observed ages.
+`r hide("R solution -> dont' peek to early ;) !")`
+```{r}
+# Make artificial ages.
+fict_dat <- tibble(agea = 0:100)
+
+fict_dat <- predict( #<<
+  ols1, newdata = fict_dat, #<<
+  interval = "confidence", level = 0.95)$fit %>% #<<
+  as_tibble() %>% # Turn into a tibble, then
+  bind_cols(fict_dat, .) # Add to the synthetic data.
+
+ggplot(data = fict_dat, aes(y = fit, x = agea)) +
+  geom_vline(xintercept = c(15, 90), color = "red", lty = "dashed") +
+  geom_ribbon(aes(ymin = lwr, ymax = upr), alpha = 0.5) +
+  geom_line() +
+  labs(
+    title = "Predictions based on regression of religiosity",
+    x = "By age in years",
+    # Write Greek beta into axis title.
+    y = "Predicted average of religiosity") +
+  theme_minimal()
+```
+`r unhide()`
+
+```{r ols2, inlcude = FALSE}
+ols2 <- lm_robust(rlgdgr ~ gndr, weights = pspwght, data = ESS)
+screenreg(ols2, digits = 3, include.ci = FALSE)
+```
+
+4) Regress religiosity on gender and make a regression table that displays 3 digits and standard errors in parentheses using `texreg::screenreg()`; $\beta$ = `r fitb(coef(ols2)["gndr"], width = "4")` and the relation is statistically `r mcq(c("Insignificant", "Interesting", "Important", answer = "Significant"))`.
+`r hide("R solution -> dont' peek to early ;) !")`
+```{r ref.label = "ols2"}
+```
+`r unhide()`
+
+5) Make a cofficient plot of the result.
+`r hide("R solution -> dont' peek to early ;) !")`
+```{r Coefplot2, out.width='100%', fig.height = 4, fig.width = 6, echo = FALSE}
+plotdata2 <- ols2 %>%
+  tidy() %>% # Turn results into a tibble,
+  mutate( # Rename variables for the plot.
+    term = case_when(
+      term == "gndrFemale" ~ "Women",
+      term == "(Intercept)" ~ "Intercept")) %>%
+  filter(term != "Intercept")
+
+ggplot(data = plotdata2, aes(y = estimate, 
+                            # Order by effect size
+                            x = reorder(term, estimate))) +
+  geom_hline(yintercept = 0, color = "red", lty = "dashed") +
+  # Point with error-bars,
+  geom_pointrange(aes(min = conf.low, max = conf.high)) +
+  coord_flip() + # Flip Y- & X-Axis,
+  labs(
+    title = "Regression of religiosity",
+    x = "",
+    # Write Greek beta into axis title.
+    y = "Religiosity as compared to men") +
+  theme_minimal()
+```
+`r unhide()`
