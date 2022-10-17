@@ -4,7 +4,7 @@
     <title>Intro to R for Social Data Science</title>
     <meta charset="utf-8" />
     <meta name="author" content="Merlin Schaeffer &amp; Friedolin Merhout   Department of Sociology" />
-    <meta name="date" content="2022-10-08" />
+    <meta name="date" content="2022-10-17" />
     <script src="libs/header-attrs/header-attrs.js"></script>
     <link href="libs/tile-view/tile-view.css" rel="stylesheet" />
     <script src="libs/tile-view/tile-view.js"></script>
@@ -27,7 +27,7 @@ class: center, middle, inverse, title-slide
 ### Merlin Schaeffer &amp; Friedolin Merhout <br> Department of Sociology
 ]
 .date[
-### 2022-10-08
+### 2022-10-17
 ]
 
 ---
@@ -44,41 +44,31 @@ library(ggplot2) # Allows us to create nice figures.
 *library(estimatr) # Allows us to estimate (cluster-)robust standard errors.
 *library(texreg) # Allows us to make nicely-formatted Html &amp; Latex regression tables.
 *library(broom) # Allows us to turn model objects into tibbles.
+*library(modelr) # Further process model objects
 ```
 
 
 
 ---
-class: clear
+# Data preparation
 
 
 ```r
 ESS &lt;- ESS %&gt;% transmute( # Create new variables and keep only those
-    cntry = as_factor(cntry) %&gt;% fct_drop(), # Country of interview
-    gndr = as_factor(gndr),
-    facntr = as_factor(facntr), # Father born in cntry
-    mocntr = as_factor(mocntr), # Mother born in cntry
-    imwbcnt = max(imwbcnt, na.rm = TRUE) - zap_labels(imwbcnt),
-    pspwght = dweight*pweight,
-*   # Parental education (ISCED)
-*   eiscedf = zap_labels(eiscedf),
-*   eiscedm = zap_labels(eiscedm),
-*   par_edu = case_when(
-*     # If father's edu is missing but not mother's, take mother's
-*     (eiscedf == 55 | is.na(eiscedf)) &amp; eiscedm != 55 &amp; !is.na(eiscedm) ~ eiscedm,
-*     # If mother's edu is missing but not father's, take father's
-*     (eiscedm == 55 | is.na(eiscedm)) &amp; eiscedf != 55 &amp; !is.na(eiscedf)  ~ eiscedf,
-*     # If both are missing, its missing
-*     eiscedf == 55 &amp; eiscedm == 55 ~ as.numeric(NA),
-*     # For all others, take the average of both parents
-*     TRUE ~ (eiscedm + eiscedf) / 2),
-    eduyrs = case_when( # Education
-      eduyrs &gt; 21 ~ 21, # Recode to max 21 years of edu.
-      eduyrs &lt; 9 ~ 9, # Recode to min 9 years of edu.
-      TRUE ~ zap_labels(eduyrs))) %&gt;% # Make it numeric, then
+  idno = zap_labels(idno),
+  cntry = as_factor(cntry) %&gt;% fct_drop(), # Country of interview
+  facntr = as_factor(facntr), # Father born in cntry
+  mocntr = as_factor(mocntr), # Mother born in cntry
+  imwbcnt = max(imwbcnt, na.rm = TRUE) - zap_labels(imwbcnt),
+  pspwght = dweight*pweight,
+  eduyrs = case_when( # Education
+    eduyrs &gt; 21 ~ 21, # Recode to max 21 years of edu.
+    eduyrs &lt; 9 ~ 9, # Recode to min 9 years of edu.
+    TRUE ~ zap_labels(eduyrs))) %&gt;% # Make it numeric, then
   dplyr::filter(
     # Keep only respondents with native-born parents,
-    facntr == "Yes" &amp; mocntr == "Yes")
+    facntr == "Yes" &amp; mocntr == "Yes" &amp;
+      (cntry %in% c("Slovakia", "Hungary", "Czechia", "Slovenia")))
 ```
 
 ---
@@ -88,7 +78,7 @@ ESS &lt;- ESS %&gt;% transmute( # Create new variables and keep only those
 ```r
 # Design matrix (i.e., tibble of the vars going into out model)
 ESS &lt;- ESS %&gt;%
-  select(cntry, imwbcnt, eduyrs, par_edu, gndr, pspwght) %&gt;%
+  select(idno, cntry, imwbcnt, eduyrs, pspwght) %&gt;%
   drop_na() # Casewise deletion.
 ```
 
@@ -104,7 +94,7 @@ ESS &lt;- ESS %&gt;%
 ```r
 # Plot the distribution of imwbcnt
 ggplot(data = ESS, aes(x = imwbcnt)) +
-  geom_freqpoly() +
+  geom_histogram() +
   theme_minimal()
 ```
 ]
@@ -114,7 +104,7 @@ ggplot(data = ESS, aes(x = imwbcnt)) +
 
 .push-right[
 #### Modeling
-Coming up with a model of imwbcntphobia means: Can imwbcntphobia (i.e., `\(y\)`) be expressed as a function (i.e., `\(f()\)`) of another variable (i.e., `\(x\)`)?
+Coming up with a model of xenophobia means: Can xenophobia (i.e., `\(y\)`) be expressed as a function (i.e., `\(f()\)`) of another variable (i.e., `\(x\)`)?
 
 `$$\hat{y} = f(x)$$`
 The two critical questions are thus:
@@ -147,7 +137,7 @@ You will need to find the answer to the second question in your research questio
 # A linear Model of `\(y\)`
 
 .left-column[
-Let's try `\(x = \text{years of education}\)`, since schools in most countries teach humanism and tolerance: Is imwbcntphobia a linear (i.e., constant slope) function of one's years of education?
+Let's try `\(x = \text{years of education}\)`, since schools in most countries teach humanism and tolerance: Is xenophobia a linear (i.e., constant slope) function of one's years of education?
 ]
 
 .right-column[
@@ -165,108 +155,149 @@ ggplot(data = ESS, mapping = aes(y = imwbcnt, x = eduyrs)) +
               se = FALSE, color = "red") +
   labs(y = "Xenophobia", x =  "Years of education", 
        size = "Survey \n weight") +
-  theme_minimal()
+  theme_minimal() +
+  theme(legend.position = "none")
 ```
 ]]]
 
 ---
-# Ordinary Least Squares
+# Regressing linear models from data
+
+.panelset[
+.panel[.panel-name[Residuals, e]
+
 
 .left-column[
-We find `\(\alpha\)` and `\(\beta\)` by choosing the one line that minimizes the *residual sum of squares*:
+- **Residuals**, `\(e_{i} =y_{i} - \hat{y}\)`
+  + the differences between what our model predicts and the actual data.
 
+`\(e_{\text{Zoltán}} = 1 - 5=-4\)`
+]
+.right-column[
+&lt;img src="7-Bivariate-OLS_files/figure-html/residuals-1.png" width="100%" style="display: block; margin: auto;" /&gt;
+]]
+
+.panel[.panel-name[Minimize 1]
+
+.left-column[
+- **The _best_ fitting line**:
 `$$\begin{align*}
       \min \text{RSS} &amp;= \min \sum_{i=1}^{n} e_{i}^{2} \\
       &amp;= \min \sum_{i=1}^{n} y_{i} - \hat{y_{i}} \\
-      &amp;= \min \sum_{i=1}^{n} (y_{i} - (\alpha + \beta x_{i})^{2}
+      &amp;= \min \sum_{i=1}^{n} (y_{i} - (\color{orange}{\alpha} + \color{orange}{\beta} x_{i})^{2}
     \end{align*}$$`
-    
-.backgrnote[
-Note, how the residuals are defined only in terms of `\(y\)` and thereby differ fundamentally from those that PCA minimizes!
-]
 ]
 
 .right-column[
-&lt;img src="7-Bivariate-OLS_files/figure-html/OLS-1.png" width="90%" style="display: block; margin: auto;" /&gt;
+&lt;img src="7-Bivariate-OLS_files/figure-html/min_resid-1.png" width="90%" style="display: block; margin: auto;" /&gt;
+]]
 
+.panel[.panel-name[&amp; 2]
+.left-column[
+- **The _best_ fitting line**:
+`$$\begin{align*}
+      \min \text{RSS} &amp;= \min \sum_{i=1}^{n} e_{i}^{2} \\
+      &amp;= \min \sum_{i=1}^{n} y_{i} - \hat{y_{i}} \\
+      &amp;= \min \sum_{i=1}^{n} (y_{i} - (\color{orange}{\alpha} + \color{orange}{\beta} x_{i})^{2}
+    \end{align*}$$`
 ]
 
----
-# The `lm()` function 
-
 .right-column[
+&lt;img src="https://mlfromscratch.com/content/images/size/w2000/2020/06/linear_regression_gif.gif" width="50%" style="display: block; margin: auto;" /&gt;
+.backgrnote[.center[
+*Source*: [Machine Learning From Scratch](https://mlfromscratch.com/linear-regression-from-scratch/#/)
+]]]]
+
+.panel[.panel-name[R2 model fit]
+.left-column[
+- How much smaller are the residuals from our model (blue line), compared to simply using the mean `\(\bar{y}\)` as best guess (orange line)?
+`$$\text{TSS}=\sum_{i=1}^{n}(y_i-\bar{y})^2$$`
+`$$\text{RSS}=\sum_{i=1}^{n}(y_i-\hat{y}_i)^2$$`
+`\(R^2=\frac{\text{TSS} - \text{RSS}}{\text{TSS}}\)`
+]
+.right-column[
+&lt;img src="7-Bivariate-OLS_files/figure-html/R2-1.png" width="100%" style="display: block; margin: auto;" /&gt;
+]]
+
+.panel[.panel-name[Regression using R]
+.push-left[
 
 ```r
-# Estimate a linear OLS model and assign the results to object ols.
-ols &lt;- lm(formula = imwbcnt ~ eduyrs, data = ESS)
-summary(ols) # Give a summary of the main results.
-# 
-# Call:
-# lm(formula = imwbcnt ~ eduyrs, data = ESS)
-# 
-# Residuals:
-#    Min     1Q Median     3Q    Max 
-# -5.913 -1.513 -0.245  1.487  5.690 
-# 
-# Coefficients:
-#             Estimate Std. Error t value Pr(&gt;|t|)    
-# (Intercept)   7.1154     0.0901    79.0   &lt;2e-16 ***
-# eduyrs       -0.1336     0.0066   -20.2   &lt;2e-16 ***
-# ---
-# Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
-# 
-# Residual standard error: 2.4 on 14574 degrees of freedom
-# Multiple R-squared:  0.0273,	Adjusted R-squared:  0.0272 
-# F-statistic:  409 on 1 and 14574 DF,  p-value: &lt;2e-16
+# Estimate regression models.
+ols &lt;- lm_robust(data = ESS, formula = imwbcnt ~ eduyrs,
+                 weights = pspwght)
+
+screenreg(ols, # Nicely-formatted table.
+        digits = 3, include.ci = FALSE)
 ```
+
+&lt;img src="7-Bivariate-OLS_files/figure-html/unnamed-chunk-11-1.png" width="100%" style="display: block; margin: auto;" /&gt;
 ]
 
-.left-column[
+.push-right[
 
-$$
-\operatorname{\widehat{imwbcnt}} = 7.12 - 0.13(\operatorname{eduyrs})
-$$
+```
+# 
+# =========================
+#              Model 1     
+# -------------------------
+# (Intercept)     7.460 ***
+#                (0.159)   
+# eduyrs         -0.110 ***
+#                (0.012)   
+# -------------------------
+# R^2             0.016    
+# Adj. R^2        0.016    
+# Num. obs.    5966        
+# RMSE            1.347    
+# =========================
+# *** p &lt; 0.001; ** p &lt; 0.01; * p &lt; 0.05
+```
+]]
 
-
-is the line that `\(\min \sum_{i=1}^{n} e_{i}^{2}\)`.
-
+.panel[.panel-name[Interpretation]
+.push-left[
+&lt;img src="7-Bivariate-OLS_files/figure-html/unnamed-chunk-13-1.png" width="100%" style="display: block; margin: auto;" /&gt;
 ]
+
+
+
+
+.push-right[
+$$
+\operatorname{\widehat{imwbcnt}} = 7.46 - 0.11(\operatorname{eduyrs})
+$$
+ `\(\rightarrow\)` the best-fitting line that `\(\min \sum_{i=1}^{n} e_{i}^{2}\)`.
+
+- Among countries without a socialist past, poverty is on average 7.46.
+  + `\((\hat{y}|\text{Eduyrs = 0}) = 7.46\)`.
+  
+- With every year of education, the average level of xenophobia is -0.11 lower.
+
+- This model accounts for 0.02* 100 % more of the variation of xenophobia, than simply using the mean as best guess `\(\bar{y} = 6\)`.
+]]]
 
 ---
-# Weighted linear OLS
+# Two types of interpretation
 
 .left-column[
-The `weights` argument allows you to use (post-stratification) weights. 
+.center[**1. Causal**]
 
-.alert[But beware, `lm()` inference (e.g., standard errors, *t*-values, *p*-values, and confidence intervals) will be wrong, because weights introduce heteroscedasticity.]
+With every additional year of education, xenophobia is expected to decline on average by -0.11%.
+
+.alert[Beware, this interpretation only holds if X was (as good as) randomly assigneds!]
 ]
 
-.right-column[
+--
 
-```r
-# Estimate a weighted linear OLS model.
-ols &lt;- lm(formula = imwbcnt ~ eduyrs, data = ESS, 
-*         weights = pspwght)
-summary(ols) # Give a summary of the main results.
-# 
-# Call:
-# lm(formula = imwbcnt ~ eduyrs, data = ESS, weights = pspwght)
-# 
-# Weighted Residuals:
-#    Min     1Q Median     3Q    Max 
-# -9.922 -0.719 -0.077  0.803 10.065 
-# 
-# Coefficients:
-#             Estimate Std. Error t value Pr(&gt;|t|)    
-# (Intercept)  7.27426    0.08335    87.3   &lt;2e-16 ***
-# eduyrs      -0.15275    0.00604   -25.3   &lt;2e-16 ***
-# ---
-# Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
-# 
-# Residual standard error: 1.59 on 14574 degrees of freedom
-# Multiple R-squared:  0.0421,	Adjusted R-squared:  0.042 
-# F-statistic:  640 on 1 and 14574 DF,  p-value: &lt;2e-16
-```
+.right-column[
+.center[
+**2. Descriptive: conditional means `\(\bar{y}|x\)`**
+]
+
+With every year of education, the average level of xenophobia is -0.11 units lower.
+
+Here regression is a (linear) model that describes the average of the outcome for different values of the predictor.
 ]
 
 ---
@@ -285,7 +316,7 @@ But beware, `lm()` inference (e.g., standard errors, *t*-values, *p*-values) wil
 ```r
 # Estimate a weighted linear OLS model.
 *ols &lt;- lm_robust(formula = imwbcnt ~ eduyrs, data = ESS,
-                 weights = pspwght)
+*                weights = pspwght)
 summary(ols) # Give a summary of the main results.
 # 
 # Call:
@@ -294,130 +325,129 @@ summary(ols) # Give a summary of the main results.
 # Weighted, Standard error type:  HC2 
 # 
 # Coefficients:
-#             Estimate Std. Error t value Pr(&gt;|t|) CI Lower CI Upper    DF
-# (Intercept)    7.274     0.1473    49.4 0.00e+00    6.986    7.563 14574
-# eduyrs        -0.153     0.0107   -14.3 4.09e-46   -0.174   -0.132 14574
+#             Estimate Std. Error t value Pr(&gt;|t|) CI Lower CI Upper   DF
+# (Intercept)     7.46     0.1590   46.93 0.00e+00    7.148   7.7714 5964
+# eduyrs         -0.11     0.0119   -9.25 3.18e-20   -0.133  -0.0867 5964
 # 
-# Multiple R-squared:  0.0421 ,	Adjusted R-squared:  0.042 
-# F-statistic:  205 on 1 and 14574 DF,  p-value: &lt;2e-16
+# Multiple R-squared:  0.016 ,	Adjusted R-squared:  0.0158 
+# F-statistic: 85.5 on 1 and 5964 DF,  p-value: &lt;2e-16
 ```
 ]
 
 ---
-# Multiple linear OLS
+# Categorical predicators
 
-.left-column[
-&lt;img src="7-Bivariate-OLS_files/figure-html/unnamed-chunk-13-1.png" width="100%" style="display: block; margin: auto;" /&gt;
-
-.alert[But is parental education the only confounder?] 
-
-.backgrnote[
-A confounder is a common cause of both one's predictor `\(x_{i1}\)` (e.g., years of education) and of the outcome `\(y_i\)` (e.g., imwbcntphobia). Counfounder bias is: `\(\mathbb{E}(\tilde{\beta_{x_{1}}}) = \beta_{x_{1}} + \color{orange}{\beta_{x_{2}} \frac{\text{Cov}(x_{i1},x_{i2})}{\text{Var}(x_{i1})}}.\)`
-]
-]
-
-.right-column[
-In the social sciences we use OLS to test theories about causal effects. It is thus important to rule out alternative explanations.
-
-```r
-# Estimate a weighted linear OLS model.
-ols2 &lt;- lm_robust(
-* formula = imwbcnt ~ eduyrs + par_edu,
-  data = ESS, weights = pspwght)
-summary(ols2) # Give a summary of the main results.
-# 
-# Call:
-# lm_robust(formula = imwbcnt ~ eduyrs + par_edu, data = ESS, weights = pspwght)
-# 
-# Weighted, Standard error type:  HC2 
-# 
-# Coefficients:
-#             Estimate Std. Error t value Pr(&gt;|t|) CI Lower CI Upper    DF
-# (Intercept)   7.2706     0.1470   49.46 0.00e+00    6.982   7.5588 14573
-# eduyrs       -0.1353     0.0120  -11.31 1.48e-29   -0.159  -0.1119 14573
-# par_edu      -0.0769     0.0218   -3.52 4.32e-04   -0.120  -0.0341 14573
-# 
-# Multiple R-squared:  0.0447 ,	Adjusted R-squared:  0.0445 
-# F-statistic:  112 on 2 and 14573 DF,  p-value: &lt;2e-16
-```
-]
-
----
-# Categorical predictors
-
-.left-column[
-.center[.content-box-blue[
-How can we make sense of a categorical predictor in a linear model?]]
-]
-
---
-
-.right-column[
 .panelset[
-.panel[.panel-name[Plot]
-&lt;img src="7-Bivariate-OLS_files/figure-html/dummies-1.png" width="90%" style="display: block; margin: auto;" /&gt;
-]
-.panel[.panel-name[Code]
-
-```r
-ggplot(data = ESS, 
-       mapping = aes(y = imwbcnt, 
-                     x = case_when(
-                       cntry == "Denmark" ~ 0,
-                       cntry == "Sweden" ~ 1,
-                       TRUE ~ as.numeric(NA)
-                     ))) +
-  geom_jitter(aes(size = pspwght), alpha = 1/15, width = 0.05, height = 0) +
-  geom_smooth(aes(weight = pspwght), method = "lm", se = FALSE) +
-  scale_x_continuous(breaks = c(0, 1), 
-                     labels = c("0 = Denmark", "1 = Sweden")) +
-  labs(x = "Country", y = "Xenophobia", 
-       size = "Survey \n weight") +
-  theme_minimal()
-```
-]]]
-
----
-# Categorical predictors
+.panel[.panel-name[Scatter plot]
 
 .left-column[
-Factors are automatically treated as dummies, with the first level taken as reference. Thus if you want to change the reference, you need to recode the levels of the factor using the `forcats` package.
+.content-box-green[
+1. At which `\(\hat{Y}\)` does the regression line pass through the cloud of countries colonized by Britain?
+2. At which `\(\hat{Y}\)` does the regression line pass through the cloud of countries colonized by Belgium?
+3. What does this suggest about the slope `\(\hat{\beta}\)`?
+]]
+.right-column[
+&lt;img src="7-Bivariate-OLS_files/figure-html/categorical-1.png" width="100%" style="display: block; margin: auto;" /&gt;
+]]
+
+.panel[.panel-name[Dummy coding]
+
+.push-left[
+`$$x=
+  \begin{cases}
+    1, &amp; \text{if condition is met} \\
+    0 &amp; \text{otherwise}
+  \end{cases}$$`
+
+Country                       |  Slovenia | Hungary | ...
+---------------------------------|----|----|----
+1                 | 1  | 0  | 0 
+2                 | 1  | 0  | 0
+...                 | 1  | 0  | 0
+1230                          | 0  | 1  | 0  
+1231                          | 0  | 1  | 0
+...                          | 0  | 1  | 0
+Reference &lt;br&gt; .backgrnote[(Czechia)] | 0  | 0  | 0
 ]
 
-.right-column[
-.font90[
+.push-right[
+&lt;img src="7-Bivariate-OLS_files/figure-html/categorical2-1.png" width="100%" style="display: block; margin: auto;" /&gt;
+]]
+
+.panel[.panel-name[How it's done in R]
+.push-left[
 
 ```r
-ols3 &lt;- lm_robust(formula = imwbcnt ~ eduyrs + par_edu + gndr + cntry, 
-                  data = ESS, weights = pspwght)
-summary(ols3) # Give a summary of the main results.
+# R recognizes categorical variables automatically,
+# if they are factor or character vectors.
+ols_2 &lt;- lm_robust(imwbcnt ~ cntry, data = ESS, 
+                   weights = pspwght)
+
+screenreg(ols_2, # Nicely-formatted table.
+        include.ci = FALSE, digits = 3, 
+        single.row = TRUE)
+```
+
+&lt;img src="7-Bivariate-OLS_files/figure-html/unnamed-chunk-15-1.png" width="80%" style="display: block; margin: auto;" /&gt;
+]
+.push-right[
+
+```
 # 
-# Call:
-# lm_robust(formula = imwbcnt ~ eduyrs + par_edu + gndr + cntry, 
-#     data = ESS, weights = pspwght)
-# 
-# Weighted, Standard error type:  HC2 
-# 
-# Coefficients:
-#                Estimate Std. Error t value Pr(&gt;|t|) CI Lower CI Upper    DF
-# (Intercept)      7.1324     0.1525  46.755 0.00e+00    6.833   7.4314 14563
-# eduyrs          -0.0975     0.0124  -7.886 3.35e-15   -0.122  -0.0732 14563
-# par_edu         -0.1628     0.0223  -7.314 2.72e-13   -0.206  -0.1192 14563
-# gndrFemale      -0.1475     0.0624  -2.361 1.82e-02   -0.270  -0.0250 14563
-# cntryCzechia     1.0558     0.0792  13.337 2.43e-40    0.901   1.2110 14563
-# cntryEstonia     0.0371     0.0833   0.446 6.56e-01   -0.126   0.2005 14563
-# cntryFinland    -1.0057     0.0745 -13.493 3.06e-41   -1.152  -0.8596 14563
-# cntryFrance     -0.3276     0.0769  -4.260 2.06e-05   -0.478  -0.1769 14563
-# cntryCroatia    -0.4285     0.0945  -4.533 5.87e-06   -0.614  -0.2432 14563
-# cntryHungary     0.5585     0.0713   7.835 5.02e-15    0.419   0.6982 14563
-# cntryLithuania  -0.3525     0.0906  -3.892 9.99e-05   -0.530  -0.1750 14563
-# cntrySlovenia    0.0316     0.0864   0.366 7.15e-01   -0.138   0.2010 14563
-# cntrySlovakia    1.0010     0.0905  11.058 2.59e-28    0.824   1.1784 14563
-# 
-# Multiple R-squared:  0.102 ,	Adjusted R-squared:  0.102 
-# F-statistic:  116 on 12 and 14563 DF,  p-value: &lt;2e-16
+# ===================================
+#                Model 1             
+# -----------------------------------
+# (Intercept)       6.160 (0.061) ***
+# cntryHungary     -0.232 (0.079) ** 
+# cntrySlovenia    -0.858 (0.095) ***
+# cntrySlovakia     0.091 (0.097)    
+# -----------------------------------
+# R^2               0.010            
+# Adj. R^2          0.010            
+# Num. obs.      5966                
+# RMSE              1.351            
+# ===================================
+# *** p &lt; 0.001; ** p &lt; 0.01; * p &lt; 0.05
 ```
 ]]
+
+.panel[.panel-name[Interpretation]
+.push-left[.font90[
+
+```
+# 
+# ===================================
+#                Model 1             
+# -----------------------------------
+# (Intercept)       6.160 (0.061) ***
+# cntryHungary     -0.232 (0.079) ** 
+# cntrySlovenia    -0.858 (0.095) ***
+# cntrySlovakia     0.091 (0.097)    
+# -----------------------------------
+# R^2               0.010            
+# Adj. R^2          0.010            
+# Num. obs.      5966                
+# RMSE              1.351            
+# ===================================
+# *** p &lt; 0.001; ** p &lt; 0.01; * p &lt; 0.05
+```
+]]
+.push-right[
+
+
+$$
+`\begin{aligned}
+\operatorname{\widehat{imwbcnt}} &amp;= 6.16 - 0.23(\operatorname{cntry}_{\operatorname{Hungary}})\ - \\
+&amp;\quad 0.86(\operatorname{cntry}_{\operatorname{Slovenia}}) + 0.09(\operatorname{cntry}_{\operatorname{Slovakia}})
+\end{aligned}`
+$$
+
+
+- When Hungary = 0, Slovenia == 0, and Slovakia = 0, then poverty is on average 6.16%.&lt;br&gt; `\(\rightarrow\)` Average xenophobia in Czechia is: 6.16%.
+
+- In Hungary, xenophobia is on average -0.23 units lower than among the Czech; and this difference is statistically significant/systematic.
+  + In Hungary, xenophobia is thus: `\(6.16 + -0.23 = 5.93\)`.
+]]]
 
 ---
 # Regression tables
@@ -425,44 +455,28 @@ summary(ols3) # Give a summary of the main results.
 .font90[
 
 ```r
-# Regression table of model objects ols1 to ols3; report standard errors, not confidence intervals.
-texreg::screenreg(list(ols, ols2, ols3), include.ci = FALSE) 
+# Regression table of model objects ols1 and ols_2; report standard errors, not confidence intervals.
+texreg::screenreg(list(ols, ols_2), include.ci = FALSE) 
 # 
-# ========================================================
-#                 Model 1       Model 2       Model 3     
-# --------------------------------------------------------
-# (Intercept)         7.27 ***      7.27 ***      7.13 ***
-#                    (0.15)        (0.15)        (0.15)   
-# eduyrs             -0.15 ***     -0.14 ***     -0.10 ***
-#                    (0.01)        (0.01)        (0.01)   
-# par_edu                          -0.08 ***     -0.16 ***
-#                                  (0.02)        (0.02)   
-# gndrFemale                                     -0.15 *  
-#                                                (0.06)   
-# cntryCzechia                                    1.06 ***
-#                                                (0.08)   
-# cntryEstonia                                    0.04    
-#                                                (0.08)   
-# cntryFinland                                   -1.01 ***
-#                                                (0.07)   
-# cntryFrance                                    -0.33 ***
-#                                                (0.08)   
-# cntryCroatia                                   -0.43 ***
-#                                                (0.09)   
-# cntryHungary                                    0.56 ***
-#                                                (0.07)   
-# cntryLithuania                                 -0.35 ***
-#                                                (0.09)   
-# cntrySlovenia                                   0.03    
-#                                                (0.09)   
-# cntrySlovakia                                   1.00 ***
-#                                                (0.09)   
-# --------------------------------------------------------
-# R^2                 0.04          0.04          0.10    
-# Adj. R^2            0.04          0.04          0.10    
-# Num. obs.       14576         14576         14576       
-# RMSE                1.59          1.58          1.54    
-# ========================================================
+# =======================================
+#                Model 1      Model 2    
+# ---------------------------------------
+# (Intercept)       7.46 ***     6.16 ***
+#                  (0.16)       (0.06)   
+# eduyrs           -0.11 ***             
+#                  (0.01)                
+# cntryHungary                  -0.23 ** 
+#                               (0.08)   
+# cntrySlovenia                 -0.86 ***
+#                               (0.09)   
+# cntrySlovakia                  0.09    
+#                               (0.10)   
+# ---------------------------------------
+# R^2               0.02         0.01    
+# Adj. R^2          0.02         0.01    
+# Num. obs.      5966         5966       
+# RMSE              1.35         1.35    
+# =======================================
 # *** p &lt; 0.001; ** p &lt; 0.01; * p &lt; 0.05
 ```
 ]
@@ -473,17 +487,17 @@ texreg::screenreg(list(ols, ols2, ols3), include.ci = FALSE)
 .push-left[
 
 ```r
-# Regression table of model objects ols1 to ols3; 
+# Regression table of model objects ols1 and ols_2; 
 # report standard errors, not confidence intervals.
-texreg::htmlreg(list(ols, ols2, ols3), 
+texreg::htmlreg(list(ols, ols_2), 
         include.ci = FALSE, 
         file = "MyOLSModels.doc") # Word table
 
-texreg::htmlreg(list(ols, ols2, ols3), 
+texreg::htmlreg(list(ols, ols_2), 
         include.ci = FALSE, 
         file = "MyOLSModels.html") # Html table
 
-texreg::texreg(list(ols, ols2, ols3), 
+texreg::texreg(list(ols, ols_2), 
        include.ci = FALSE, 
        file =  "MyOLSModels.tex") # Latex table 
 ```
@@ -491,11 +505,11 @@ texreg::texreg(list(ols, ols2, ols3),
 
 ```r
 # Regression table with labelled predicators
-htmlreg(list(ols, ols2, ols3), include.ci = FALSE,
+htmlreg(list(ols, ols_2), include.ci = FALSE,
         custom.coef.names = c("Intercept", 
                               "Years of Education", 
-                              "Age", "Women", 
-                              "Denmark", "Norway", "Sweden"),
+                              "Hungary", "Slovenia", 
+                              "Slovakia"),
         caption = "My regression table", 
         caption.above = TRUE,
         single.row = TRUE)
@@ -504,10 +518,68 @@ htmlreg(list(ols, ols2, ols3), include.ci = FALSE,
 
 .push-right[
 .font60[
-
-```
-# Error in matrixreg(l, single.row = single.row, stars = stars, custom.model.names = custom.model.names, : 'custom.coef.names' must be a character vector of length 13.
-```
+&lt;table class="texreg" style="margin: 10px auto;border-collapse: collapse;border-spacing: 0px;color: #000000;border-top: 2px solid #000000;"&gt;
+&lt;caption&gt;My regression table&lt;/caption&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th style="padding-left: 5px;padding-right: 5px;"&gt;&amp;nbsp;&lt;/th&gt;
+&lt;th style="padding-left: 5px;padding-right: 5px;"&gt;Model 1&lt;/th&gt;
+&lt;th style="padding-left: 5px;padding-right: 5px;"&gt;Model 2&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr style="border-top: 1px solid #000000;"&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;Intercept&lt;/td&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;7.46 (0.16)&lt;sup&gt;&amp;#42;&amp;#42;&amp;#42;&lt;/sup&gt;&lt;/td&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;6.16 (0.06)&lt;sup&gt;&amp;#42;&amp;#42;&amp;#42;&lt;/sup&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;Years of Education&lt;/td&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;-0.11 (0.01)&lt;sup&gt;&amp;#42;&amp;#42;&amp;#42;&lt;/sup&gt;&lt;/td&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;&amp;nbsp;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;Hungary&lt;/td&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;&amp;nbsp;&lt;/td&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;-0.23 (0.08)&lt;sup&gt;&amp;#42;&amp;#42;&lt;/sup&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;Slovenia&lt;/td&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;&amp;nbsp;&lt;/td&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;-0.86 (0.09)&lt;sup&gt;&amp;#42;&amp;#42;&amp;#42;&lt;/sup&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;Slovakia&lt;/td&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;&amp;nbsp;&lt;/td&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;0.09 (0.10)&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr style="border-top: 1px solid #000000;"&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;R&lt;sup&gt;2&lt;/sup&gt;&lt;/td&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;0.02&lt;/td&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;0.01&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;Adj. R&lt;sup&gt;2&lt;/sup&gt;&lt;/td&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;0.02&lt;/td&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;0.01&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;Num. obs.&lt;/td&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;5966&lt;/td&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;5966&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr style="border-bottom: 2px solid #000000;"&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;RMSE&lt;/td&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;1.35&lt;/td&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;1.35&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;tfoot&gt;
+&lt;tr&gt;
+&lt;td style="font-size: 0.8em;" colspan="3"&gt;&lt;sup&gt;&amp;#42;&amp;#42;&amp;#42;&lt;/sup&gt;p &amp;lt; 0.001; &lt;sup&gt;&amp;#42;&amp;#42;&lt;/sup&gt;p &amp;lt; 0.01; &lt;sup&gt;&amp;#42;&lt;/sup&gt;p &amp;lt; 0.05&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tfoot&gt;
+&lt;/table&gt;
 ]]
 
 ---
@@ -516,21 +588,12 @@ htmlreg(list(ols, ols2, ols3), include.ci = FALSE,
 `broom:tidy()` turns a model object into a tibble containing coefficients and inference stats.
 
 ```r
-tidy(ols3) 
-#              term estimate std.error statistic  p.value conf.low conf.high    df outcome
-# 1     (Intercept)   7.1324    0.1525    46.755 0.00e+00    6.833    7.4314 14563 imwbcnt
-# 2          eduyrs  -0.0975    0.0124    -7.886 3.35e-15   -0.122   -0.0732 14563 imwbcnt
-# 3         par_edu  -0.1628    0.0223    -7.314 2.72e-13   -0.206   -0.1192 14563 imwbcnt
-# 4      gndrFemale  -0.1475    0.0624    -2.361 1.82e-02   -0.270   -0.0250 14563 imwbcnt
-# 5    cntryCzechia   1.0558    0.0792    13.337 2.43e-40    0.901    1.2110 14563 imwbcnt
-# 6    cntryEstonia   0.0371    0.0833     0.446 6.56e-01   -0.126    0.2005 14563 imwbcnt
-# 7    cntryFinland  -1.0057    0.0745   -13.493 3.06e-41   -1.152   -0.8596 14563 imwbcnt
-# 8     cntryFrance  -0.3276    0.0769    -4.260 2.06e-05   -0.478   -0.1769 14563 imwbcnt
-# 9    cntryCroatia  -0.4285    0.0945    -4.533 5.87e-06   -0.614   -0.2432 14563 imwbcnt
-# 10   cntryHungary   0.5585    0.0713     7.835 5.02e-15    0.419    0.6982 14563 imwbcnt
-# 11 cntryLithuania  -0.3525    0.0906    -3.892 9.99e-05   -0.530   -0.1750 14563 imwbcnt
-# 12  cntrySlovenia   0.0316    0.0864     0.366 7.15e-01   -0.138    0.2010 14563 imwbcnt
-# 13  cntrySlovakia   1.0010    0.0905    11.058 2.59e-28    0.824    1.1784 14563 imwbcnt
+tidy(ols_2) 
+#            term estimate std.error statistic  p.value conf.low conf.high   df outcome
+# 1   (Intercept)   6.1603    0.0613   100.569 0.00e+00   6.0402    6.2804 5962 imwbcnt
+# 2  cntryHungary  -0.2321    0.0792    -2.929 3.41e-03  -0.3874   -0.0768 5962 imwbcnt
+# 3 cntrySlovenia  -0.8581    0.0946    -9.074 1.53e-19  -1.0434   -0.6727 5962 imwbcnt
+# 4 cntrySlovakia   0.0915    0.0967     0.946 3.44e-01  -0.0981    0.2810 5962 imwbcnt
 ```
 
 ---
@@ -538,33 +601,18 @@ tidy(ols3)
 
 
 ```r
-(plotdata &lt;- ols3 %&gt;% tidy() %&gt;% # Use the ols5 model object, then tidy it, then
+(plotdata &lt;- ols_2 %&gt;% tidy() %&gt;% # Use the ols_2 model object, then tidy it, then
    mutate(term = fct_recode(factor(term), # Recode predictor names, then
-                            "Years of Education" = "eduyrs",
-                            "Parental education" = "par_edu",
-                            "Women" = "gndrFemale",
                             "Intercept" = "(Intercept)",
-                            "Denmark" = "cntryDenmark",
-                            "Norway" = "cntryNorway",
-                            "Sweden" = "cntrySweden"),
-          predictor = case_when( # Identify explanatry and confounding variables
-            term == "Years of Education" ~ "Predictor",
-            TRUE ~ "Potential confounder"))) %&gt;% 
-  select(term, estimate, conf.low, conf.high, predictor) # keep only some of all the info.
-#                  term estimate conf.low conf.high            predictor
-# 1           Intercept   7.1324    6.833    7.4314 Potential confounder
-# 2  Years of Education  -0.0975   -0.122   -0.0732            Predictor
-# 3  Parental education  -0.1628   -0.206   -0.1192 Potential confounder
-# 4               Women  -0.1475   -0.270   -0.0250 Potential confounder
-# 5        cntryCzechia   1.0558    0.901    1.2110 Potential confounder
-# 6        cntryEstonia   0.0371   -0.126    0.2005 Potential confounder
-# 7        cntryFinland  -1.0057   -1.152   -0.8596 Potential confounder
-# 8         cntryFrance  -0.3276   -0.478   -0.1769 Potential confounder
-# 9        cntryCroatia  -0.4285   -0.614   -0.2432 Potential confounder
-# 10       cntryHungary   0.5585    0.419    0.6982 Potential confounder
-# 11     cntryLithuania  -0.3525   -0.530   -0.1750 Potential confounder
-# 12      cntrySlovenia   0.0316   -0.138    0.2010 Potential confounder
-# 13      cntrySlovakia   1.0010    0.824    1.1784 Potential confounder
+                            "Hungary" = "cntryHungary",
+                            "Slovenia" = "cntrySlovenia",
+                            "Slovakia" = "cntrySlovakia")) %&gt;% 
+  select(term, estimate, conf.low, conf.high) %&gt;% # keep only some of all the info.
+   filter(term != "Intercept"))
+#       term estimate conf.low conf.high
+# 1  Hungary  -0.2321  -0.3874   -0.0768
+# 2 Slovenia  -0.8581  -1.0434   -0.6727
+# 3 Slovakia   0.0915  -0.0981    0.2810
 ```
 
 ---
@@ -573,97 +621,109 @@ class: clear
 
 .panelset[
 .panel[.panel-name[Plot]
-&lt;img src="7-Bivariate-OLS_files/figure-html/unnamed-chunk-23-1.png" width="60%" style="display: block; margin: auto;" /&gt;
+&lt;img src="7-Bivariate-OLS_files/figure-html/unnamed-chunk-24-1.png" width="60%" style="display: block; margin: auto;" /&gt;
 ]
 .panel[.panel-name[Code]
 
 ```r
 ggplot(data = plotdata,
-       aes(x = reorder(term, estimate), y = estimate, ymin = conf.low, ymax = conf.high, color = predictor)) +
+       aes(x = reorder(term, estimate), y = estimate, ymin = conf.low, ymax = conf.high)) +
   geom_hline(yintercept = 0, # Null-hypothesis line.
              color = "#901A1E", lty = "dashed") + 
   geom_pointrange() + # Coefs with 95% CI.
   coord_flip() + 
   theme_minimal() +
   # Axis title: greek beta.
-  labs(y = expression(beta), x = "") +
+  labs(y = "Difference in xenophobia as compared to Czechia", 
+       x = "",
+       caption = "Note: Results are from post-stratitification weighted OLS regression with robust inference") +
   theme(legend.position="bottom",
         legend.title=element_blank())
 ```
 ]]
 
 ---
-class: clear
-# Further processing of model results .font60[Several models]
-
-```r
-*(plotdata &lt;- bind_rows( # Stack several tibbles on top of each other into one tibble,
-* tidy(ols), tidy(ols2), # turn the two models into tibbles,
-* .id = "model" # Identify which model the tibbles came from.
-)) 
-#   model        term estimate std.error statistic  p.value conf.low conf.high    df outcome
-# 1     1 (Intercept)   7.2743    0.1473     49.38 0.00e+00    6.986    7.5630 14574 imwbcnt
-# 2     1      eduyrs  -0.1528    0.0107    -14.31 4.09e-46   -0.174   -0.1318 14574 imwbcnt
-# 3     2 (Intercept)   7.2706    0.1470     49.46 0.00e+00    6.982    7.5588 14573 imwbcnt
-# 4     2      eduyrs  -0.1353    0.0120    -11.31 1.48e-29   -0.159   -0.1119 14573 imwbcnt
-# 5     2     par_edu  -0.0769    0.0218     -3.52 4.32e-04   -0.120   -0.0341 14573 imwbcnt
-```
-
----
-# Further processing of model results
-
-
-```r
-(plotdata &lt;- bind_rows(tidy(ols), tidy(ols2), # Stack the data of two model objects into one tibble.
-                       .id = "model") %&gt;% # Identify which model the data came from, then
-   # Get rid of the intercept, because it is so large compared to the other coefficients.
-   dplyr::filter(term != "(Intercept)") %&gt;%
-   mutate(
-     model = case_when(model == 1 ~ "Model 1", # Rename model identifyer.
-                       model == 2 ~ "Model 2"),
-     term = fct_recode(factor(term), # Recode predictor names, then
-                       "Years of Education" = "eduyrs",
-                       "Parental education" = "par_edu"),
-     predictor = case_when( # Identify explanatry and confounding variables
-       term == "Years of Education" ~ "Predictor",
-       TRUE ~ "Potential confounder")) %&gt;% 
-   select(term, estimate, conf.low, conf.high, model, predictor)) # keep only some of all the info.
-#                 term estimate conf.low conf.high   model            predictor
-# 1 Years of Education  -0.1528   -0.174   -0.1318 Model 1            Predictor
-# 2 Years of Education  -0.1353   -0.159   -0.1119 Model 2            Predictor
-# 3 Parental education  -0.0769   -0.120   -0.0341 Model 2 Potential confounder
-```
-
----
-class: clear
-# Coefficient plots .font60[Good alternative to regression tables]
+# Model predictions .font60[For continuous predictors]
 
 .panelset[
-.panel[.panel-name[Plot]
-&lt;img src="7-Bivariate-OLS_files/figure-html/unnamed-chunk-27-1.png" width="60%" style="display: block; margin: auto;" /&gt;
-]
-.panel[.panel-name[Code]
+.panel[.panel-name[The OLS model]
+.push-left[
 
 ```r
-ggplot(data = plotdata, 
-       aes(x = reorder(term, estimate),
-           y = estimate, 
-           ymin = conf.low, ymax = conf.high,
-           color = predictor, shape = model)) +
-  geom_hline(yintercept = 0, # Null-hypothesis line.
-             color = "#901A1E", lty = "dashed") + 
-* geom_pointrange(# Coefs &amp; 95% CI.
-*   position = position_dodge(width=0.5)) +
-  coord_flip() + 
-  theme_minimal() +
-  # Axis title: greek beta.
-  labs(y = expression(beta), 
-       x = "") +
-  theme(legend.position="bottom",
-        legend.title=element_blank(),
-        legend.box = 'vertical')
+ols &lt;- lm_robust(formula = imwbcnt ~ eduyrs, data = ESS, weights = pspwght)
+```
+]
+.push-right[
+&lt;img src="7-Bivariate-OLS_files/figure-html/Coefplot2-1.png" width="100%" style="display: block; margin: auto;" /&gt;
+]]
+.panel[.panel-name[Predictions]
+.push-left[
+**Step 1**: Generate fictional data of `\(x\)` with theoretically-informative values.
+
+
+```r
+(fict_dat &lt;- tibble(eduyrs = 1:30))
+# # A tibble: 30 × 1
+#    eduyrs
+#     &lt;int&gt;
+#  1      1
+#  2      2
+#  3      3
+#  4      4
+#  5      5
+#  6      6
+#  7      7
+#  8      8
+#  9      9
+# 10     10
+# # … with 20 more rows
+```
+]
+.push-right[
+**Step 2**: Apply estimated model to fictional data. Given fictional data, what `\(\hat{y}\)` does our model predict?
+
+
+```r
+*(fict_dat &lt;- predict(
+* ols, newdata = fict_dat,
+* interval = "confidence", level = 0.95)$fit %&gt;%
+   as_tibble() %&gt;% # Turn into a tibble, then
+   bind_cols(fict_dat, .)) # Add to the synthetic data.
+# # A tibble: 30 × 4
+#    eduyrs   fit   lwr   upr
+#     &lt;int&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;
+#  1      1  7.35  7.06  7.64
+#  2      2  7.24  6.97  7.51
+#  3      3  7.13  6.89  7.37
+#  4      4  7.02  6.80  7.24
+#  5      5  6.91  6.71  7.11
+#  6      6  6.80  6.62  6.98
+#  7      7  6.69  6.53  6.85
+#  8      8  6.58  6.45  6.71
+#  9      9  6.47  6.35  6.58
+# 10     10  6.36  6.26  6.46
+# # … with 20 more rows
 ```
 ]]
+.panel[.panel-name[Visualization]
+.push-left[
+
+```r
+ggplot(data = fict_dat, aes(y = fit, x = eduyrs)) +
+  geom_vline(xintercept = c(9, 21), color = "red", lty = "dashed") +
+  geom_ribbon(aes(ymin = lwr, ymax = upr), alpha = 0.5) +
+  geom_line() +
+  labs(
+    title = "Predictions based on regression of xenophobia",
+    x = "By years of education",
+    # Write Greek beta into axis title.
+    y = "Predicted average of xenophobia") +
+  theme_minimal()
+```
+]
+.push-right[
+&lt;img src="7-Bivariate-OLS_files/figure-html/unnamed-chunk-29-1.png" width="100%" style="display: block; margin: auto;" /&gt;
+]]]
 
 ---
 class: inverse
@@ -675,12 +735,9 @@ class: inverse
 class: inverse
 # Important functions
 
-1. `lm()`: Estimate linear OLS regression. `estimatr::lm_robust()` estimates OLS regression with heteroscedasticity-robust standard errors (or cluster-robust standard errors if you wish).
+1. `estimatr::lm_robust()` estimates linear OLS regression with heteroscedasticity-robust standard errors (or cluster-robust standard errors if you wish).
 2. `broom::tidy()`: Return tibble of model results.
 3. `textreg::texreg()`, `textreg::htmlreg()`, and `textreg::screenreg()`: Create nicely-formatted (html, Word, ASCII, or Latex) tables of (one or several) regression models.
-4. `dplyr::bind_rows()`: Add the rows of a data frames to another data frame that has equal columns/variables.
-5. `dplyr::bind_cols()`: Add rows of another data frame to a data frame that has an equal number of rows. In contrast to a join/merge, no identifying key is specified. This can be helpful, but is also a bit dangerous!
-6. `scale()` z-standardizes variables. But sometimes it returns a matrix rather than a vector. Therefore it makes sense to always code `scale(x) %&gt;% as.numeric()` to ensure you get an numeric vector out of it.
     </textarea>
 <style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
 <script src="../template/remark-latest.min.js"></script>
