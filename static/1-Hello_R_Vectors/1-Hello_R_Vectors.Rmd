@@ -41,11 +41,11 @@ xaringanExtra::use_xaringan_extra(c("tile_view", "tachyons"))
 xaringanExtra::use_panelset()
 ```
 
-# Lecturers
+# Lecturers and Schedule
 
 --
 
-.center[
+.push-left[
 
 ![](https://www2.adm.ku.dk/selv/pls/prt_www40.hentindhold_cms?p_personid=608735)
 ![](https://www2.adm.ku.dk/selv/pls/prt_www40.hentindhold_cms?p_personid=646912)
@@ -53,6 +53,22 @@ xaringanExtra::use_panelset()
 .caption[
 &nbsp; Merlin Schaeffer &nbsp;&nbsp;&nbsp;&nbsp; Friedolin Merhout
 ]]
+--
+
+.push-right[
+    Day|Session|Content
+    ---|---|---
+    Wed|1| Hello R: Vectors
+     |2| Data Frames and Tibbles
+     |3| Visualization I
+    Thu|4| Visualization II
+     |5| Piping and Grouped Operations
+     |6| Visualization III 
+     Fri|7| Bivariate OLS Regression
+     |8| Multiple OLS Regression
+     |9| Interactions and Polynomials
+    
+]
 
 ---
 
