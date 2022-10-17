@@ -1,10 +1,10 @@
 <!DOCTYPE html>
 <html lang="" xml:lang="">
   <head>
-    <title>Intro to R for Social Data Science</title>
+    <title>Intro to R</title>
     <meta charset="utf-8" />
     <meta name="author" content="Merlin Schaeffer &amp; Friedolin Merhout   Department of Sociology" />
-    <meta name="date" content="2022-10-08" />
+    <meta name="date" content="2022-10-17" />
     <script src="libs/header-attrs/header-attrs.js"></script>
     <link href="libs/tile-view/tile-view.css" rel="stylesheet" />
     <script src="libs/tile-view/tile-view.js"></script>
@@ -18,7 +18,7 @@
 class: center, middle, inverse, title-slide
 
 .title[
-# Intro to R for Social Data Science
+# Intro to R
 ]
 .subtitle[
 ## 8 Multiple OLS Regression
@@ -27,7 +27,7 @@ class: center, middle, inverse, title-slide
 ### Merlin Schaeffer &amp; Friedolin Merhout <br> Department of Sociology
 ]
 .date[
-### 2022-10-08
+### 2022-10-17
 ]
 
 ---
@@ -42,9 +42,9 @@ library(tidyverse) # Add the tidyverse package to my current library.
 library(haven) # Handle labelled data.
 library(ggplot2) # Allows us to create nice figures.
 library(estimatr) # Allows us to estimate (cluster-)robust standard errors.
-library(texreg) # Allows us to make nicely-formatted Html &amp; Latex regression tables.
-library(broom) # Allows us to turn parts of model objects into tibbles.
-*library(modelr) # Model predictions (can also do resampling).
+*library(texreg) # Allows us to make nicely-formatted Html &amp; Latex regression tables.
+*library(broom) # Allows us to turn parts of model objects into tibbles.
+# library(modelr) # Model predictions (can also do resampling).
 ```
 
 
@@ -57,33 +57,20 @@ class: clear
 ESS &lt;- ESS %&gt;% transmute( # Create new variables and keep only those
 *   cntry = as_factor(cntry) %&gt;% fct_relevel("France"), # Country of interview
     gndr = as_factor(gndr), # Gender
-*   agea = zap_labels(agea), # Age
+    agea = zap_labels(agea), # Age
     facntr = as_factor(facntr), # Father born in cntry
     mocntr = as_factor(mocntr), # Mother born in cntry
-    imwbcnt = max(imwbcnt, na.rm = TRUE) - zap_labels(imwbcnt),
-    pspwght = zap_labels(pspwght),
-    # Parental education (ISCED)
-    eiscedf = zap_labels(eiscedf),
-    eiscedm = zap_labels(eiscedm),
-    par_edu = case_when(
-      # If father's edu is missing but not mother's, take mother's
-      (eiscedf == 55 | is.na(eiscedf)) &amp; eiscedm != 55 &amp; !is.na(eiscedm) ~ eiscedm,
-      # If mother's edu is missing but not father's, take father's
-      (eiscedm == 55 | is.na(eiscedm)) &amp; eiscedf != 55 &amp; !is.na(eiscedf)  ~ eiscedf,
-      # If both are missing, its missing
-      eiscedf == 55 &amp; eiscedm == 55 ~ as.numeric(NA),
-      # For all others, take the average of both parents
-      TRUE ~ (eiscedm + eiscedf) / 2),
+    imwbcnt = max(imwbcnt, na.rm = TRUE) - zap_labels(imwbcnt), # Immigrants make country better (0) - worse (10) place
+*   nwspol_hrs = zap_labels(ESS$nwspol)/60, # Daily politital news consumption in hours
+*   rtrd = as_factor(rtrd), # Last 7 days: retired
+    pspwght = pweight*dweight,
     eduyrs = case_when( # Education
       eduyrs &gt; 21 ~ 21, # Recode to max 21 years of edu.
       eduyrs &lt; 9 ~ 9, # Recode to min 9 years of edu.
       TRUE ~ zap_labels(eduyrs))) %&gt;% # Make it numeric, then
-  dplyr::filter(
-    facntr == "Yes" &amp; mocntr == "Yes")
-# Error in `transmute()`:
-# ! Problem while computing `pspwght = zap_labels(pspwght)`.
-# Caused by error in `zap_labels()`:
-# ! object 'pspwght' not found
+  dplyr::filter( # Keep only respondents with native-born parents in four countries
+    facntr == "Yes" &amp; mocntr == "Yes",
+    cntry %in% c("France", "Estonia", "Finland", "Hungary"))
 ```
 
 ---
@@ -91,450 +78,668 @@ ESS &lt;- ESS %&gt;% transmute( # Create new variables and keep only those
 
 
 ```r
-# Design matrix (i.e., tibble of the vars going into out model)
+# Design matrix (i.e., tibble of the variables going into our model)
 ESS &lt;- ESS %&gt;%
-  select(cntry, imwbcnt, eduyrs, par_edu, gndr, agea, pspwght) %&gt;%
-  mutate(cntry = fct_drop(cntry)) %&gt;% # Drop unused cntry factor levels, then
+  select(cntry, imwbcnt, eduyrs, nwspol_hrs, rtrd, gndr, agea, pspwght) %&gt;%
+  mutate(cntry = fct_drop(cntry)) %&gt;% # Drop unused cntry factor levels
   drop_na() # Casewise deletion.
-# Error in `select()`:
-# ! Can't subset columns that don't exist.
-# ✖ Column `par_edu` doesn't exist.
 ```
 
+
 ---
-# OLS I `\(\rightarrow\)` OLS II
 
-.left-column[
-**OLS I**: OLS allows us to express a continuous outcome as *linear* function of continuous or categorical predictors. We can adjust/control for multiple confounding variables. The estimated linear association is *not conditional* on the level of the control/confounding variables.
+# The limits of bivariate OLS
 
-**OLS II**: Conditional and non-linear relationships!
+--
+
+.push-left[
+Bivariate OLS allows us to express a continuous outcome as linear function of *one* continuous or categorical predictor.
+
+```r
+# Estimate a weighted linear OLS model.
+ols1 &lt;- lm_robust(
+* formula = imwbcnt ~ nwspol_hrs,
+  data = ESS, weights = pspwght)
+summary(ols1) # Give a summary of the main results.
+# 
+# Call:
+# lm_robust(formula = imwbcnt ~ nwspol_hrs, data = ESS, weights = pspwght)
+# 
+# Weighted, Standard error type:  HC2 
+# 
+# Coefficients:
+#             Estimate Std. Error t value Pr(&gt;|t|) CI Lower CI Upper   DF
+# (Intercept)   5.0249     0.0504   99.71   0.0000  4.92614   5.1237 5587
+# nwspol_hrs    0.0409     0.0164    2.49   0.0127  0.00873   0.0731 5587
+# 
+# Multiple R-squared:  0.00195 ,	Adjusted R-squared:  0.00178 
+# F-statistic: 6.21 on 1 and 5587 DF,  p-value: 0.0127
+```
 ]
 
-.right-column[
+--
+
+.push-right[
+But with observational data, we oftentimes have *multiple* potential explanations/predictors of interest.
+
+```r
+# Estimate an alternative bivariate OLS model.
+ols2 &lt;- lm_robust(
+* formula = imwbcnt ~ rtrd,
+  data = ESS, weights = pspwght)
+summary(ols2) # Give a summary of the main results.
+# 
+# Call:
+# lm_robust(formula = imwbcnt ~ rtrd, data = ESS, weights = pspwght)
+# 
+# Weighted, Standard error type:  HC2 
+# 
+# Coefficients:
+#             Estimate Std. Error t value Pr(&gt;|t|) CI Lower CI Upper   DF
+# (Intercept)     4.96     0.0518   95.72 0.00e+00    4.854    5.057 5587
+# rtrdMarked      0.42     0.0964    4.36 1.35e-05    0.231    0.609 5587
+# 
+# Multiple R-squared:  0.00797 ,	Adjusted R-squared:  0.00779 
+# F-statistic:   19 on 1 and 5587 DF,  p-value: 1.35e-05
+```
+]
+
+
+
+---
+
+# The limits of bivariate OLS
+
+
+.push-left[
+So, what to do if our alternative explanations are correlated?
+
+```r
+# Estimate a model of our focal predictors.
+ols3 &lt;- lm_robust(
+* formula = nwspol_hrs ~ rtrd,
+  data = ESS, weights = pspwght)
+summary(ols3) # Give a summary of the main results.
+# 
+# Call:
+# lm_robust(formula = nwspol_hrs ~ rtrd, data = ESS, weights = pspwght)
+# 
+# Weighted, Standard error type:  HC2 
+# 
+# Coefficients:
+#             Estimate Std. Error t value  Pr(&gt;|t|) CI Lower CI Upper   DF
+# (Intercept)    1.152     0.0502   22.95 2.02e-111    1.054     1.25 5587
+# rtrdMarked     0.658     0.1030    6.39  1.77e-10    0.457     0.86 5587
+# 
+# Multiple R-squared:  0.0168 ,	Adjusted R-squared:  0.0166 
+# F-statistic: 40.9 on 1 and 5587 DF,  p-value: 1.77e-10
+```
+]
+
+--
+
+.push-right[
+&lt;img src="8-Multiple-OLS_files/figure-html/unnamed-chunk-8-1.png" width="100%" style="display: block; margin: auto;" /&gt;
+]
+
+
+---
+
+# The solution: multiple OLS
+
+--
+
+.left-column[
+To identify the causal effect of news consumption on perceptions of immigrants' societal impact, we need to account for the confounding influence of retirement status.
+&lt;img src="8-Multiple-OLS_files/figure-html/unnamed-chunk-9-1.png" width="100%" style="display: block; margin: auto;" /&gt;
+.backgrnote[
+A confounder is a common cause of both the focal predictor `\(x_{i1}\)` (e.g., news consumption) and the outcome `\(y_i\)` (e.g., xenophobia). Counfounder bias is: `\(\mathbb{E}(\tilde{\beta_{x_{1}}}) = \beta_{x_{1}} + \color{orange}{\beta_{x_{2}} \frac{\text{Cov}(x_{i1},x_{i2})}{\text{Var}(x_{i1})}}.\)`
+]
+]
+
+--
+
+.right-column[ 
+In R, we run multiple OLS by adding additional predictors with `+` to the right-hand side of our model formula.
+.panelset[
+.panel[.panel-name[Bivariate (biased) model]
+.font90[
+
+```r
+lm_robust(imwbcnt ~ nwspol_hrs, data = ESS, weights = pspwght) %&gt;%
+  summary()
+# 
+# Call:
+# lm_robust(formula = imwbcnt ~ nwspol_hrs, data = ESS, weights = pspwght)
+# 
+# Weighted, Standard error type:  HC2 
+# 
+# Coefficients:
+#             Estimate Std. Error t value Pr(&gt;|t|) CI Lower CI Upper   DF
+# (Intercept)   5.0249     0.0504   99.71   0.0000  4.92614   5.1237 5587
+# nwspol_hrs    0.0409     0.0164    2.49   0.0127  0.00873   0.0731 5587
+# 
+# Multiple R-squared:  0.00195 ,	Adjusted R-squared:  0.00178 
+# F-statistic: 6.21 on 1 and 5587 DF,  p-value: 0.0127
+```
+]]
+.panel[.panel-name[Multiple (corrected) model]
+.font90[
+
+```r
+lm_robust(imwbcnt ~ nwspol_hrs + rtrd, data = ESS, weights = pspwght) %&gt;%
+  summary()
+# 
+# Call:
+# lm_robust(formula = imwbcnt ~ nwspol_hrs + rtrd, data = ESS, 
+#     weights = pspwght)
+# 
+# Weighted, Standard error type:  HC2 
+# 
+# Coefficients:
+#             Estimate Std. Error t value Pr(&gt;|t|) CI Lower CI Upper   DF
+# (Intercept)   4.9202     0.0560   87.85 0.00e+00  4.81046   5.0300 5586
+# nwspol_hrs    0.0307     0.0164    1.88 6.06e-02 -0.00137   0.0628 5586
+# rtrdMarked    0.3996     0.0972    4.11 3.98e-05  0.20907   0.5901 5586
+# 
+# Multiple R-squared:  0.00905 ,	Adjusted R-squared:  0.0087 
+# F-statistic: 11.3 on 2 and 5586 DF,  p-value: 1.3e-05
+```
+]]
+]
+
+]
+
+---
+
+# A "comprehensive" model
+
+
+.push-left[
+Let's assume perceptions of immigrants' societal impact can be explained by respondents' *news consumption*, *retirement status*, *gender*, and *country of residence*. 
+]
+
+
+---
+
+# A "comprehensive" model
+
+
+.push-left[
+Let's assume perceptions of immigrants' societal impact can be explained by respondents' *news consumption*, *retirement status*, *gender*, and *country of residence*. We can model this as follows:
+
 .font80[
 
 ```r
-# Run a series of three post-stratification weighted linear OLS models.
-ols1 &lt;- lm_robust(formula = imwbcnt ~ eduyrs, data = ESS, weights = pspwght)
-# Error in eval_tidy(mfargs[[da]], data = data): object 'pspwght' not found
-ols2 &lt;- lm_robust(formula = imwbcnt ~ eduyrs + par_edu, data = ESS, weights = pspwght)
-# Error in eval_tidy(mfargs[[da]], data = data): object 'pspwght' not found
-ols3 &lt;- lm_robust(formula = imwbcnt ~ eduyrs + par_edu + gndr + cntry, data = ESS, weights = pspwght)
-# Error in eval_tidy(mfargs[[da]], data = data): object 'pspwght' not found
-# Report results in a regression table.
-screenreg(list(ols1, ols2, ols3), include.ci = FALSE) 
-# Error in "list" %in% class(l)[1]: object 'ols1' not found
+# Estimate a comprehensive multiple OLS model.
+ols5 &lt;- lm_robust(
+* formula = imwbcnt ~ nwspol_hrs + rtrd + gndr + cntry ,
+  data = ESS, weights = pspwght)
+summary(ols5) # Give a summary of the main results.
+# 
+# Call:
+# lm_robust(formula = imwbcnt ~ nwspol_hrs + rtrd + gndr + cntry, 
+#     data = ESS, weights = pspwght)
+# 
+# Weighted, Standard error type:  HC2 
+# 
+# Coefficients:
+#              Estimate Std. Error t value Pr(&gt;|t|) CI Lower CI Upper   DF
+# (Intercept)    4.9147     0.0787  62.417 0.00e+00   4.7604   5.0691 5582
+# nwspol_hrs     0.0180     0.0161   1.120 2.63e-01  -0.0135   0.0495 5582
+# rtrdMarked     0.4285     0.0972   4.409 1.06e-05   0.2379   0.6190 5582
+# gndrFemale    -0.0742     0.0882  -0.841 4.00e-01  -0.2471   0.0987 5582
+# cntryEstonia   0.1251     0.0874   1.431 1.52e-01  -0.0463   0.2964 5582
+# cntryFinland  -0.9168     0.0769 -11.924 2.19e-32  -1.0675  -0.7661 5582
+# cntryHungary   0.9129     0.0762  11.980 1.14e-32   0.7635   1.0623 5582
+# 
+# Multiple R-squared:  0.0479 ,	Adjusted R-squared:  0.0469 
+# F-statistic:  107 on 6 and 5582 DF,  p-value: &lt;2e-16
 ```
-]]
+]
+]
+
+--
+
+.push-right[
+.center[.content-box-green[
+What does the model tell us about the causal effect of news consumption?]]
+]
+
 
 ---
-# Conditional relations .font60[Aka interaction effects]
 
-.panelset[
-.panel[.panel-name[Plot]
+# A "comprehensive" model
 
+
+.push-left[
+Let's assume perceptions of immigrants' societal impact can be explained by respondents' *news consumption*, *retirement status*, *gender*, and *country of residence*. We can model this as follows:
+
+.font80[
+
+```r
+# Estimate a comprehensive multiple OLS model.
+ols5 &lt;- lm_robust(
+* formula = imwbcnt ~ nwspol_hrs + rtrd + gndr + cntry ,
+  data = ESS, weights = pspwght)
+summary(ols5) # Give a summary of the main results.
+# 
+# Call:
+# lm_robust(formula = imwbcnt ~ nwspol_hrs + rtrd + gndr + cntry, 
+#     data = ESS, weights = pspwght)
+# 
+# Weighted, Standard error type:  HC2 
+# 
+# Coefficients:
+#              Estimate Std. Error t value Pr(&gt;|t|) CI Lower CI Upper   DF
+# (Intercept)    4.9147     0.0787  62.417 0.00e+00   4.7604   5.0691 5582
+# nwspol_hrs     0.0180     0.0161   1.120 2.63e-01  -0.0135   0.0495 5582
+# rtrdMarked     0.4285     0.0972   4.409 1.06e-05   0.2379   0.6190 5582
+# gndrFemale    -0.0742     0.0882  -0.841 4.00e-01  -0.2471   0.0987 5582
+# cntryEstonia   0.1251     0.0874   1.431 1.52e-01  -0.0463   0.2964 5582
+# cntryFinland  -0.9168     0.0769 -11.924 2.19e-32  -1.0675  -0.7661 5582
+# cntryHungary   0.9129     0.0762  11.980 1.14e-32   0.7635   1.0623 5582
+# 
+# Multiple R-squared:  0.0479 ,	Adjusted R-squared:  0.0469 
+# F-statistic:  107 on 6 and 5582 DF,  p-value: &lt;2e-16
 ```
-# Error in FUN(X[[i]], ...): object 'pspwght' not found
+]
+]
+
+.push-right[
+.center[.content-box-green[
+What does the model tell us about the causal effect of news consumption?]]
+
+.center[.content-box-green[
+How do we interpret the coefficient for retirement status?]]
+]
+
+
+
+---
+
+# A "comprehensive" model
+
+
+.push-left[
+Let's assume perceptions of immigrants' societal impact can be explained by respondents' *news consumption*, *retirement status*, *gender*, and *country of residence*. We can model this as follows:
+
+.font80[
+
+```r
+# Estimate a comprehensive multiple OLS model.
+ols5 &lt;- lm_robust(
+* formula = imwbcnt ~ nwspol_hrs + rtrd + gndr + cntry ,
+  data = ESS, weights = pspwght)
+summary(ols5) # Give a summary of the main results.
+# 
+# Call:
+# lm_robust(formula = imwbcnt ~ nwspol_hrs + rtrd + gndr + cntry, 
+#     data = ESS, weights = pspwght)
+# 
+# Weighted, Standard error type:  HC2 
+# 
+# Coefficients:
+#              Estimate Std. Error t value Pr(&gt;|t|) CI Lower CI Upper   DF
+# (Intercept)    4.9147     0.0787  62.417 0.00e+00   4.7604   5.0691 5582
+# nwspol_hrs     0.0180     0.0161   1.120 2.63e-01  -0.0135   0.0495 5582
+# rtrdMarked     0.4285     0.0972   4.409 1.06e-05   0.2379   0.6190 5582
+# gndrFemale    -0.0742     0.0882  -0.841 4.00e-01  -0.2471   0.0987 5582
+# cntryEstonia   0.1251     0.0874   1.431 1.52e-01  -0.0463   0.2964 5582
+# cntryFinland  -0.9168     0.0769 -11.924 2.19e-32  -1.0675  -0.7661 5582
+# cntryHungary   0.9129     0.0762  11.980 1.14e-32   0.7635   1.0623 5582
+# 
+# Multiple R-squared:  0.0479 ,	Adjusted R-squared:  0.0469 
+# F-statistic:  107 on 6 and 5582 DF,  p-value: &lt;2e-16
+```
+]
+]
+
+.push-right[
+.center[.content-box-green[
+What does the model tell us about the causal effect of news consumption?]]
+
+.center[.content-box-green[
+How do we interpret the coefficient for retirement status?]]
+
+.center[.alert[But isn't there a way to make finding these answers easier?]]
+]
+
+
+---
+# Regression tables
+
+--
+
+.font90[
+
+```r
+# Regression table of model objects ols1, ols4, and ols5; report standard errors, not confidence intervals.
+texreg::screenreg(list(ols1, ols4, ols5), include.ci = FALSE) 
+# 
+# ===================================================
+#               Model 1      Model 2      Model 3    
+# ---------------------------------------------------
+# (Intercept)      5.02 ***     4.92 ***     4.91 ***
+#                 (0.05)       (0.06)       (0.08)   
+# nwspol_hrs       0.04 *       0.03         0.02    
+#                 (0.02)       (0.02)       (0.02)   
+# rtrdMarked                    0.40 ***     0.43 ***
+#                              (0.10)       (0.10)   
+# gndrFemale                                -0.07    
+#                                           (0.09)   
+# cntryEstonia                               0.13    
+#                                           (0.09)   
+# cntryFinland                              -0.92 ***
+#                                           (0.08)   
+# cntryHungary                               0.91 ***
+#                                           (0.08)   
+# ---------------------------------------------------
+# R^2              0.00         0.01         0.05    
+# Adj. R^2         0.00         0.01         0.05    
+# Num. obs.     5589         5589         5589       
+# RMSE             2.10         2.09         2.05    
+# ===================================================
+# *** p &lt; 0.001; ** p &lt; 0.01; * p &lt; 0.05
 ```
 ]
 
+---
+
+# Regression tables
+
+.push-left[
+.font90[
+
+```r
+# Regression table with labelled predictors
+htmlreg(list(ols1, ols4, ols5), include.ci = FALSE,
+        custom.coef.names = c("Intercept", 
+                              "News consumption (hours)", 
+                              "Retired", "Women", 
+                              "Estonia", "Finland", "Sweden"),
+        caption = "My regression table", 
+        caption.above = TRUE,
+        single.row = TRUE)
+```
+]]
+
+--
+
+.push-right[
+.font70[
+&lt;table class="texreg" style="margin: 10px auto;border-collapse: collapse;border-spacing: 0px;color: #000000;border-top: 2px solid #000000;"&gt;
+&lt;caption&gt;My regression table&lt;/caption&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th style="padding-left: 5px;padding-right: 5px;"&gt;&amp;nbsp;&lt;/th&gt;
+&lt;th style="padding-left: 5px;padding-right: 5px;"&gt;Model 1&lt;/th&gt;
+&lt;th style="padding-left: 5px;padding-right: 5px;"&gt;Model 2&lt;/th&gt;
+&lt;th style="padding-left: 5px;padding-right: 5px;"&gt;Model 3&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr style="border-top: 1px solid #000000;"&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;Intercept&lt;/td&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;5.02 (0.05)&lt;sup&gt;&amp;#42;&amp;#42;&amp;#42;&lt;/sup&gt;&lt;/td&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;4.92 (0.06)&lt;sup&gt;&amp;#42;&amp;#42;&amp;#42;&lt;/sup&gt;&lt;/td&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;4.91 (0.08)&lt;sup&gt;&amp;#42;&amp;#42;&amp;#42;&lt;/sup&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;News consumption (hours)&lt;/td&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;0.04 (0.02)&lt;sup&gt;&amp;#42;&lt;/sup&gt;&lt;/td&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;0.03 (0.02)&lt;/td&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;0.02 (0.02)&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;Retired&lt;/td&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;&amp;nbsp;&lt;/td&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;0.40 (0.10)&lt;sup&gt;&amp;#42;&amp;#42;&amp;#42;&lt;/sup&gt;&lt;/td&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;0.43 (0.10)&lt;sup&gt;&amp;#42;&amp;#42;&amp;#42;&lt;/sup&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;Women&lt;/td&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;&amp;nbsp;&lt;/td&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;&amp;nbsp;&lt;/td&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;-0.07 (0.09)&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;Estonia&lt;/td&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;&amp;nbsp;&lt;/td&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;&amp;nbsp;&lt;/td&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;0.13 (0.09)&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;Finland&lt;/td&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;&amp;nbsp;&lt;/td&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;&amp;nbsp;&lt;/td&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;-0.92 (0.08)&lt;sup&gt;&amp;#42;&amp;#42;&amp;#42;&lt;/sup&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;Sweden&lt;/td&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;&amp;nbsp;&lt;/td&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;&amp;nbsp;&lt;/td&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;0.91 (0.08)&lt;sup&gt;&amp;#42;&amp;#42;&amp;#42;&lt;/sup&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr style="border-top: 1px solid #000000;"&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;R&lt;sup&gt;2&lt;/sup&gt;&lt;/td&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;0.00&lt;/td&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;0.01&lt;/td&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;0.05&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;Adj. R&lt;sup&gt;2&lt;/sup&gt;&lt;/td&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;0.00&lt;/td&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;0.01&lt;/td&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;0.05&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;Num. obs.&lt;/td&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;5589&lt;/td&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;5589&lt;/td&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;5589&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr style="border-bottom: 2px solid #000000;"&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;RMSE&lt;/td&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;2.10&lt;/td&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;2.09&lt;/td&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;2.05&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;tfoot&gt;
+&lt;tr&gt;
+&lt;td style="font-size: 0.8em;" colspan="4"&gt;&lt;sup&gt;&amp;#42;&amp;#42;&amp;#42;&lt;/sup&gt;p &amp;lt; 0.001; &lt;sup&gt;&amp;#42;&amp;#42;&lt;/sup&gt;p &amp;lt; 0.01; &lt;sup&gt;&amp;#42;&lt;/sup&gt;p &amp;lt; 0.05&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tfoot&gt;
+&lt;/table&gt;
+]]
+
+
+---
+
+# Exporting regression tables
+
+
+```r
+# Regression table of model objects ols1, ols4, and ols5; 
+# report standard errors, not confidence intervals.
+texreg::htmlreg(list(ols1, ols4, ols5), 
+        include.ci = FALSE, 
+        custom.coef.names = c("Intercept", "News consumption (hours)", "Retired", "Women", 
+                              "Estonia", "Finland", "Sweden"),
+        file = "MyOLSModels.doc") # Word table
+texreg::htmlreg(list(ols1, ols4, ols5), 
+        include.ci = FALSE, 
+        custom.coef.names = c("Intercept", "News consumption (hours)", "Retired", "Women",
+                              "Estonia", "Finland", "Sweden"),
+        file = "MyOLSModels.html") # Html table (also for Excel)
+texreg::texreg(list(ols1, ols4, ols5), 
+       include.ci = FALSE, 
+        custom.coef.names = c("Intercept", "News consumption (hours)", "Retired", "Women",
+                              "Estonia", "Finland", "Sweden"),
+       file =  "MyOLSModels.tex") # Latex table 
+```
+
+
+---
+# Further processing of model results
+
+`broom:tidy()` turns a model object into a tibble containing coefficients and inference stats.
+
+```r
+tidy(ols5) 
+#           term estimate std.error statistic  p.value conf.low conf.high   df outcome
+# 1  (Intercept)   4.9147    0.0787    62.417 0.00e+00   4.7604    5.0691 5582 imwbcnt
+# 2   nwspol_hrs   0.0180    0.0161     1.120 2.63e-01  -0.0135    0.0495 5582 imwbcnt
+# 3   rtrdMarked   0.4285    0.0972     4.409 1.06e-05   0.2379    0.6190 5582 imwbcnt
+# 4   gndrFemale  -0.0742    0.0882    -0.841 4.00e-01  -0.2471    0.0987 5582 imwbcnt
+# 5 cntryEstonia   0.1251    0.0874     1.431 1.52e-01  -0.0463    0.2964 5582 imwbcnt
+# 6 cntryFinland  -0.9168    0.0769   -11.924 2.19e-32  -1.0675   -0.7661 5582 imwbcnt
+# 7 cntryHungary   0.9129    0.0762    11.980 1.14e-32   0.7635    1.0623 5582 imwbcnt
+```
+
+---
+# Regression results are data too!
+
+
+```r
+(plotdata &lt;- ols5 %&gt;% tidy() %&gt;% # Use the ols5 model object, then tidy it, then
+   mutate(term = fct_recode(factor(term), # Recode predictor names, then
+                            "Intercept" = "(Intercept)",
+                            "News consumption (hours)" = "nwspol_hrs",
+                            "Retired" = "rtrdMarked",
+                            "Women" = "gndrFemale",
+                            "Estonia" = "cntryEstonia",
+                            "Finland" = "cntryFinland",
+                            "Sweden" = "cntryHungary"),
+          predictor = case_when( # Identify explanatory and confounding variables
+            term %in% c("News consumption (hours)", "Retired") ~ "Predictor",
+            TRUE ~ "Potential confounder"))) %&gt;% 
+  select(term, estimate, conf.low, conf.high, predictor) # Keep only relevant info.
+#                       term estimate conf.low conf.high            predictor
+# 1                Intercept   4.9147   4.7604    5.0691 Potential confounder
+# 2 News consumption (hours)   0.0180  -0.0135    0.0495            Predictor
+# 3                  Retired   0.4285   0.2379    0.6190            Predictor
+# 4                    Women  -0.0742  -0.2471    0.0987 Potential confounder
+# 5                  Estonia   0.1251  -0.0463    0.2964 Potential confounder
+# 6                  Finland  -0.9168  -1.0675   -0.7661 Potential confounder
+# 7                   Sweden   0.9129   0.7635    1.0623 Potential confounder
+```
+
+---
+class: clear
+# Coefficient plots .font60[A good alternative to regression tables]
+
+.panelset[
+.panel[.panel-name[Plot]
+&lt;img src="8-Multiple-OLS_files/figure-html/unnamed-chunk-22-1.png" width="60%" style="display: block; margin: auto;" /&gt;
+]
 .panel[.panel-name[Code]
 
 ```r
-ggplot(data = ESS, 
-       mapping = aes(y = imwbcnt, x = eduyrs, color = cntry)) +
-  geom_jitter(aes(size = pspwght), alpha = 1/7) +
-  geom_smooth(aes(weight = pspwght), method = "lm", se = FALSE) +
-  labs(x = "Years of education", y = "Xenophobia", size = "Survey \n weight", color = "Country") +
-  theme_minimal()
-# Error in FUN(X[[i]], ...): object 'pspwght' not found
+ggplot(data = plotdata,
+*      aes(x = reorder(term, estimate), # Sort predictors based on coef size
+*          y = estimate,
+*          ymin = conf.low, ymax = conf.high,
+           color = predictor)) +
+  geom_hline(yintercept = 0, # Null-hypothesis line.
+             color = "#901A1E", lty = "dashed") + 
+  geom_pointrange() + # Coefs with 95% CI.
+  coord_flip() + 
+  theme_minimal() +
+  # Axis title: greek beta.
+  labs(y = expression(beta), x = "") +
+  theme(legend.position="bottom",
+        legend.title=element_blank())
 ```
 ]]
 
 ---
 class: clear
-# Interaction effects .font60[Specify them as what they are: *multiplicative* terms]
-
-.right-column[
-.font70[
+# Further processing of model results .font60[Several models]
 
 ```r
-ols4 &lt;- lm_robust(formula = imwbcnt ~ par_edu + gndr +
-*                   eduyrs*cntry,
-                  data = ESS, weights = pspwght)
-# Error in eval_tidy(mfargs[[da]], data = data): object 'pspwght' not found
-screenreg(ols4, include.ci = FALSE) 
-# Error in "list" %in% class(l)[1]: object 'ols4' not found
+*(plotdata &lt;- bind_rows( # Stack several tibbles on top of each other into one tibble,
+* tidy(ols1), tidy(ols4), # turn the two models into tibbles,
+* .id = "model" # Identify which model the tibbles came from.
+)) 
+#   model        term estimate std.error statistic  p.value conf.low conf.high   df outcome
+# 1     1 (Intercept)   5.0249    0.0504     99.71 0.00e+00  4.92614    5.1237 5587 imwbcnt
+# 2     1  nwspol_hrs   0.0409    0.0164      2.49 1.27e-02  0.00873    0.0731 5587 imwbcnt
+# 3     2 (Intercept)   4.9202    0.0560     87.85 0.00e+00  4.81046    5.0300 5586 imwbcnt
+# 4     2  nwspol_hrs   0.0307    0.0164      1.88 6.06e-02 -0.00137    0.0628 5586 imwbcnt
+# 5     2  rtrdMarked   0.3996    0.0972      4.11 3.98e-05  0.20907    0.5901 5586 imwbcnt
 ```
-]]
-
---
-
-.left-column[.content-box-green[
-
-1. How do we interpret the estimate `eduyrs:cntrySweden` correctly?
-
-2. Why is `\(\beta_{\text{eduyrs}}\)` more negative than in model 3?
-
-3. Why do Bulgarians suddenly seem to have *lower* levels of xenophobia, whereas before they had higher ones?
-]]
 
 ---
-# Interaction effects .font60[Beware of the scaling of the Xs!]
+# Further processing of model results
+
+
+```r
+(plotdata &lt;- bind_rows(tidy(ols1), tidy(ols4), # Stack the data of two model objects into one tibble.
+                       .id = "model") %&gt;% # Identify which model the data came from, then
+   # Get rid of the intercept, because it is so large compared to the other coefficients.
+   dplyr::filter(term != "(Intercept)") %&gt;%
+   mutate(
+     model = case_when(model == 1 ~ "Model 1", # Rename model identifier.
+                       model == 2 ~ "Model 2"),
+     term = fct_recode(factor(term), # Recode predictor names, then
+                       "News consumption (hours)" = "nwspol_hrs",
+                            "Retired" = "rtrdMarked")) %&gt;% 
+   select(term, estimate, conf.low, conf.high, model)) # Keep only relevant info.
+#                       term estimate conf.low conf.high   model
+# 1 News consumption (hours)   0.0409  0.00873    0.0731 Model 1
+# 2 News consumption (hours)   0.0307 -0.00137    0.0628 Model 2
+# 3                  Retired   0.3996  0.20907    0.5901 Model 2
+```
+
+---
+class: clear
+# Coefficient plots .font60[Good alternative to regression tables]
 
 .panelset[
 .panel[.panel-name[Plot]
-
-```
-# Error in FUN(X[[i]], ...): object 'pspwght' not found
-```
+&lt;img src="8-Multiple-OLS_files/figure-html/unnamed-chunk-26-1.png" width="60%" style="display: block; margin: auto;" /&gt;
 ]
 .panel[.panel-name[Code]
 
 ```r
-ggplot(data = ESS, 
-       mapping = aes(y = imwbcnt, x = eduyrs, color = cntry)) +
-  geom_jitter(aes(size = pspwght), alpha = 1/7) +
-  geom_smooth(aes(weight = pspwght), method = "lm", se = FALSE,
-*             # draw line beyond observed cases.
-*             fullrange = TRUE) +
-* xlim(c(0, 21)) + # Extend range of x-axis.
-  labs(x = "Years of education", y = "Xenophobia", size = "Survey \n weight", color = "Country") +
-  theme_minimal()
-# Error in FUN(X[[i]], ...): object 'pspwght' not found
+ggplot(data = plotdata, 
+       aes(x = reorder(term, estimate),
+           y = estimate, 
+           ymin = conf.low, ymax = conf.high,
+           shape = model)) +
+  geom_hline(yintercept = 0, # Null-hypothesis line.
+             color = "#901A1E", lty = "dashed") + 
+* geom_pointrange(# Coefs &amp; 95% CI.
+*   position = position_dodge(width=0.5)) +
+  coord_flip() + 
+  theme_minimal() +
+  # Axis title: greek beta.
+  labs(y = expression(beta), 
+       x = "") +
+  theme(legend.position="bottom",
+        legend.title=element_blank(),
+        legend.box = 'vertical')
 ```
 ]]
-
----
-# Solution: Rescale .font60[(e.g., z-standardization)]
-
-.panelset[
-.panel[.panel-name[Code]
-
-```r
-ESS &lt;- ESS %&gt;% mutate( 
-  # create z-standardized version of continuous predictor.
-  z_eduyrs = scale(eduyrs) %&gt;% as.numeric()
-)
-```
-
-
-```r
-ggplot(data = ESS, 
-       mapping = aes(y = imwbcnt, x = z_eduyrs, color = cntry)) +
-  geom_jitter(aes(size = pspwght), alpha = 1/7) +
-  geom_vline(xintercept = 0, color = "#901A1E") + 
-  geom_smooth(aes(weight = pspwght), 
-              method = "lm", se = FALSE) +
-  labs(x = "Years of education \n (z-standardized)", y = "Xenophobia", size = "Survey \n weight", color = "Country") +
-  theme_minimal()
-# Error in FUN(X[[i]], ...): object 'pspwght' not found
-```
-]
-.panel[.panel-name[Plot]
-
-```
-# Error in FUN(X[[i]], ...): object 'pspwght' not found
-```
-]]
-
----
-# Interaction effects .font60[Improved interpretability]
-
-.push-right[
-.font70[
-
-```r
-ols4 &lt;- lm_robust(formula = imwbcnt ~ par_edu + gndr +
-                    I(scale(eduyrs))*cntry, ##&lt;
-                  data = ESS, weights = pspwght)
-# Error in eval_tidy(mfargs[[da]], data = data): object 'pspwght' not found
-screenreg(ols4, include.ci = FALSE) 
-# Error in "list" %in% class(l)[1]: object 'ols4' not found
-```
-]]
-
-.push-left[
-
-```
-# Error in FUN(X[[i]], ...): object 'pspwght' not found
-```
-]
-
----
-# Non-linearities? .font60[Transform using `I()` and `poly()`]
-
-.push-left[
-`I()` allows you to perform any transformation without a need to change the underlying tibble/design matrix. Really helpful for predictions!
-
-`poly()` introduces *orthogonal* polynomials (e.g., squared terms). If you don't want them to be orthogonal, you can use the option `raw = TRUE`.
-
-.alert[Beware of over-fitting!]
-
-```r
-ols6 &lt;- lm_robust(
-  formula = imwbcnt ~ gndr + cntry + eduyrs +
-*   poly(agea, 2, raw = TRUE) +
-*   I(log(par_edu)),
-  data = ESS, weights = pspwght)
-# Error in eval_tidy(mfargs[[da]], data = data): object 'pspwght' not found
-```
-]
-
-.push-right[
-.font80[
-
-```r
-screenreg(ols6, include.ci = FALSE, digits = 4) 
-# Error in "list" %in% class(l)[1]: object 'ols6' not found
-```
-]]
-
----
-# Model visualization .font60[Especially for lay audiences!]
-
-.push-left[
-**Step 1**: Generate a synthetic tibble with theoretically-informative values containing all variables of the model you want to visualize. `modelr::data_grid()` generates a tibble with all combinations of the variables you feed to it.
-.font80[
-
-```r
-(synth_data &lt;- ESS %&gt;%
-   # Generate theoretically-informative 
-   # but artificial tibble for predictions.
-*  data_grid(eduyrs, par_edu, gndr, agea, cntry))
-# Error in eval_tidy(dot, data = mask): object 'par_edu' not found
-```
-]]
-
---
-
-.push-right[
-.font80[
-**Step 2**: Alter your new tibble, so that only one predictor of interest varies. Set all others to an informative constant value.
-
-```r
-(synth_data &lt;- synth_data %&gt;%
-   mutate( # Set variables constant that you don't want to vidualize,
-     eduyrs = mean(ESS$eduyrs, na.rm = TRUE),
-     par_edu = mean(ESS$par_edu, na.rm = TRUE),
-     gndr = "Female",
-     cntry = "Denmark") %&gt;% # then
-   unique()) # Drop duplicates.
-# Error in mutate(., eduyrs = mean(ESS$eduyrs, na.rm = TRUE), par_edu = mean(ESS$par_edu, : object 'synth_data' not found
-```
-]]
-
----
-# Model predictions
-
-.push-left[
-**Step 3**: Add predictions, that is, apply the estimated model to the synthetic data. Given the synthetic data, what `\(\hat{y}\)` does your model predict?
-
-```r
-# Generate predictions and 95% CI, then
-*(synth_data &lt;- predict(ols6, newdata = synth_data,
-*                      interval = "confidence",
-*                      level = 0.95)$fit %&gt;%
-   as_tibble() %&gt;% # Turn into a tibble, then
-   # Add to the synthetic data.
-   bind_cols(synth_data, .)) 
-```
-]
-
-.push-right[
-.font80[
-
-```
-# Error in list2(...): object 'synth_data' not found
-```
-]]
-
----
-# Visualize model predictions
-
-.push-left[
-.panelset[
-.panel[.panel-name[Plot]
-
-```
-# Error in ggplot(data = synth_data, aes(y = fit, x = agea)): object 'synth_data' not found
-```
-]
-.panel[.panel-name[Code]
-
-```r
-ggplot(data = synth_data, 
-       aes(y = fit, x = agea)) +
-  geom_ribbon(aes(ymin = lwr, ymax = upr), 
-              alpha = 0.5) +
-  geom_line() +
-  labs(x = "Age",
-  y = "Xenophobia",
-  caption = "(Covariates set to: Women in Denmark \n at mean levels of (parental) education)") + 
-  theme_minimal()
-# Error in ggplot(data = synth_data, aes(y = fit, x = agea)): object 'synth_data' not found
-```
-]]]
-.push-right[
-.font80[
-
-```r
-screenreg(ols6, include.ci = FALSE, digits = 4) 
-# Error in "list" %in% class(l)[1]: object 'ols6' not found
-```
-]]
-
----
-# One more time ...
-
-.push-left[
-.font90[
-
-```r
-# Generate synthetic data to visualize parental education
-synth_data &lt;- ESS %&gt;%
-   # Generate theoretically-informative 
-   # but artificial tibble for predictions.
-   data_grid(eduyrs, par_edu, gndr, agea, cntry) %&gt;%
-   mutate( # Set confounders constant at their mean,
-     eduyrs = mean(ESS$eduyrs, na.rm = TRUE),
-     agea = mean(ESS$agea, na.rm = TRUE),
-     gndr = "Female",
-     cntry = "Denmark") %&gt;% # then
-   unique() # Drop duplicates.
-# Error in eval_tidy(dot, data = mask): object 'par_edu' not found
-# Generate predictions and 95% confidence intervals, then
-synth_data &lt;- predict(ols6, newdata = synth_data,
-                      interval = "confidence",
-                      level=0.95)$fit %&gt;%
-  as_tibble() %&gt;% # Turn into a tibble, then
-  bind_cols(synth_data, .) # Add to the synthetic data.
-# Error in list2(...): object 'synth_data' not found
-```
-]]
-
-.push-right[
-.panelset[
-.panel[.panel-name[Plot]
-
-```
-# Error in ggplot(data = synth_data, aes(y = fit, x = par_edu)): object 'synth_data' not found
-```
-]
-.panel[.panel-name[Code]
-.font90[
-
-```r
-ggplot(data = synth_data, aes(y = fit, x = par_edu)) +
-  geom_ribbon(aes(ymin = lwr, ymax = upr), alpha = 0.5) +
-  geom_line() +
-  labs(x = "Parental education", y = "Xenophobia", 
-       caption = "(Covariates set to: Women at mean levels of parental education)") + 
-  theme_minimal()
-# Error in ggplot(data = synth_data, aes(y = fit, x = par_edu)): object 'synth_data' not found
-```
-]]]]
----
-# Visualizing interactions
-
-.push-left[
-.font90[
-
-```r
-# Estimate linear OLS with interaction effect;
-# no z-standardization if you visualize.
-ols7 &lt;- lm_robust(formula = imwbcnt ~ log(par_edu) + gndr + poly(agea, 2) +
-*                   eduyrs*cntry,
-                  data = ESS, weights = pspwght)
-# Error in eval_tidy(mfargs[[da]], data = data): object 'pspwght' not found
-# Generate synthetic data to 
-# visualize parental education
-synth_data &lt;- ESS %&gt;%
-   # Generate theoretically-informative 
-   # but artificial tibble for predictions.
-   data_grid(par_edu, gndr, cntry, eduyrs, agea) %&gt;%
-   mutate( # Set confounders constant at their mean,
-*    # but let both cntry and eduyrs vary.
-     par_edu = mean(ESS$par_edu, na.rm = TRUE),
-     agea = mean(ESS$agea, na.rm = TRUE),
-     gndr = "Female") %&gt;% # then
-   unique() # Drop duplicates.
-# Error in eval_tidy(dot, data = mask): object 'par_edu' not found
-# Generate predictions and 95% confidence intervals, then
-synth_data &lt;- predict(ols7, newdata = synth_data,
-                      interval = "confidence",
-                      level=0.95)$fit %&gt;%
-  as_tibble() %&gt;% # Turn into a tibble, then
-  bind_cols(synth_data, .) # Add to the synthetic data.
-# Error in list2(...): object 'synth_data' not found
-```
-]]
-
-.push-right[
-.font80[
-
-```
-# Error in print(synth_data, n = 28): object 'synth_data' not found
-```
-]]
-
----
-# Visualizing interactions
-
-.panelset[
-.panel[.panel-name[Plot]
-
-```
-# Error in ggplot(data = synth_data, aes(y = fit, x = eduyrs)): object 'synth_data' not found
-```
-]
-.panel[.panel-name[Code]
-
-```r
-ggplot(data = synth_data, aes(y = fit, x = eduyrs)) +
-  geom_ribbon(aes(ymin = lwr, ymax = upr, 
-*                 fill = cntry),
-              alpha = 0.5) +
-* geom_line(aes(color = cntry)) +
-  labs(x = "Years of education", y = "Xenophobia", 
-       caption = "(Covariates set to: Women at mean levels of parental education)") + 
-  theme_minimal()
-# Error in ggplot(data = synth_data, aes(y = fit, x = eduyrs)): object 'synth_data' not found
-```
-]]
-
----
-# Marginal effects 
-
-&lt;iframe src="https://www.rdocumentation.org/packages/margins/versions/0.3.26" height="100%" width="100%" frameBorder="0" style="min-height: 560px;"&gt;&lt;/iframe&gt;
-
----
-background-image: url(https://mareds.github.io/r_course/img_site/Tidyverse_packages.png)
-background-size: contain
-background-position: center
-class: clear center
-
---
-
-&lt;br&gt;
-.alert[.font200[Thank you for a fun course!]]
 
 ---
 class: inverse
 # General lessons
 
-1. Linear OLS models are very versatile and can approximate very complex relationships. Theoretically, interaction effects, transformed variables and polynomials allow us to *linearize* any relationship/functional form.
-2. You can formulate conditional and non-linear relationships directly in your model's formula.
-3. It is important to visualize such complex relationships, because regression coefficients alone are hard to interpret. You can do that by making predictions from your model for synthetic data.
+1. Multiple linear OLS models allow us to specify more complex theorized data generating processes. We specify additional predictors with `+` on the right-hand side of our model formula.
+2. R allows us to communicate our model results efficiently via regression tables (cf. `texreg` package) and coefficient plots.
+3. Everything in R is an object and you can always further process it. For instance, regression results are also just data, which you can visualize, table, join to other data, etc.
 
 ---
 class: inverse
 # Important functions
 
-1. `I()` allows you to transform predictors in the formula argument of your regression model.
-2. `poly()` allows you to introduce orthogonal polynomials to your model.
-3. `predict()` generates predictions from your model for a tibble that you feed to it.
-4. `modelr::data_grid()` generates synthetic data sets that contain all combinations of variables you feed to it.
+1. `estimatr::lm_robust()` estimates (bivariate and multiple) OLS regression with heteroscedasticity-robust standard errors (or cluster-robust standard errors if you wish).
+2. `broom::tidy()`: Turn model results into tibble for further processing.
+3. `textreg::texreg()`, `textreg::htmlreg()`, and `textreg::screenreg()`: Create nicely-formatted (html, Word, ASCII, or Latex) tables of (one or several) regression models.
+4. `dplyr::bind_rows()`: Add the rows of a data frames to another data frame that has equal columns/variables.
     </textarea>
 <style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
 <script src="../template/remark-latest.min.js"></script>
