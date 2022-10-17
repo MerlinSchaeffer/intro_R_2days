@@ -20,7 +20,7 @@ library(tidyverse)
 starwars
 ```
 
-In this session you will also learn how to access specific variables or cases from a tibble, how to do complex data transformations and recodes, and finally, how to use an API to import data from the European Social Survey.
+In this session you will also learn how to access specific variables or cases from a tibble, how to do complex data transformations and recodes.
 
 Lecture slides: [**Data Frames and Tibbles**](/2-Data-Frames/2-Data-Frames.html)
 
