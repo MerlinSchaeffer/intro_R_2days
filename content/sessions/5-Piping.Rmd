@@ -64,7 +64,4 @@ This code shows how you can use `%>%`, `group_by()` and `summarize()` to quickly
 
 Lecture slides: [**Piping and Grouped Operations**](/5-Piping/5-Piping.html)
 
-Today's exercise: [**Web Excercise 5**](/exercises/exercise5.html)
-
-# Homework
-Read [Chapter 5.6 & 5.7 on grouped operations](http://r4ds.had.co.nz/transform.html#grouped-summaries-with-summarise).
+Exercise: [**Web Excercise 5**](/exercises/exercise5.html)

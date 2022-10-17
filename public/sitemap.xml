@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+  xmlns:xhtml="http://www.w3.org/1999/xhtml">
+  
+  <url>
+    <loc>/resources/</loc>
+  </url>
+  
+  <url>
+    <loc>/about/</loc>
+  </url>
+  
+  <url>
+    <loc>/sessions/1-hello_r_vectors/</loc>
+    <lastmod>2022-10-19T00:00:00+00:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>/sessions/2-data-frames/</loc>
+    <lastmod>2022-10-19T00:00:00+00:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>/sessions/3-visualization-i/</loc>
+    <lastmod>2022-10-19T00:00:00+00:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>/</loc>
+    <lastmod>2022-10-19T00:00:00+00:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>/sessions/</loc>
+    <lastmod>2022-10-19T00:00:00+00:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>/authors/</loc>
+  </url>
+  
+  <url>
+    <loc>/categories/</loc>
+  </url>
+  
+  <url>
+    <loc>/publication_types/</loc>
+  </url>
+  
+  <url>
+    <loc>/tags/</loc>
+  </url>
+  
+</urlset>

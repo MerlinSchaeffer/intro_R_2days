@@ -1,0 +1,1077 @@
+<!DOCTYPE html>
+<html lang="" xml:lang="">
+  <head>
+    <title>Intro to R</title>
+    <meta charset="utf-8" />
+    <meta name="author" content="Merlin Schaeffer &amp; Friedolin Merhout Department of Sociology" />
+    <meta name="date" content="2021-10-19" />
+    <script src="libs/header-attrs/header-attrs.js"></script>
+    <link href="libs/tile-view/tile-view.css" rel="stylesheet" />
+    <script src="libs/tile-view/tile-view.js"></script>
+    <link href="libs/tachyons/tachyons.min.css" rel="stylesheet" />
+    <link href="libs/panelset/panelset.css" rel="stylesheet" />
+    <script src="libs/panelset/panelset.js"></script>
+    <link rel="stylesheet" href="../template/Merlin169.css" type="text/css" />
+  </head>
+  <body>
+    <textarea id="source">
+class: center, middle, inverse, title-slide
+
+.title[
+# Intro to R
+]
+.subtitle[
+## Data Frames &amp; Tibbles
+]
+.author[
+### Merlin Schaeffer &amp; Friedolin Merhout<br>Department of Sociology
+]
+.date[
+### 2021-10-19
+]
+
+---
+
+# Processing atomic vectors .font60[Numeric vectors]
+
+
+
+.push-left[
+&lt;img src="./img/VectorTypesFull.png" width="100%" style="display: block; margin: auto;" /&gt;
+
+- Atomic vectors    
+    - are a fundamental building block in R 
+    - can only contain _one_ type of data
+    - require different modes of processing
+
+]
+
+--
+
+.push-right[
+**Numeric** vectors allow ...
+
+... _arithmetic operations_.
+
+```r
+# Create numeric vector x1
+(x1 &lt;- c(3,6,9))
+# [1] 3 6 9
+# Add 5 to each element and assign
+(x1 &lt;- x1 + 5)
+# [1]  8 11 14
+```
+
+... a myriad of advanced _functions_.&lt;br&gt; .backgrnote[See Chapter [5 Data transformation](http://r4ds.had.co.nz/transform.html) of Grolemund and Wickham (2017) for further examples.]
+
+
+```r
+# Assign logarithm with base 2 of x1 to x1.
+(x1 &lt;- log2(x1)) 
+# [1] 3.00 3.46 3.81
+```
+]
+
+---
+# Processing atomic vectors .font60[Factor vectors]
+
+.push-left[
+**Factor** vectors *cannot* be *numerically* transformed, since they are categorical.
+
+If you attempt to do so, the result is `NA`.
+
+
+```r
+# Create factor vector conti
+conti &lt;- factor(
+  x = c("Europe", "Africa", "Africa", "Asia", "S.America"),
+  levels = c("Africa", "Asia", "Australia",
+             "Europe", "N.America", "S.America")
+) 
+
+# Multiply conti by 2
+conti * 2
+# [1] NA NA NA NA NA
+```
+
+.center[.alert[Processing factors in R differs fundamentally from working with numeric vectors!]]
+]
+
+--
+
+.push-right[
+*Base* R can be tedious and confusing when working with factors. Instead, we learn to use functionality from the `forcats` package, part of the tidyverse, to process them.
+&lt;img src="https://forcats.tidyverse.org/logo.png" width="50%" style="display: block; margin: auto;" /&gt;
+
+]
+
+---
+# Processing atomic vectors .font60[Factor vectors]
+
+.push-left[
+**Factor** vectors *cannot* be *numerically* transformed, since they are categorical.
+
+If you attempt to do so, the result is `NA`.
+
+
+```r
+# Create factor vector conti
+conti &lt;- factor(
+  x = c("Europe", "Africa", "Africa", "Asia", "S.America"),
+  levels = c("Africa", "Asia", "Australia",
+             "Europe", "N.America", "S.America")
+) 
+
+# Multiply conti by 2
+conti * 2
+# [1] NA NA NA NA NA
+```
+
+.center[.alert[Processing factors in R differs fundamentally from working with numeric vectors!]]
+]
+
+.push-right[
+*Base* R can be tedious and confusing when working with factors. Instead, we learn to use functionality from the `forcats` package, part of the tidyverse, to process them.
+&lt;img src="https://forcats.tidyverse.org/logo.png" width="50%" style="display: block; margin: auto;" /&gt;
+
+
+.center[.alert[Wait, tidyverse? Packages? What is all of this?]]
+]
+
+
+---
+# Packages in R
+
+--
+
+.push-left[
+A **package** is a collection of functions and their documentation (sometimes also data). Every installation of R comes with the *base* package pre-installed. 
+
+R's versatility comes from additional, user-written packages. Many of these are hosted on the *Comprehensive R Archive Network (CRAN)*. 
+
+To install any of the 17,000+ packages on CRAN, write `install.packages("name_of_the_package")`.
+
+.backgrnote[Do not add the `install.packages()` call to your R Scripts. Installation downloads the package to your computer, which is required only once.]
+
+]
+
+--
+
+.push-right[
+The `tidyverse` is a collection of such user-written packages which includes `forcats` and many other packages we will be using.
+
+&lt;img src="https://www.tidyverse.org/images/tidyverse-default.png" style="display: block; margin: auto;" /&gt;
+
+
+Please install the tidyverse package now by typing: `install.packages("tidyverse")` into the *console*.
+]
+
+???
+
+- Installing a package downloads it to your computer, BUT
+- Does not give access in R session
+
+
+---
+# The library
+
+.left-column[
+&lt;img src="https://bucket.trending.com/trending/reddit/2016-12-11/the-incredible-library-at-the-university-of-copenhagen-in-denmark_preview.jpg" width="100%" style="display: block; margin: auto;" /&gt;
+]
+
+.right-column[
+Since all functions need names and there are so many user-written packages, multiple functions sometimes have the same, *conflicting name*. 
+
+To avoid conflicts, you need to explicitly specify the packages you work with in each R session. To do is, write `library(package_name)`.&lt;br&gt;
+.backgrnote[Best practice is to specify all needed packages at the top of your R script.]
+
+Please add the tidyverse to your R session's library by writing the following as the very first line in your R script.
+
+
+```r
+# Add tidyverse package to library
+library(tidyverse) 
+```
+
+.backgrnote[Some `tidyverse` functions conflict with Base R's `stats` package. To call a function from a specific package write `package_name::function_name()`.]
+]
+
+???
+
+- Syntax difference between install.packages and library
+- Tidyverse is a collection of packages, with uniform logic and syntax
+
+---
+# The library
+
+.left-column[
+
+&lt;img src="https://bucket.trending.com/trending/reddit/2016-12-11/the-incredible-library-at-the-university-of-copenhagen-in-denmark_preview.jpg" width="100%" style="display: block; margin: auto;" /&gt;
+]
+
+.right-column[
+Since all functions need names and there are so many user-written packages, multiple functions sometimes have the same, *conflicting name*. 
+
+To avoid conflicts, you need to explicitly specify the packages you work with in each R session. To do is, write `library(package_name)`.&lt;br&gt;
+.backgrnote[Best practice is to specify all needed packages at the top of your R script.]
+
+Please add the tidyverse to your R session's library by writing the following as the very first line in your R script.
+
+
+```r
+# Add tidyverse package to library
+library(tidyverse) 
+```
+
+.backgrnote[Some `tidyverse` functions conflict with Base R's `stats` package. To call a function from a specific package write `package_name::function_name()`.]
+
+.center[.alert[With this clarified, let's return to processing factor vectors.]]
+]
+
+---
+# Processing atomic vectors .font60[Factor vectors]
+
+.left-column[
+&lt;img src="https://forcats.tidyverse.org/logo.png" width="60%" style="display: block; margin: auto;" /&gt;
+]
+
+.right-column[
+Factors can best be **recoded** using `fct_recode()` from the `forcats` package.
+
+
+```r
+# Recode conti to German
+# Not syntax: first the new, then the old value...
+*conti &lt;- fct_recode(conti,
+*                   "Europa" = "Europe",
+*                   "Afrika" = "Africa",
+*                   "Asien" = "Asia",
+*                   "Suedamerika" = "S. America",
+*                   "Nordamerika" = "N. America",
+*                   "Australien" = "Australia")
+
+# Frequency table of conti
+table(conti) 
+# conti
+#     Afrika      Asien Australien     Europa  N.America  S.America 
+#          2          1          0          1          0          1
+```
+
+`forcats` contains [many more useful functions](https://forcats.tidyverse.org/reference/index.html) to process factors, including changing the order of levels `fct_relevel()` and removing unused levels `fct_drop()`!&lt;br&gt; .backgrnote[[Chapter 15 Factors](https://r4ds.had.co.nz/factors.html) in Grolemund and Wickham (2017) provides a thorough introduction.]
+]
+
+???
+
+- forcats is a package for working with factors (and an anagram)
+  - many package creators are fans of puns
+- Pay attention to syntax, new_value = old value
+
+---
+# Building up from vectors
+
+
+```r
+# Add packages for this session to library
+library(tidyverse) # Add the tidyverse package to my current library.
+library(haven) # Read and handle SPSS, Stata &amp; SAS data (installed with tidyverse)
+
+# Now create a couple of vectors.
+(age &lt;- c(34, 22, 42, 12, 76))
+# [1] 34 22 42 12 76
+(conti &lt;- factor(x = c("Europe", "Africa", "Africa", "Asia", "S. America"),
+                 levels = c("Africa", "Asia", "Australia", "Europe", "N. America", "S. America")))
+# [1] Europe     Africa     Africa     Asia       S. America
+# Levels: Africa Asia Australia Europe N. America S. America
+(employed &lt;- c(FALSE, TRUE, TRUE, TRUE, TRUE))
+# [1] FALSE  TRUE  TRUE  TRUE  TRUE
+(name &lt;- c("Agnes", "Martin", "Hakan", "Tu", "Thais"))
+# [1] "Agnes"  "Martin" "Hakan"  "Tu"     "Thais"
+(nr_kids &lt;- c(1, 0, 3, 0, 4))
+# [1] 1 0 3 0 4
+```
+
+???
+
+- vectors as basic building blocks in R
+- are limited (one data type) and can be tedious to work with
+- need more advanced data structure
+
+---
+background-image: url('http://www.europeansocialsurvey.org/about/news/img/round7.png')
+background-size: cover
+class: center middle
+
+.white[.font200[**Tabular Data**]]
+
+---
+# Tabular Data .font60[Data frames]
+
+**Data frames** organize vectors of *equal length* along their indices.
+
+
+```r
+# Bind our 4 vectors along their index into a data frame.
+# Assign that data frame to object "Dat".
+(Dat &lt;- data.frame(name, age, conti, employed, nr_kids))
+#     name age      conti employed nr_kids
+# 1  Agnes  34     Europe    FALSE       1
+# 2 Martin  22     Africa     TRUE       0
+# 3  Hakan  42     Africa     TRUE       3
+# 4     Tu  12       Asia     TRUE       0
+# 5  Thais  76 S. America     TRUE       4
+```
+
+--
+
+.center[Data frames are base R's data structure for "rectangular" or tabular data:]
+&lt;img src="https://d33wubrfki0l68.cloudfront.net/6f1ddb544fc5c69a2478e444ab8112fb0eea23f8/91adc/images/tidy-1.png" width="60%" style="display: block; margin: auto;" /&gt;
+
+
+???
+
+- Data frames are base R data structure for tabular data
+- Terminology:    
+  - columns = variables
+  - rows = observations
+  - cells = values
+
+---
+background-image: url('http://www.europeansocialsurvey.org/about/news/img/round7.png')
+background-size: cover
+class: center middle
+
+&lt;img src="https://raw.githubusercontent.com/rstudio/hex-stickers/master/PNG/tibble.png" width="30%" style="display: block; margin: auto;" /&gt;
+
+???
+
+- more convenient, tidyvere tabular structure: tibble
+
+---
+# Tabular Data .font60[Tibbles]
+
+**Tibbles** are data frames. But they have some improved features, so we will work with them.
+
+--
+
+.push-left[
+Compare how our data frame prints.
+
+```r
+# Print basic data frame
+Dat
+#     name age      conti employed nr_kids
+# 1  Agnes  34     Europe    FALSE       1
+# 2 Martin  22     Africa     TRUE       0
+# 3  Hakan  42     Africa     TRUE       3
+# 4     Tu  12       Asia     TRUE       0
+# 5  Thais  76 S. America     TRUE       4
+```
+]
+
+--
+
+.push-right[
+To how the same data prints as a tibble
+
+```r
+# Turn data frame into tibble and print
+(Dat &lt;- as_tibble(Dat))
+# # A tibble: 5 × 5
+#   name     age conti      employed nr_kids
+#   &lt;chr&gt;  &lt;dbl&gt; &lt;fct&gt;      &lt;lgl&gt;      &lt;dbl&gt;
+# 1 Agnes     34 Europe     FALSE          1
+# 2 Martin    22 Africa     TRUE           0
+# 3 Hakan     42 Africa     TRUE           3
+# 4 Tu        12 Asia       TRUE           0
+# 5 Thais     76 S. America TRUE           4
+```
+]
+
+???
+
+- tibbles:
+  - summarize information about cols and rows
+  - show the type of each vector
+  - only preview the first few rows (can't see here)
+
+---
+# Accessing variables .font70[The `$` operator]
+
+The base R way to access a single variable in tabular data uses the `$` operator: `data_frame$variable`.
+
+
+```r
+# Return variable "age" contained in tibble Dat.
+Dat$age
+# [1] 34 22 42 12 76
+```
+
+--
+
+We can then work with that individual variable, such as getting some summary information.
+
+
+```r
+# Give a summary of numeric vector age contained in Dat.
+summary(Dat$age)
+#    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+#    12.0    22.0    34.0    37.2    42.0    76.0
+```
+
+--
+
+
+```r
+# Give a summary of factor vector conti contained in Dat.
+summary(Dat$conti)
+#     Africa       Asia  Australia     Europe N. America S. America 
+#          2          1          0          1          0          1
+```
+
+.center[.content-box-green[
+Wait, why does `summary()` give me first some summary statistics and then a frequency table?
+]]
+
+---
+layout:true
+# Accessing variables .font70[The `select()` function]
+
+---
+
+The `tidyverse` adds functionality to access multiple variables at once using the `select` function.
+
+
+```r
+# Select from tibble Dat the variables name and nr_kids,
+# and assign them to the new object Dat_small.
+(Dat_small &lt;- select(Dat, name, nr_kids))
+# # A tibble: 5 × 2
+#   name   nr_kids
+#   &lt;chr&gt;    &lt;dbl&gt;
+# 1 Agnes        1
+# 2 Martin       0
+# 3 Hakan        3
+# 4 Tu           0
+# 5 Thais        4
+```
+
+---
+
+In addition to accessing variables by name, **helper functions** from the `tidyverse` allow us to access them based on conditions, see `?select` for details.
+
+```r
+# Select from object Dat all variables that start with n,
+# and assign the result to a new object Dat_small.
+(Dat_small &lt;- select(Dat, starts_with("n")))
+# # A tibble: 5 × 2
+#   name   nr_kids
+#   &lt;chr&gt;    &lt;dbl&gt;
+# 1 Agnes        1
+# 2 Martin       0
+# 3 Hakan        3
+# 4 Tu           0
+# 5 Thais        4
+```
+
+---
+layout:false
+layout:true
+# Accessing observations .font70[The `filter()` function]
+
+---
+
+To access _observations_ in a tabular data structure, the `tidyverse` provides the `filter()` function which accesses them via conditions.
+
+
+```r
+# Return all cases contained in Dat with value "Africa" in conti.
+(Dat_small&lt;- dplyr::filter(Dat, conti == "Africa"))
+# # A tibble: 2 × 5
+#   name     age conti  employed nr_kids
+#   &lt;chr&gt;  &lt;dbl&gt; &lt;fct&gt;  &lt;lgl&gt;      &lt;dbl&gt;
+# 1 Martin    22 Africa TRUE           0
+# 2 Hakan     42 Africa TRUE           3
+```
+
+--
+
+We can also use base R to do this, similar to indexing of vectors with `[]`.
+
+
+```r
+# Or use the index, to achieve the same.
+(Dat_small &lt;- Dat[Dat$conti == "Africa", ])
+# # A tibble: 2 × 5
+#   name     age conti  employed nr_kids
+#   &lt;chr&gt;  &lt;dbl&gt; &lt;fct&gt;  &lt;lgl&gt;      &lt;dbl&gt;
+# 1 Martin    22 Africa TRUE           0
+# 2 Hakan     42 Africa TRUE           3
+```
+
+---
+
+We can also use base R to do this, similar to indexing of vectors with `[]`.
+
+
+```r
+# Or use the index, to achieve the same.
+(Dat_small &lt;- Dat[Dat$conti == "Africa", ])
+# # A tibble: 2 × 5
+#   name     age conti  employed nr_kids
+#   &lt;chr&gt;  &lt;dbl&gt; &lt;fct&gt;  &lt;lgl&gt;      &lt;dbl&gt;
+# 1 Martin    22 Africa TRUE           0
+# 2 Hakan     42 Africa TRUE           3
+```
+
+.center[.content-box-green[
+Why is there a `,` after `"Africa"`?
+]]
+
+---
+layout:false
+# Indexing tabular data .font70[[Rows, columns]]
+
+In contrast to vectors, data frames and tibbles have rows and columns. R's index thus distinguishes `[rows, columns]`. The `,` after `"Africa"` tells R that we talk about rows. To understand how the index method works, remember logical vectors:
+
+.push-left[
+
+```r
+# Print factor conti contained in tibble Dat.
+Dat$conti
+# [1] Europe     Africa     Africa     Asia       S. America
+# Levels: Africa Asia Australia Europe N. America S. America
+# Return a logical vector of whether the different
+# elements in Dat$conti equal "Africa".
+Dat$conti == "Africa"
+# [1] FALSE  TRUE  TRUE FALSE FALSE
+# Feed the logical vector to the index of Dat
+# to select TRUE cases from "Africa".
+(Dat_small &lt;- Dat[Dat$conti == "Africa", ])
+# # A tibble: 2 × 5
+#   name     age conti  employed nr_kids
+#   &lt;chr&gt;  &lt;dbl&gt; &lt;fct&gt;  &lt;lgl&gt;      &lt;dbl&gt;
+# 1 Martin    22 Africa TRUE           0
+# 2 Hakan     42 Africa TRUE           3
+```
+]
+
+--
+
+.push-right[
+
+```r
+# Create a new logical variable called "selector",
+# which identifies cases with "Africa" in Dat$conti.
+Dat$selector &lt;- Dat$conti == "Africa"
+
+# Print Dat.
+Dat
+# # A tibble: 5 × 6
+#   name     age conti      employed nr_kids selector
+#   &lt;chr&gt;  &lt;dbl&gt; &lt;fct&gt;      &lt;lgl&gt;      &lt;dbl&gt; &lt;lgl&gt;   
+# 1 Agnes     34 Europe     FALSE          1 FALSE   
+# 2 Martin    22 Africa     TRUE           0 TRUE    
+# 3 Hakan     42 Africa     TRUE           3 TRUE    
+# 4 Tu        12 Asia       TRUE           0 FALSE   
+# 5 Thais     76 S. America TRUE           4 FALSE
+```
+]
+
+---
+
+# Processing a variable .font60[In tabular data]
+
+To transform and recode a variable in place, simply use `$` to clarify which one you are referring to and remember to assign the result.
+
+```r
+# Center age around the average age.
+(Dat$age &lt;- Dat$age - mean(Dat$age))
+# [1]  -3.2 -15.2   4.8 -25.2  38.8
+```
+
+
+```r
+# Recode "Africa" to "Afrika!".
+(Dat$conti &lt;- fct_recode(Dat$conti, "Afrika!" = "Africa"))
+# [1] Europe     Afrika!    Afrika!    Asia       S. America
+# Levels: Afrika! Asia Australia Europe N. America S. America
+```
+
+--
+
+To create a new variable instead, assign the result to a new name.
+
+```r
+# Divide age by its standard deviation;
+# now it is z-standardized (mean = 0, sd = 1).
+(Dat$z_age &lt;- Dat$age / sd(Dat$age))
+# [1] -0.131 -0.620  0.196 -1.028  1.582
+```
+
+---
+# Processing several variables  .font60[In tabular data]
+
+Processing one variable at a time can become tedious. To simplify processing variables from the same tibble, the `tidyverse` provides the `mutate()` function.
+
+
+```r
+*(Dat &lt;- mutate(Dat,                              # Use the Dat tibble.
+              nr_kids = nr_kids - mean(nr_kids), # Transform to deviation from average.
+              z_nr_kids = nr_kids / sd(nr_kids), # z-standardize nr_kids.
+              conti = fct_recode(conti,          # Recode conti.
+                                 "Europa!" = "Europe", # "Europe" to "Europa!".
+                                 "Asien!" = "Asia")    # "Asia" to "Asien!".
+*             ) # Don't forget to close mutate's bracket ")"
+ )
+# # A tibble: 5 × 8
+#   name      age conti      employed nr_kids selector  z_age z_nr_kids
+#   &lt;chr&gt;   &lt;dbl&gt; &lt;fct&gt;      &lt;lgl&gt;      &lt;dbl&gt; &lt;lgl&gt;     &lt;dbl&gt;     &lt;dbl&gt;
+# 1 Agnes   -3.20 Europa!    FALSE       -0.6 FALSE    -0.131    -0.330
+# 2 Martin -15.2  Afrika!    TRUE        -1.6 TRUE     -0.620    -0.881
+# 3 Hakan    4.8  Afrika!    TRUE         1.4 TRUE      0.196     0.771
+# 4 Tu     -25.2  Asien!     TRUE        -1.6 FALSE    -1.03     -0.881
+# 5 Thais   38.8  S. America TRUE         2.4 FALSE     1.58      1.32
+```
+.center[.backgrnote[Note how RStudio structures your code. This helps you to understand, within which function or parenthesis things are happening.]]
+
+???
+
+- point to nested functions "mutate(mean(), fct_recode)"
+- RStudio helps you with automatically providing closing brackets
+- If you encounter an error, check if all brackets are close and contain the right things
+
+---
+layout:true
+# Conditional processing .font60[(i.e., for filtered cases)]
+
+---
+
+In many cases, you will want to change values only for cases meeting specific conditions. For such complex processing, the `tidyverse` provides the function `case_when()`.
+
+
+```r
+Dat &lt;- mutate(
+  Dat, # Mutate variables contained in Dat.
+* conti = case_when( # Start conditional recode of conti,
+*   employed == FALSE &amp; conti == "Afrika!" ~ "Atlantis", # 1. complex condition ~ new value "Atlantis",
+*   age &lt; 0 &amp; nr_kids &lt; -1  ~ "Antarctica",              # 2. complex condition ~ new value "Antarctica",
+*   TRUE ~ as.character(conti)                           # 3. and all others ~ leave as is;
+* ) # close case_when's bracket.
+) # close mutate's bracket
+```
+
+???
+
+- point out syntax:
+  - condition (including potentially old value) ~ new values
+  - case_when specifies condition, still need mutate to change values
+
+---
+
+
+```r
+(Dat &lt;- mutate(
+  Dat, # Mutate variables contained in Dat.
+* conti = case_when( # Start conditional recode of conti,
+*   employed == FALSE &amp; conti == "Afrika!" ~ "Atlantis", # 1. complex condition ~ new value "Atlantis",
+*   age &lt; 0 &amp; nr_kids &lt; -1  ~ "Antarctica",              # 2. complex condition ~ new value "Antarctica",
+*   TRUE ~ as.character(conti)                           # 3. and all others ~ leave as is;
+* ) # close case_when's bracket.
+)) # close mutate's (and the print) bracket .
+```
+
+The three lines of this `case_when()` application do the following thing:
+
+--
+
+1. For all non-employed African cases ~ recode conti to "Atlantis".
+
+--
+
+2. For all those who're younger than 0 and have less than -1 kids ~ recode conti to "Antarctica".
+
+--
+
+3. All remaining cases ~ use their original conti values, but transform them to a character vector.
+ - .alert[Remember, vectors can only contain one type of data!] We cannot enter factor data into a character vector. Because we give `case_when()` "Atlantis" and "Antarctica" as new values, it assumes that we want to make conti a character vector. Thus we cannot supply the former factor values in line three.
+
+???
+
+- remember that factor values are integer under the hood
+- thus not transforming to character would mean adding integer/numeric values
+
+---
+layout:false
+# Conditional processing .font60[`case_when()` and `NA`]
+
+
+```r
+(Dat &lt;- mutate(
+  Dat,
+  conti = case_when( # Start conditional recode of conti,
+    employed == FALSE &amp; conti == "Afrika!" ~ "Atlantis", # 1. complex condition ~ new value "Atlantis",
+    age &lt; 0 &amp; nr_kids &lt; -1  ~ "Antarctica",              # 2. complex condition ~ new value "Antarctica",
+*   TRUE ~ NA                           # 3. and all others ~ NA
+  ) # close case_when's bracket.
+)) # close mutate's (and the print) bracket.
+# Error in `mutate()`:
+# ! Problem while computing `conti = case_when(...)`.
+# Caused by error in `case_when()`:
+```
+
+When working with missing data in `case_when`, we also need to be cognizant of the type of the data. When look into the documentation for `NA` by writing `?NA`, you will learn:
+&gt; "*NA is a logical* constant of length 1 which contains a missing value indicator. *NA can be coerced to any other vector type* except raw." 
+  
+---
+# Conditional processing .font60[`case_when()` and `NA`]
+
+`NA` has a type, too! Therefore, we need to coerce `NA` into the appropriate type with `as.character()`/`as.numeric()`.
+
+```r
+(Dat &lt;- mutate(
+  Dat,
+  conti = case_when( # Start conditional recode of conti,
+    employed == FALSE &amp; conti == "Afrika!" ~ "Atlantis", # 1. complex condition ~ new value "Atlantis",
+    age &lt; 0 &amp; nr_kids &lt; -1  ~ "Antarctica",              # 2. complex condition ~ new value "Antarctica",
+*   TRUE ~ as.character(NA)                              # 3. and all others ~ NA
+  ) # close case_when's bracket.
+)) # close mutate's (and the print) bracket.
+# # A tibble: 5 × 8
+#   name      age conti      employed nr_kids selector  z_age z_nr_kids
+#   &lt;chr&gt;   &lt;dbl&gt; &lt;chr&gt;      &lt;lgl&gt;      &lt;dbl&gt; &lt;lgl&gt;     &lt;dbl&gt;     &lt;dbl&gt;
+# 1 Agnes   -3.20 &lt;NA&gt;       FALSE       -0.6 FALSE    -0.131    -0.330
+# 2 Martin -15.2  Antarctica TRUE        -1.6 TRUE     -0.620    -0.881
+# 3 Hakan    4.8  &lt;NA&gt;       TRUE         1.4 TRUE      0.196     0.771
+# 4 Tu     -25.2  Antarctica TRUE        -1.6 FALSE    -1.03     -0.881
+# 5 Thais   38.8  &lt;NA&gt;       TRUE         2.4 FALSE     1.58      1.32
+```
+.center[.backgrnote[Alternatively, you can also use the type-specific missing values: `NA\\\_character\\\_`, `NA\\\_real\\\_`, etc..]]
+
+---
+background-image: url('http://www.europeansocialsurvey.org/docs/img/general_banner.jpg')
+background-size: contain
+background-position: center
+
+# Setup for next steps
+
+.push-left[
+&lt;br&gt;
+Please register as a user and download the [European Social Survey 10](https://ess-search.nsd.no/en/study/172ac431-2a06-41df-9dab-c1fd8f3877e7) to the folder in which you have your RStudio-Project.
+&lt;br&gt;&lt;br&gt;
+&lt;img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQc8K5da5GSR5c4x4lJBIaBheKgcqfNjFfihonLBJWqbzUYVitp&amp;s" width="70%" style="display: block; margin: auto auto auto 0;" /&gt;
+]
+
+---
+# Importing Data .font60[Local data]
+
+The classic way to work with actual data, is to download them to the folder of your RStudio-project and to then import them to R. The tidyverse contains three packages for importing local data from your machine:
+
+--
+
+.push-left[
+&lt;img src="https://haven.tidyverse.org/logo.png" width="30%" style="display: block; margin: auto;" /&gt;
+
+- The `haven` package allows you to import Stata, SPSS, and SAS files. .backgrnote[See the `haven` website for details [here](https://haven.tidyverse.org/).]
+
+```r
+# Create an object ESS and assign the
+# imported ESS.sav to it, if you have
+# downloaded it into your intro_r folder
+ESS &lt;- read_spss("ESS10.sav")
+```
+
+
+]
+
+--
+
+.push-right[
+.push-left[
+&lt;br&gt;
+&lt;img src="https://readr.tidyverse.org/logo.png" width="65%" style="display: block; margin: auto;" /&gt;
+]
+.push-right[
+&lt;br&gt;
+&lt;img src="https://readxl.tidyverse.org/logo.png" width="65%" style="display: block; margin: auto;" /&gt;
+]
+.white[vcdv]
+- The `readr` package allows you to import csv, tsv and fwf files.&lt;br&gt; .backgrnote[See the `readr` website [here](https://readr.tidyverse.org/) and this [cheat sheet](https://rawgit.com/rstudio/cheatsheets/master/data-import.pdf) for details.]
+
+
+- The `readxl` package allows you to read in Excel's xlsx files. .backgrnote[See the  `readxl` website for more [here](https://readxl.tidyverse.org/).]
+]
+
+???
+
+- In this workshop, we will use a non-traditional approach and access the data directly from their online repository
+
+---
+# The ESS
+
+
+```r
+ESS
+# # A tibble: 18,060 × 513
+#    name       essround edition prodd…¹  idno cntry    pweight dweight nwspol netus…² netustm ppltrst pplfair pplhlp
+#    &lt;chr&gt;         &lt;dbl&gt; &lt;chr&gt;   &lt;chr&gt;   &lt;dbl&gt; &lt;chr+lb&gt;   &lt;dbl&gt;   &lt;dbl&gt; &lt;dbl+&gt; &lt;dbl+l&gt; &lt;dbl+l&gt; &lt;dbl+l&gt; &lt;dbl+l&gt; &lt;dbl+&gt;
+#  1 ESS10e01_3       10 1.3     4.10.2… 10002 BG [Bul…   0.218   1.03   80    1 [Nev…  NA     5 [5]   5 [5]   1 [1] 
+#  2 ESS10e01_3       10 1.3     4.10.2… 10006 BG [Bul…   0.218   0.879  63    5 [Eve… 180     0 [You… 6 [6]   2 [2] 
+#  3 ESS10e01_3       10 1.3     4.10.2… 10009 BG [Bul…   0.218   1.01  390    5 [Eve… 405     5 [5]   3 [3]   4 [4] 
+#  4 ESS10e01_3       10 1.3     4.10.2… 10024 BG [Bul…   0.218   0.955  60    5 [Eve…  80     5 [5]   5 [5]   3 [3] 
+#  5 ESS10e01_3       10 1.3     4.10.2… 10027 BG [Bul…   0.218   0.841 120    5 [Eve… 120     4 [4]   4 [4]   2 [2] 
+#  6 ESS10e01_3       10 1.3     4.10.2… 10048 BG [Bul…   0.218   0.946  60    5 [Eve…  60     3 [3]   3 [3]   3 [3] 
+#  7 ESS10e01_3       10 1.3     4.10.2… 10053 BG [Bul…   0.218   1.01   30    5 [Eve… 120     3 [3]   5 [5]   5 [5] 
+#  8 ESS10e01_3       10 1.3     4.10.2… 10055 BG [Bul…   0.218   1.03   70    5 [Eve… 260     4 [4]   4 [4]   6 [6] 
+#  9 ESS10e01_3       10 1.3     4.10.2… 10059 BG [Bul…   0.218   0.991  60    1 [Nev…  NA     5 [5]   7 [7]   4 [4] 
+# 10 ESS10e01_3       10 1.3     4.10.2… 10061 BG [Bul…   0.218   1.05   60    1 [Nev…  NA     0 [You… 1 [1]   2 [2] 
+# # … with 18,050 more rows, 499 more variables: polintr &lt;dbl+lbl&gt;, psppsgva &lt;dbl+lbl&gt;, actrolga &lt;dbl+lbl&gt;,
+# #   psppipla &lt;dbl+lbl&gt;, cptppola &lt;dbl+lbl&gt;, trstprl &lt;dbl+lbl&gt;, trstlgl &lt;dbl+lbl&gt;, trstplc &lt;dbl+lbl&gt;,
+# #   trstplt &lt;dbl+lbl&gt;, trstprt &lt;dbl+lbl&gt;, trstep &lt;dbl+lbl&gt;, trstun &lt;dbl+lbl&gt;, trstsci &lt;dbl+lbl&gt;, vote &lt;dbl+lbl&gt;,
+# #   prtvtebg &lt;dbl+lbl&gt;, prtvtbhr &lt;dbl+lbl&gt;, prtvtecz &lt;dbl+lbl&gt;, prtvthee &lt;dbl+lbl&gt;, prtvtefi &lt;dbl+lbl&gt;,
+# #   prtvtefr &lt;dbl+lbl&gt;, prtvtghu &lt;dbl+lbl&gt;, prtvclt1 &lt;dbl+lbl&gt;, prtvclt2 &lt;dbl+lbl&gt;, prtvclt3 &lt;dbl+lbl&gt;,
+# #   prtvtfsi &lt;dbl+lbl&gt;, prtvtesk &lt;dbl+lbl&gt;, contplt &lt;dbl+lbl&gt;, donprty &lt;dbl+lbl&gt;, badge &lt;dbl+lbl&gt;,
+# #   sgnptit &lt;dbl+lbl&gt;, pbldmna &lt;dbl+lbl&gt;, bctprd &lt;dbl+lbl&gt;, pstplonl &lt;dbl+lbl&gt;, volunfp &lt;dbl+lbl&gt;, …
+```
+
+---
+# First steps with the ESS
+
+.push-left[
+&lt;img src="./img/dscrgrp.png" width="100%" style="display: block; margin: auto;" /&gt;
+
+
+```r
+# A frequency table to get a first impression
+# of the variables values and frequencies.
+table(ESS$dscrgrp)
+# 
+#     1     2 
+#  1315 16476
+```
+]
+
+--
+
+.push-right[
+.center[This is not too insightful...&lt;br&gt;Remember how R uses _factors_ for _categorical data_? &lt;br&gt; This is in contrast to labels in Stata or SPSS.]
+
+&lt;img src="https://i.vimeocdn.com/portrait/3399477_300x300" width="40%" style="display: block; margin: auto;" /&gt;
+]
+
+???
+
+- There is no native R data we can download from ESS API
+- Instead we downloaded SPSS format with labels
+
+---
+# Importing Data .font60[Labelled data]
+
+
+R imports Stata and SPSS labels, but cannot handle them. Thus, when you import Stata or SPSS data,&lt;br&gt;
+... you need to .alert[transform labelled variables into **numeric or factor**] before analyzing them.
+
+--
+
+.push-left[
+If you want to use a variable as categorical, use `as_factor()` to make the labels the new factor levels:
+
+```r
+# Make the labelled variable "dscrgrp" a factor.
+*ESS$dscrgrp &lt;- as_factor(ESS$dscrgrp)
+
+# A frequency table to get a first impression
+# of the variables values and frequencies.
+table(ESS$dscrgrp)
+# 
+#        Yes         No    Refusal Don't know  No answer 
+#       1315      16476          0          0          0
+```
+]
+
+--
+
+.push-right[
+If you want to use a variable as numeric, use `zap_labels()` to prevent problems with the imported labels:
+
+
+```r
+# Strip/zap the labels from the numeric variable agea.
+*ESS$agea &lt;- zap_labels(ESS$agea)
+
+# A summary of descriptive statistics
+# to get a first impression of the variable.
+summary(ESS$agea)
+#    Min. 1st Qu.  Median    Mean 3rd Qu.    Max.    NA's 
+#    15.0    36.0    51.0    50.9    66.0    90.0     120
+```
+
+]
+
+---
+class: inverse
+# General lessons
+
+1. When processing data in R, we need to be cognizant of the data type. We can *transform* numeric vectors with arithmetic operators and a myriad of different functions. We can *recode* factor vectors with the `fct_recode()` function.
+2. Advanced R functionality is bundled up in *packages*, which are collections of functions along with their documentation. To avoid conflicts, you need to add the packages you will use in a given R session to the *library*.
+3. *Data frames* organize equally-sized vectors along their indices; *Tibbles* are modernized data frames. The indices of data frames/tibbles are organized as `[row, column]`.
+4. To work with tabular data we need to be able to subset data to specific variables or observations. Both is possible via the index `[row, column]`, but the `tidyverse` functions `filter()` (for case selection) and `select()` (for variable selection) provide a more convenient approach.
+5. R code may be *nested*, that is, you can write functions into functions. This is particularly important for *helper functions* make specific tasks easier but work only within the function for which they were designed.
+6. In the `tidyverse`, we use `mutate()` to process variables and `case_when` for more complex transformation or conditional processing.
+7. R has no labels. Instead, it uses *factors* for categorical data. To work with labelled data from Stata or SPSS, we need to transform first using `zap_labels()` for numeric variables and `as_factor()` for categorical ones.
+
+---
+class: inverse
+# New operators
+
+1. `$`: Allows your to access vectors contained in a data frame/tibble.
+
+---
+class: inverse
+# Important functions
+1. `data.frame()`: Organize several vectors of equal length by their index.
+2. `as_tibble()`: Take a data frame and turn it into a tibble.
+3. `summary()`: Give a summary of an object, result depends on object's class.
+4. `select()`: Access one or more variables from a data frame/tibble.
+5. `filter()`: Subset observations based on conditions (i.e. values in variables). 
+6. `mutate()`: Process one or more variables from a data frame/tibble. Keeps all other variables.
+7. `case_when()`: Conditionally process variables based on one or more conditions.
+8. `as_factor()`: Turn a labelled Stata/SPSS variable into a factor.
+9. `zap_labels()`: Turn a labelled Stata/SPSS variable into a numeric vector.
+    </textarea>
+<style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
+<script src="../template/remark-latest.min.js"></script>
+<script>var slideshow = remark.create({
+"highlightLanguage": "r",
+"highlightStyle": "zenburn",
+"highlightLines": true,
+"countIncrementalSlides": false,
+"ratio": "16:9"
+});
+if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
+  window.dispatchEvent(new Event('resize'));
+});
+(function(d) {
+  var s = d.createElement("style"), r = d.querySelector(".remark-slide-scaler");
+  if (!r) return;
+  s.type = "text/css"; s.innerHTML = "@page {size: " + r.style.width + " " + r.style.height +"; }";
+  d.head.appendChild(s);
+})(document);
+
+(function(d) {
+  var el = d.getElementsByClassName("remark-slides-area");
+  if (!el) return;
+  var slide, slides = slideshow.getSlides(), els = el[0].children;
+  for (var i = 1; i < slides.length; i++) {
+    slide = slides[i];
+    if (slide.properties.continued === "true" || slide.properties.count === "false") {
+      els[i - 1].className += ' has-continuation';
+    }
+  }
+  var s = d.createElement("style");
+  s.type = "text/css"; s.innerHTML = "@media print { .has-continuation { display: none; } }";
+  d.head.appendChild(s);
+})(document);
+// delete the temporary CSS (for displaying all slides initially) when the user
+// starts to view slides
+(function() {
+  var deleted = false;
+  slideshow.on('beforeShowSlide', function(slide) {
+    if (deleted) return;
+    var sheets = document.styleSheets, node;
+    for (var i = 0; i < sheets.length; i++) {
+      node = sheets[i].ownerNode;
+      if (node.dataset["target"] !== "print-only") continue;
+      node.parentNode.removeChild(node);
+    }
+    deleted = true;
+  });
+})();
+// add `data-at-shortcutkeys` attribute to <body> to resolve conflicts with JAWS
+// screen reader (see PR #262)
+(function(d) {
+  let res = {};
+  d.querySelectorAll('.remark-help-content table tr').forEach(tr => {
+    const t = tr.querySelector('td:nth-child(2)').innerText;
+    tr.querySelectorAll('td:first-child .key').forEach(key => {
+      const k = key.innerText;
+      if (/^[a-z]$/.test(k)) res[k] = t;  // must be a single letter (key)
+    });
+  });
+  d.body.setAttribute('data-at-shortcutkeys', JSON.stringify(res));
+})(document);
+(function() {
+  "use strict"
+  // Replace <script> tags in slides area to make them executable
+  var scripts = document.querySelectorAll(
+    '.remark-slides-area .remark-slide-container script'
+  );
+  if (!scripts.length) return;
+  for (var i = 0; i < scripts.length; i++) {
+    var s = document.createElement('script');
+    var code = document.createTextNode(scripts[i].textContent);
+    s.appendChild(code);
+    var scriptAttrs = scripts[i].attributes;
+    for (var j = 0; j < scriptAttrs.length; j++) {
+      s.setAttribute(scriptAttrs[j].name, scriptAttrs[j].value);
+    }
+    scripts[i].parentElement.replaceChild(s, scripts[i]);
+  }
+})();
+(function() {
+  var links = document.getElementsByTagName('a');
+  for (var i = 0; i < links.length; i++) {
+    if (/^(https?:)?\/\//.test(links[i].getAttribute('href'))) {
+      links[i].target = '_blank';
+    }
+  }
+})();
+// adds .remark-code-has-line-highlighted class to <pre> parent elements
+// of code chunks containing highlighted lines with class .remark-code-line-highlighted
+(function(d) {
+  const hlines = d.querySelectorAll('.remark-code-line-highlighted');
+  const preParents = [];
+  const findPreParent = function(line, p = 0) {
+    if (p > 1) return null; // traverse up no further than grandparent
+    const el = line.parentElement;
+    return el.tagName === "PRE" ? el : findPreParent(el, ++p);
+  };
+
+  for (let line of hlines) {
+    let pre = findPreParent(line);
+    if (pre && !preParents.includes(pre)) preParents.push(pre);
+  }
+  preParents.forEach(p => p.classList.add("remark-code-has-line-highlighted"));
+})(document);</script>
+
+<script>
+slideshow._releaseMath = function(el) {
+  var i, text, code, codes = el.getElementsByTagName('code');
+  for (i = 0; i < codes.length;) {
+    code = codes[i];
+    if (code.parentNode.tagName !== 'PRE' && code.childElementCount === 0) {
+      text = code.textContent;
+      if (/^\\\((.|\s)+\\\)$/.test(text) || /^\\\[(.|\s)+\\\]$/.test(text) ||
+          /^\$\$(.|\s)+\$\$$/.test(text) ||
+          /^\\begin\{([^}]+)\}(.|\s)+\\end\{[^}]+\}$/.test(text)) {
+        code.outerHTML = code.innerHTML;  // remove <code></code>
+        continue;
+      }
+    }
+    i++;
+  }
+};
+slideshow._releaseMath(document);
+</script>
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+(function () {
+  var script = document.createElement('script');
+  script.type = 'text/javascript';
+  script.src  = 'https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML';
+  if (location.protocol !== 'file:' && /^https?:/.test(script.src))
+    script.src  = script.src.replace(/^https?:/, '');
+  document.getElementsByTagName('head')[0].appendChild(script);
+})();
+</script>
+  </body>
+</html>

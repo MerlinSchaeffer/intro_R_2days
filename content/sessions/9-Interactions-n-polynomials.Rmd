@@ -24,10 +24,12 @@ myBib <- ReadBib("./../../intRo.bib", check = FALSE)
 
 Lecture slides: [**Interaction Effects**](/9-Inter/9-Inter.html)
 
-Today's exercise: [**Web Excercise 9**](/exercises/exercise9.html)
+Exercise: [**Web Excercise 9**](/exercises/exercise9.html)
 
 ![](/9-Inter/9-Inter_files/figure-html/unnamed-chunk-28-1.png)
 
 Linear OLS regression is the backbone of statistical modeling/data science. One of the reasons for that is that it is actually more versatile than its name suggests. That is, although it is linear, it allows us to estimate non-linear and conditional associations, such as the one shown above. In this session you will learn how to specify conditional and non-linear associations and how to visualize them to ease the interpretability of your complex linear OLS regression models.
 
 
+## Homework
+1. Finish web exercise 7 through 9.

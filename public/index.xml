@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Intro to R</title>
+    <link>/</link>
+      <atom:link href="/index.xml" rel="self" type="application/rss+xml" />
+    <description>Intro to R</description>
+    <generator>Source Themes Academic (https://sourcethemes.com/academic/)</generator><language>en-us</language><copyright>Merlin Schaeffer &amp; Friedolin Merhout</copyright><lastBuildDate>Wed, 19 Oct 2022 00:00:00 +0000</lastBuildDate>
+    <image>
+      <url>img/map[gravatar:%!s(bool=false) shape:square]</url>
+      <title>Intro to R</title>
+      <link>/</link>
+    </image>
+    
+    <item>
+      <title>1 Hello R: Vectors</title>
+      <link>/sessions/1-hello_r_vectors/</link>
+      <pubDate>Wed, 19 Oct 2022 00:00:00 +0000</pubDate>
+      <guid>/sessions/1-hello_r_vectors/</guid>
+      <description>
+
+
+&lt;p&gt;In this first lecture you will get a gentle introduction to the statistical programming language R and some of its basic functionality. The lecture covers different operators, the idea behind R’s workhorse functions, and basic data structures in R. The lecture is a bit abstract, like this line of code:&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;(I_am_an_object &amp;lt;- seq(from = 2, to = 8))
+# [1] 2 3 4 5 6 7 8&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;But stay with it, you’ll get the hang of it soon enough. You will also learn about the workflow of using RStudio, including how to set up a project and how to use R Scripts to organize your research and make it reproducible.&lt;/p&gt;
+&lt;p&gt;Lecture slides: &lt;a href=&#34;/1-Hello_R_Vectors/1-Hello_R_Vectors.html&#34;&gt;&lt;strong&gt;Int_R_oduction&lt;/strong&gt;&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;Today’s exercise: &lt;a href=&#34;/exercises/exercise1.html&#34;&gt;&lt;strong&gt;Web Excercise 1&lt;/strong&gt;&lt;/a&gt;&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>2 Data Frames and Tibbles</title>
+      <link>/sessions/2-data-frames/</link>
+      <pubDate>Wed, 19 Oct 2022 00:00:00 +0000</pubDate>
+      <guid>/sessions/2-data-frames/</guid>
+      <description>
+
+
+&lt;p&gt;This lecture will introduce you to data frames and tibbles, and how to work with them as well as with atomic vectors. We will also cover packages - the source of R’s versatility - and get to know basic functionality from the collection of packages known as tidyverse. A set of packages containing, among others, data of Star Wars characters:&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;library(tidyverse)
+starwars
+# # A tibble: 87 × 14
+#    name             height  mass hair_…¹ skin_…² eye_c…³ birth…⁴ sex   gender homew…⁵ species films vehic…⁶ stars…⁷
+#    &amp;lt;chr&amp;gt;             &amp;lt;int&amp;gt; &amp;lt;dbl&amp;gt; &amp;lt;chr&amp;gt;   &amp;lt;chr&amp;gt;   &amp;lt;chr&amp;gt;     &amp;lt;dbl&amp;gt; &amp;lt;chr&amp;gt; &amp;lt;chr&amp;gt;  &amp;lt;chr&amp;gt;   &amp;lt;chr&amp;gt;   &amp;lt;lis&amp;gt; &amp;lt;list&amp;gt;  &amp;lt;list&amp;gt; 
+#  1 Luke Skywalker      172    77 blond   fair    blue       19   male  mascu… Tatooi… Human   &amp;lt;chr&amp;gt; &amp;lt;chr&amp;gt;   &amp;lt;chr&amp;gt;  
+#  2 C-3PO               167    75 &amp;lt;NA&amp;gt;    gold    yellow    112   none  mascu… Tatooi… Droid   &amp;lt;chr&amp;gt; &amp;lt;chr&amp;gt;   &amp;lt;chr&amp;gt;  
+#  3 R2-D2                96    32 &amp;lt;NA&amp;gt;    white,… red        33   none  mascu… Naboo   Droid   &amp;lt;chr&amp;gt; &amp;lt;chr&amp;gt;   &amp;lt;chr&amp;gt;  
+#  4 Darth Vader         202   136 none    white   yellow     41.9 male  mascu… Tatooi… Human   &amp;lt;chr&amp;gt; &amp;lt;chr&amp;gt;   &amp;lt;chr&amp;gt;  
+#  5 Leia Organa         150    49 brown   light   brown      19   fema… femin… Aldera… Human   &amp;lt;chr&amp;gt; &amp;lt;chr&amp;gt;   &amp;lt;chr&amp;gt;  
+#  6 Owen Lars           178   120 brown,… light   blue       52   male  mascu… Tatooi… Human   &amp;lt;chr&amp;gt; &amp;lt;chr&amp;gt;   &amp;lt;chr&amp;gt;  
+#  7 Beru Whitesun l…    165    75 brown   light   blue       47   fema… femin… Tatooi… Human   &amp;lt;chr&amp;gt; &amp;lt;chr&amp;gt;   &amp;lt;chr&amp;gt;  
+#  8 R5-D4                97    32 &amp;lt;NA&amp;gt;    white,… red        NA   none  mascu… Tatooi… Droid   &amp;lt;chr&amp;gt; &amp;lt;chr&amp;gt;   &amp;lt;chr&amp;gt;  
+#  9 Biggs Darklight…    183    84 black   light   brown      24   male  mascu… Tatooi… Human   &amp;lt;chr&amp;gt; &amp;lt;chr&amp;gt;   &amp;lt;chr&amp;gt;  
+# 10 Obi-Wan Kenobi      182    77 auburn… fair    blue-g…    57   male  mascu… Stewjon Human   &amp;lt;chr&amp;gt; &amp;lt;chr&amp;gt;   &amp;lt;chr&amp;gt;  
+# # … with 77 more rows, and abbreviated variable names ¹​hair_color, ²​skin_color, ³​eye_color, ⁴​birth_year,
+# #   ⁵​homeworld, ⁶​vehicles, ⁷​starships&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;In this session you will also learn how to access specific variables or cases from a tibble, how to do complex data transformations and recodes, and finally, how to use an API to import data from the European Social Survey.&lt;/p&gt;
+&lt;p&gt;Lecture slides: &lt;a href=&#34;/2-Data-Frames/2-Data-Frames.html&#34;&gt;&lt;strong&gt;Data Frames and Tibbles&lt;/strong&gt;&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;Today’s exercise: &lt;a href=&#34;/exercises/exercise2.html&#34;&gt;&lt;strong&gt;Web Excercise 2&lt;/strong&gt;&lt;/a&gt;&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>3 Visualization I</title>
+      <link>/sessions/3-visualization-i/</link>
+      <pubDate>Wed, 19 Oct 2022 00:00:00 +0000</pubDate>
+      <guid>/sessions/3-visualization-i/</guid>
+      <description>
+
+
+&lt;p&gt;This lecture introduces you to the basics of “the grammar of graphics”, the guiding idea of the R package ggplot2. You will gain a basic understanding of how to visualize your data for exploratory purposes. In particular, you will be able to read and write R code such as the one below, which produces the figure shown beneath the code.&lt;/p&gt;
+&lt;p&gt;Lecture slides: &lt;a href=&#34;/3-Visualization-I/3-Visualization-I.html&#34;&gt;&lt;strong&gt;Visualization I&lt;/strong&gt;&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;Today’s exercise: &lt;a href=&#34;/exercises/exercise3.html&#34;&gt;&lt;strong&gt;Web Excercise 3&lt;/strong&gt;&lt;/a&gt;&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;ggplot(data = ESS, 
+       mapping = aes(y = imwbcnt, x = factor(eduyrs), weight = pspwght)) +
+  geom_boxplot() +
+  geom_smooth(mapping = aes(group = 1)) +
+  labs(y = &amp;quot;Immigrants make country \n worse place to live&amp;quot;, 
+       x = &amp;quot;Years of Education&amp;quot;) +
+  theme_minimal()&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;img src=&#34;/sessions/3-Visualization-I_files/figure-html/unnamed-chunk-1-1.png&#34; width=&#34;768&#34; /&gt;&lt;/p&gt;
+&lt;div id=&#34;homework-and-further-readings&#34; class=&#34;section level2&#34;&gt;
+&lt;h2&gt;Homework and further readings&lt;/h2&gt;
+&lt;ol style=&#34;list-style-type: decimal&#34;&gt;
+&lt;li&gt;Finish web exercise 1 through 3.&lt;/li&gt;
+&lt;/ol&gt;
+&lt;/div&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>

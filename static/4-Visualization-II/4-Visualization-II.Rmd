@@ -63,7 +63,7 @@ ESS <- read_spss("ESS10.sav")
 ```
 
 ```{r include = FALSE}
-# Import the ESS round 9 data via the API
+# Load previously download ESS round 10 data
 ESS_raw <- read_spss("./../../assets/ESS10.sav")
 ```
 

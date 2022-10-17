@@ -54,7 +54,7 @@ This lecture introduces you to the basics of "the grammar of graphics", the guid
 
 Lecture slides: [**Visualization I**](/3-Visualization-I/3-Visualization-I.html)
 
-Today's exercise: [**Web Excercise 3**](/exercises/exercise3.html)
+Exercise: [**Web Excercise 3**](/exercises/exercise3.html)
 
 ```{r fig.width = 8, fig.height = 3.5}
 ggplot(data = ESS, 
@@ -66,6 +66,6 @@ ggplot(data = ESS,
   theme_minimal()
 ```
 
-## Homework and further readings
+## Homework
 1. Finish web exercise 1 through 3.
 

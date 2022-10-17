@@ -85,8 +85,8 @@ ggplot(data = ESS_cntry, mapping = aes(y = wperc_rd, x = reorder(cntry, wperc_rd
 
 Lecture slides: [**Visualization III**](/6-Visualization-III/6-Visualization-III.html)
 
-Today's exercise: [**Web Excercise 6**](/exercises/exercise6.html)
+Exercise: [**Web Excercise 6**](/exercises/exercise6.html)
+
 
 ## Homework
-1. Read Chapter [3 Data Visualization](http://r4ds.had.co.nz/data-visualisation.html).
-2. Read Chapter [7 Exploratory Data Analysis](http://r4ds.had.co.nz/exploratory-data-analysis.html).
+1. Finish web exercise 4 through 6.

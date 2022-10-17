@@ -24,7 +24,7 @@ myBib <- ReadBib("./../../intRo.bib", check = FALSE)
 
 Lecture slides: [**Multiple-OLS**](/8-Multiple-OLS/8-Multiple-OLS.html)
 
-Today's exercise: [**Web Excercise 8**](/exercises/exercise8.html)
+Exercise: [**Web Excercise 8**](/exercises/exercise8.html)
 
 ![](/8-Multiple-OLS/8-Multiple-OLS_files/figure-html/unnamed-chunk-23-1.png)
 

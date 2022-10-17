@@ -24,4 +24,4 @@ But stay with it, you'll get the hang of it soon enough. You will also learn abo
 
 Lecture slides: [**Int_R_oduction**](/1-Hello_R_Vectors/1-Hello_R_Vectors.html)
 
-Today's exercise: [**Web Excercise 1**](/exercises/exercise1.html)
+Exercise: [**Web Excercise 1**](/exercises/exercise1.html)

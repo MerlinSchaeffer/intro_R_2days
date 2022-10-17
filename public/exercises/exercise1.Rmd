@@ -1,0 +1,140 @@
+---
+title: "Web Exercise 1"
+author: Merlin Schaeffer & Friedolin Merhout
+output: webexercises::webexercises_default
+date: 2022-10-19
+publishdate: 2021-01-25
+---
+
+```{r setup, include = FALSE}
+options(htmltools.dir.version = FALSE, servr.interval = 0.5, width = 115, digits = 2)
+knitr::opts_chunk$set(
+  collapse = TRUE, message = FALSE, 
+  warning = FALSE, cache = FALSE,
+  comment = "#", strip.white = TRUE)
+
+library(webexercises)
+library(tidyverse)
+
+options(htmltools.dir.version = FALSE, servr.interval = 0.5, width = 115, digits = 2)
+knitr::opts_chunk$set(
+  collapse = TRUE, message = FALSE, 
+  warning = FALSE, cache = FALSE,
+  comment = "#", strip.white = TRUE)
+
+# Concatenate argument "x" to a factor and give it a
+# comprehensive list "levels" of all potential categories.
+conti <- factor(
+  x = c("Europe", "Africa", "Africa", "Asia", "S.America"),
+  levels = c("Africa", "Asia", "Australia",
+             "Europe", "N.America", "S.America")
+)
+
+# Recode conti to Danish. Watch out: first the new, then the old value...
+conti <- fct_recode(conti,
+                    "Europa" = "Europe",
+                    "Afrika" = "Africa",
+                    "Asien" = "Asia",
+                    "Suedamerika" = "S. America",
+                    "Nordamerika" = "N. America",
+                    "Australien" = "Australia") 
+
+conti <- fct_drop(conti) # Drop unused levels.
+```
+
+To work on these exercises, it is best you create a new R Script "Exercise1.R" that contains your solutions, so you don't intermix exercises with lecture notes.
+
+1. Why does the code below throw an error? Explain, and then solve the problem.
+```{r error = TRUE}
+Oh_a_new_object <- 10
+0h_a_new_object
+```
+`r hide("R solution -> dont' peak to early ;) !")`
+```{r}
+Oh_a_new_object <- 10
+Oh_a_new_object # Exchange the number 0 for the letter O #<<
+```
+`r unhide()`
+
+2. Create an object `another_object2` that contains whole numbers from 123 to 131. The name of the function allowing you to do that is: `r fitb("seq()", width = "5")` and the assignment operator that creates the object is `r fitb("<-", width = "2")`.
+`r hide("R solution -> dont' peak to early ;) !")`
+```{r}
+(another_object2 <- seq(123, 131))
+```
+`r unhide()`
+
+3. Let R evaluate which of `another_object2`'s elements is larger than 128 and smaller than 130.
+`r hide("R solution -> dont' peak to early ;) !")`
+```{r}
+another_object2 > 128 & another_object2 < 130
+```
+`r unhide()`
+
+4. Add 2 to each element of another_object2 and check again which of its elements is larger than 128 and smaller than 130.
+`r hide("R solution -> dont' peak to early ;) !")`
+```{r}
+another_object2 <- another_object2 + 2
+another_object2 > 128 & another_object2 < 130
+```
+`r unhide()`
+
+5. Create an object `another_textobject` that contains the sentence: "I am just another sentence."
+`r hide("R solution -> dont' peak to early ;) !")`
+```{r}
+(another_textobject <- "I am just another sentence.")
+```
+`r unhide()`
+
+6. What does R return if you try to multiply `another_textobject` by 3?
+```{r echo = FALSE}
+another_textobject <- "I am just another sentence."
+```
+`r mcq(c(answer = "non-numeric argument to binary operator", "type mismatch", "'I am just another sentence.' 'I am just another sentence.' 'I am just another sentence.'"))`
+`r hide("R solution -> dont' peak to early ;) !")`
+```{r error = TRUE}
+another_textobject <- another_textobject * 3
+```
+`r unhide()`
+
+7. Use the `rep()` function to repeat `another_textobject` five times. The argument to which you need to supply the value 5 is called `r fitb("times", width = "5")`.
+`r hide("R solution -> dont' peak to early ;) !")`
+```{r}
+rep(another_textobject, times = 5)
+```
+`r unhide()`
+
+8. Use the `rep()` function to repeat `another_object2` three times and assign it to a new object called `another_object2_triple`. Then use the `length()` function to find out the number of elements in the object. How many are there? `r fitb("27", width = "2")`
+`r hide("R solution -> dont' peak to early ;) !")`
+```{r}
+another_object2_triple <- rep(another_object2, times = 3)
+
+length(another_object2_triple)
+```
+`r unhide()`
+
+9. Use the `rep()` function to repeat *each element* of `another_object2` three times. The argument to which you need to supply the value 3 is called `r fitb("each", width = "4")`.
+`r hide("R solution -> dont' peak to early ;) !")`
+```{r}
+rep(another_object2, each = 3)
+```
+`r unhide()`
+
+10. Create a numeric vector that runs from 1 to 10 and let R print it. To create and print it right away, you need to enclose your statement with `r fitb("()", width = "2")`.
+`r hide("R solution -> dont' peek to early ;) !")`
+```{r}
+(my_numeric_vector <-seq(1, 10))
+```
+`r unhide()`
+
+11. Now access the 8th element of the vector you just created and multiply it by 4. Then, access the 2nd element and add 7 to it. To access single elements of a vector, you need to use its index via `r fitb("[]", width = "2")`. _Bonus:_ Can you assign these processed values to their respective place in the vector?
+`r hide("R solution -> dont' peek to early ;) !")`
+```{r}
+my_numeric_vector[8] * 4 
+my_numeric_vector[2] + 7 
+
+my_numeric_vector[8] <- my_numeric_vector[8] * 4 
+my_numeric_vector[2] <- my_numeric_vector[2] + 7 
+
+my_numeric_vector
+```
+`r unhide()`

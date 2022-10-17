@@ -8,9 +8,9 @@ publishdate: 2022-10-20
 
 
 
-<p>This lecture introduces you to the basics of “the grammar of graphics”, the guiding idea of the R package ggplot2. You will gain a basic understanding of how to visualize your data for exploratory purposes. In particular, you will be able to read and write R code such as the one below, which produces the figure shown beneath the code.</p>
+<p>This lecture refreshes and builds up on yesterday’s introduction to the basics of “the grammar of graphics”. Specifically, you will learn how to deal with overplotting due to discrete responses, represent grouping variables in intuitive ways, and export your resulting visualizations.</p>
 <p>Lecture slides: <a href="/4-Visualization-II/4-Visualization-II.html"><strong>Visualization II</strong></a></p>
-<p>Today’s exercise: <a href="/exercises/exercise4.html"><strong>Web Excercise 4</strong></a></p>
+<p>Exercise: <a href="/exercises/exercise4.html"><strong>Web Excercise 4</strong></a></p>
 <pre class="r"><code>ggplot(data = ESS, 
        mapping = aes(y = imwbcnt, x = factor(eduyrs), weight = pspwght)) +
   geom_boxplot() +

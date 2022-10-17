@@ -16,7 +16,7 @@ knitr::opts_chunk$set(
 
 Lecture slides: [**Bivariate OLS**](/7-Bivariate-OLS/7-Bivariate-OLS.html)
 
-Today's exercise: [**Web Excercise 7**](/exercises/exercise7.html)
+Exercise: [**Web Excercise 7**](/exercises/exercise7.html)
 
 ![](/7-Bivariate-OLS/7-Bivariate-OLS_files/figure-html/OLS-1.png)
 

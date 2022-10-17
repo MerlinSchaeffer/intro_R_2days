@@ -1,0 +1,79 @@
+---
+title: "Web Exercise 3"
+author: Merlin Schaeffer & Friedolin Merhout
+output: webexercises::webexercises_default
+date: 2022-10-19
+publishdate: 2021-02-12
+---
+
+```{r setup, include = FALSE}
+options(htmltools.dir.version = FALSE, servr.interval = 0.5, width = 115, digits = 2)
+knitr::opts_chunk$set(
+  collapse = TRUE, message = FALSE, 
+  warning = FALSE, cache = FALSE,
+  comment = "#", strip.white = TRUE)
+
+library(webexercises)
+```
+
+Some preparation:
+```{r setup2, include = FALSE}
+options(htmltools.dir.version = FALSE, servr.interval = 0.5, width = 115, digits = 2)
+knitr::opts_chunk$set(
+  collapse = TRUE, message = FALSE, fig.align='center',
+  warning = FALSE, cache = FALSE, fig.retina = 2,
+  comment = "#", strip.white = TRUE)
+
+# Add packages to library
+library(tidyverse) # Add the tidyverse package to my current library.
+library(haven) # Handle labelled data.
+library(ggplot2) # Allows us to create nice figures.
+library(webexercises) # Create interactive web pages that students can use in self-guided learning.
+```
+
+```{r include  = FALSE}
+# Import the ESS round 10
+ESS <- read_spss("./../../assets/ESS10.sav")
+```
+
+```{r}
+ESS <- transmute(ESS, # Recode several variables & keep only the recoded ones (i.e., transmute vs mutate). #<<
+                 idno = zap_labels(idno),
+                 # Make the following variables factors:
+                 cntry = as_factor(cntry) %>% fct_drop(), 
+                 agea = zap_labels(agea),
+                 pspwght = pweight*dweight)
+```
+
+```{r include = FALSE}
+ESS_keep <- ESS
+```
+
+```{r}
+ESS <- dplyr::filter(ESS,
+                     # Only respondents from Eastern European countries:
+                     (cntry %in% c("Slovakia", "Hungary", "Czechia", "Slovenia"))
+)
+
+# Casewise deletion of missing values
+ESS <- drop_na(ESS)
+```
+
+1. Get the ggplot2 [cheat sheet](https://www.rstudio.com/resources/cheatsheets/), and check out the [reference page of ggplot2](https://ggplot2.tidyverse.org/reference/). Look at geoms for univariate (one variable) figures. Make an appropriate (weighted) figure that describes the distribution of `cntry`. Which country (Slovakia, Hungary, Czechia, or Slovenia) has the largest number of observations? `r mcq(c("Slovenia", answer = "Czechia", "Hungary", "Slovakia"))`
+    + Throughout all figures, learn how to use `labs()` (i.e., learn it from the [reference page of ggplot2](https://ggplot2.tidyverse.org/reference/)).
+`r hide("R solution -> dont' peek to early ;) !")`
+```{r out.width='85%', fig.width = 6, fig.height = 3}
+ggplot(data = ESS) +
+  geom_bar(aes(x = cntry, weight = pspwght)) +
+  labs(x = "Country of interview")
+```
+`r unhide()`
+
+2. Make an appropriate (weighted) figure that describes the distribution of `agea`. Across all four countries, are there more or less than 20 respondents who are older than 100? `r mcq(c("More", answer = "Less"))`
+`r hide("R solution -> dont' peek to early ;) !")`
+```{r out.width='85%', fig.width = 6, fig.height = 3}
+ggplot(data = ESS) +
+  geom_histogram(aes(x = agea, weight = pspwght)) +
+  labs(x = "Age")
+```
+`r unhide()`

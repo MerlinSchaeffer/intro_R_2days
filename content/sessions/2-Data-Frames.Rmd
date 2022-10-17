@@ -24,4 +24,4 @@ In this session you will also learn how to access specific variables or cases fr
 
 Lecture slides: [**Data Frames and Tibbles**](/2-Data-Frames/2-Data-Frames.html)
 
-Today's exercise: [**Web Excercise 2**](/exercises/exercise2.html)
+Exercise: [**Web Excercise 2**](/exercises/exercise2.html)

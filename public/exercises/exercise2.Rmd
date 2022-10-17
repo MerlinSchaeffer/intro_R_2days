@@ -1,0 +1,180 @@
+---
+title: "Web Exercise 2"
+author: Merlin Schaeffer & Friedolin Merhout
+output: webexercises::webexercises_default
+date: 2022-10-19
+publishdate: 2021-01-25
+---
+
+```{r setup, include = FALSE}
+options(htmltools.dir.version = FALSE, servr.interval = 0.5, width = 115, digits = 2)
+knitr::opts_chunk$set(
+  collapse = TRUE, message = FALSE, 
+  warning = FALSE, cache = FALSE,
+  comment = "#", strip.white = TRUE)
+
+library(webexercises)
+library(tidyverse)
+
+options(htmltools.dir.version = FALSE, servr.interval = 0.5, width = 115, digits = 2)
+knitr::opts_chunk$set(
+  collapse = TRUE, message = FALSE, 
+  warning = FALSE, cache = FALSE,
+  comment = "#", strip.white = TRUE)
+```
+
+
+1. Create a factor vector called `conti` with the five observations: "Europe", "Africa", "Africa", "Asia", "S.America" and the six levels: "Africa", "Asia", "Australia", "Europe", "N.America", "S.America". Make sure to print it right away.
+`r hide("R solution -> dont' peak to early ;) !")`
+```{r}
+(conti <- factor(
+  x = c("Europe", "Africa", "Africa", "Asia", "S.America"),
+  levels = c("Africa", "Asia", "Australia",
+             "Europe", "N.America", "S.America")
+))
+```
+`r unhide()`
+
+2. Recode the continent variable into your native language or another language you know. To do that, we use the `r fitb("fct_recode()", width = "10")` function from the forcats package.
+`r hide("R solution -> dont' peak to early ;) !")`
+```{r error = TRUE}
+# Recode conti to French.
+# Watch out: first the new, then the old value...
+conti <- fct_recode(conti, 
+                    "Afrika" = "Africa",
+                    "Asien" = "Asia",
+                    "Australien" = "Australia",
+                    "Europa" = "Europe",
+                    "Nordamerika" = "N.America",
+                    "Suedmerika" = "S.America") 
+
+table(conti)
+```
+`r unhide()`
+
+3. Use `forcats` functionality to add Atlantis as another level. If you don't know where to start, check out the `forcats` cheat sheet [here](https://raw.githubusercontent.com/rstudio/cheatsheets/master/factors.pdf). To do this, we need the `r fitb("fct_expand()", width = "12")` function.
+`r hide("R solution -> dont' peak to early ;) !")`
+```{r error = TRUE}
+conti <- fct_expand(conti, "Atlantis")
+
+table(conti)
+```  
+`r unhide()`
+
+4. Reorder the factor vector such, that Atlantis is shown first. Now we need the `r fitb("fct_relevel()", width = "13")` function.
+`r hide("R solution -> dont' peak to early ;) !")`
+```{r error = TRUE}
+conti <- fct_relevel(conti, "Atlantis")
+
+table(conti)
+```  
+`r unhide()`
+
+5. Import the ESS round 10 data.
+`r hide("R solution -> dont' peak to early ;) !")`
+```{r eval = FALSE}
+# Add packages to library
+library(tidyverse) # Add the tidyverse package to my current library.
+library(haven) # Handle labelled data.
+
+# Import the ESS round 10
+ESS <- read_spss("ESS10.sav")
+```
+
+```{r include = FALSE}
+# Add packages to library
+library(tidyverse) # Add the tidyverse package to my current library.
+library(haven) # Handle labelled data.
+
+# Import the ESS round 10
+ESS <- read_spss("./../../assets/ESS10.sav")
+```
+`r unhide()`
+
+6. Keep only a person and a country identifier, the post-stratification weights, `eduyrs`, `agea`, `dscrgrp`, and three variables indicating homophobia `freehms`, `hmsfmlsh`, `hmsacld.` The function that allows you to do that is called `r fitb("select()", width = "8")`.
+`r hide("R solution -> dont' peak to early ;) !")`
+```{r}
+(ESS <- select(ESS, idno, cntry, pweight, dweight,
+               eduyrs, agea, dscrgrp, 
+               freehms, hmsfmlsh, hmsacld))
+```
+`r unhide()`
+
+7. Change the variables into numeric and factors appropriately. For that, you need the two functions `r fitb("zap_labels()", width = "12")` for numeric and `r fitb("as_factor()", width = "11")` for categorical variables. Also use `fct_drop()` to drop factor levels from `ctnry` that have no observations yet.
+`r hide("R solution -> dont' peak to early ;) !")`
+```{r}
+ESS <- mutate(ESS,
+              idno = zap_labels(idno),
+              cntry = as_factor(cntry) %>% fct_drop(),
+              pspwght = pweight*dweight,
+              eduyrs = zap_labels(eduyrs),
+              agea = zap_labels(agea),
+              dscrgrp = as_factor(dscrgrp),
+              freehms = zap_labels(freehms),
+              hmsfmlsh = zap_labels(hmsfmlsh),
+              hmsacld = zap_labels(hmsacld)
+)
+```
+`r unhide()`
+
+8. Top code `eduyrs` to maximum 21 and bottom code it to minimum 9 years. Then recode `dscrgrp` to "Yes" for all persons older than 80 in Bulgaria, and to "No" for all respondents with more than average years of education in France. Use the `table()` function to show the frequency of `dscrgrp` by country. After the recode, `r fitb("324", width = "3")` respondents from Bulgaria answered that they belong to a discriminated minority, and `r fitb("136", width = "3")` from France.
+`r hide("R solution -> dont' peak to early ;) !")`
+```{r error = TRUE}
+ESS <- mutate(ESS,
+              # Recode to max 21 years of edu.
+              eduyrs = case_when(
+                eduyrs > 21 ~ 21,
+                eduyrs < 9 ~ 9,
+                TRUE ~ as.numeric(eduyrs)
+              ),
+              dscrgrp = case_when( # Start complex recode
+                # Older than 80 & Germany ~ "Yes",
+                agea > 80 & cntry == "Bulgaria" ~ "Yes", 
+                # Older than mean & France
+                eduyrs > mean(eduyrs, na.rm = TRUE) & cntry == "France" ~ "No",
+                # All others ~ as before, need to make it character for type consistency.
+                TRUE ~ as.character(dscrgrp) 
+              ),
+              # Now make it a factor again.
+              dscrgrp = factor(dscrgrp) 
+)
+
+# ... don't forget to check your recode for bugs!
+
+# Absolute frequencies cross-table.
+table(ESS$dscrgrp, ESS$cntry) # Israel, no surprise 20% are Arab in this contested state.
+```
+`r unhide()`
+
+9. Now check out `prop.table()` and find out how to use it. In which country do most people report discrimination (apart from Germany and France, which we messed up ...)?
+
+`r mcq(c("Czechia followed by Croatia", "Croatia followed by Hungary", answer = "Bulgaria followed by Finland", "Hungary followed by Bulgaria"))`
+
+`r hide("R solution -> dont' peak to early ;) !")`
+```{r}
+# Relative frequencies cross-table.
+prop.table(table(ESS$dscrgrp, ESS$cntry), margin = 1) # Relative frequencies. With 24.6% it is still Israel, followed by the UK.
+```
+`r unhide()`
+
+10. Show the frequency table only for respondents who are older than 45.
+`r hide("R solution -> dont' peak to early ;) !")`
+```{r error = TRUE}
+# Use the index to select cases
+prop.table(table(ESS$cntry[ESS$agea > 45], ESS$dscrgrp))
+
+# You need to make sure to select the same cases for both variables!
+prop.table(table(ESS$cntry[ESS$agea > 45], ESS$dscrgrp[ESS$agea > 45]))
+```
+`r unhide()`
+
+11. How did you filter the cases; would there have been another way?
+`r hide("R solution -> dont' peak to early ;) !")`
+```{r error = TRUE}
+# Use filter() to generate a new tibble that contains only cases who are older than 45.
+ESS_46Plus <- filter(ESS, agea > 45)
+
+prop.table(table(ESS_46Plus$cntry, ESS_46Plus$dscrgrp))
+```
+`r unhide()`
+
