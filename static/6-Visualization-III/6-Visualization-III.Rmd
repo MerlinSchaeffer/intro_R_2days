@@ -1,5 +1,5 @@
 ---
-title: "Intro to R for Social Data Science"
+title: "Intro to R"
 subtitle: "6 Visualization 3"
 author: "Merlin Schaeffer & Friedolin Merhout <br> Department of Sociology"
 date: "`r Sys.Date()`"

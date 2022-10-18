@@ -1,5 +1,5 @@
 ---
-title: "Intro to R for Social Data Science"
+title: "Intro to R"
 subtitle: "9 Interaction Effects and Polynomials"
 author: "Merlin Schaeffer & Friedolin Merhout <br> Department of Sociology"
 date: "`r Sys.Date()`"

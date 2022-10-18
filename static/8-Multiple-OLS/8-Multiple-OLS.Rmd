@@ -49,7 +49,7 @@ library(ggplot2) # Allows us to create nice figures.
 library(estimatr) # Allows us to estimate (cluster-)robust standard errors.
 library(texreg) # Allows us to make nicely-formatted Html & Latex regression tables. #<<
 library(broom) # Allows us to turn parts of model objects into tibbles. #<<
-# library(modelr) # Model predictions (can also do resampling).
+library(modelr) # Model predictions (can also do resampling).
 ```
 
 ```{r include = FALSE}
@@ -365,40 +365,17 @@ htmlreg(list(ols1, ols4, ols5), include.ci = FALSE, doctype = FALSE,
 
 
 ---
-
-# Exporting regression tables
-
-```{r}
-# Regression table of model objects ols1, ols4, and ols5; 
-# report standard errors, not confidence intervals.
-texreg::htmlreg(list(ols1, ols4, ols5), 
-        include.ci = FALSE, 
-        custom.coef.names = c("Intercept", "News consumption (hours)", "Retired", "Women", 
-                              "Estonia", "Finland", "Sweden"),
-        file = "MyOLSModels.doc") # Word table
-texreg::htmlreg(list(ols1, ols4, ols5), 
-        include.ci = FALSE, 
-        custom.coef.names = c("Intercept", "News consumption (hours)", "Retired", "Women",
-                              "Estonia", "Finland", "Sweden"),
-        file = "MyOLSModels.html") # Html table (also for Excel)
-texreg::texreg(list(ols1, ols4, ols5), 
-       include.ci = FALSE, 
-        custom.coef.names = c("Intercept", "News consumption (hours)", "Retired", "Women",
-                              "Estonia", "Finland", "Sweden"),
-       file =  "MyOLSModels.tex") # Latex table 
-```
-
-
----
 # Further processing of model results
 
-`broom:tidy()` turns a model object into a tibble containing coefficients and inference stats.
+ We can also turn multiple regression model results into a tibble containing coefficients and inferential statistics using `broom:tidy()`.
 ```{r}
 tidy(ols5) 
 ```
 
 ---
-# Regression results are data too!
+# Remember: regression results are data too.
+
+And then process the data in our tibble to make it presentable.
 
 ```{r out.width='50%', fig.align='center', dpi = 350, fig.height = 3, fig.width = 5}
 (plotdata <- ols5 %>% tidy() %>% # Use the ols5 model object, then tidy it, then
@@ -418,7 +395,7 @@ tidy(ols5)
 
 ---
 class: clear
-# Coefficient plots .font60[A good alternative to regression tables]
+# Coefficient plots .font60[Great for multiple regression results]
 
 .panelset[
 .panel[.panel-name[Plot]
@@ -434,7 +411,9 @@ ggplot(data = plotdata,
   coord_flip() + 
   theme_minimal() +
   # Axis title: greek beta.
-  labs(y = expression(beta), 
+  labs(title = "Coefficients from multiple OLS regression",
+       subtitle = "predicting perception of immigrants' societal impact",
+       y = expression(beta), 
        x = "") +
   theme(legend.position="bottom",
         legend.title=element_blank())
@@ -534,12 +513,158 @@ ggplot(data = plotdata,
 ```
 ]]
 
+
+---
+# Model predictions .font60[From multiple regression]
+
+.panelset[
+.panel[.panel-name[The multiple OLS model]
+.push-left[
+**Step 1**: Fit multiple OLS model to (survey) data.
+```{r}
+ols <- lm_robust(
+  formula = imwbcnt ~ nwspol_hrs + rtrd + gndr + cntry,
+  data = ESS, weights = pspwght)
+```
+]
+.push-right[
+```{r Coefplot2, out.width='100%', fig.height = 4, fig.width = 6, echo = FALSE}
+plotdata2 <- ols %>%
+  tidy() %>% # Turn results into a tibble,
+  mutate( # Rename variables for the plot.
+    term = fct_recode(factor(term), # Recode predictor names, then
+                            "Intercept" = "(Intercept)",
+                            "News consumption (hours)" = "nwspol_hrs",
+                            "Retired" = "rtrdMarked",
+                            "Women" = "gndrFemale",
+                            "Estonia" = "cntryEstonia",
+                            "Finland" = "cntryFinland",
+                            "Sweden" = "cntryHungary"),) %>%
+  filter(term != "Intercept")
+
+
+ggplot(data = plotdata2, aes(y = estimate, 
+                            # Order by effect size
+                            x = reorder(term, estimate))) +
+  geom_hline(yintercept = 0, color = "red", lty = "dashed") +
+  # Point with error-bars,
+  geom_pointrange(aes(min = conf.low, max = conf.high)) +
+  coord_flip() + # Flip Y- & X-Axis,
+  labs(
+    title = "Coefficients from multiple OLS regression",
+    subtitle = "predicting perception of immigrants' societal impact",
+    x = "",
+    # Write Greek beta into axis title.
+    y = expression("Estimate of"~beta)) +
+  theme_minimal()
+```
+]]
+.panel[.panel-name[Predictions]
+.push-left[
+**Step 2**: Generate a synthetic tibble with theoretically-informative values. `modelr::data_grid()` generates a tibble with all combinations of the provided variables.
+
+```{r}
+(pred_data <- ESS %>%
+   # Generate theoretically-informative 
+   # synthetic tibble for predictions.
+   data_grid(nwspol_hrs = seq_range(nwspol_hrs, 20), #<<
+             rtrd = names(sort(table(ESS$rtrd), decreasing = TRUE))[1], #<<
+             gndr = names(sort(table(ESS$gndr), decreasing = TRUE))[1], #<<
+             cntry = names(sort(table(ESS$cntry), decreasing = TRUE))[1]) #<<
+)
+```
+]
+.push-right[
+**Step 3**: Compute predictions from model for synthetic data. Given data, what $\hat{y}$ does our model predict?
+
+```{r}
+(pred_data <- predict( #<<
+  ols, newdata = pred_data, #<<
+  interval = "confidence", level = 0.95)$fit %>% #<<
+   as_tibble() %>% # Turn into a tibble, then
+   bind_cols(pred_data, .)) # Add to the synthetic data.
+```
+]]
+.panel[.panel-name[Visualization]
+.push-left[
+**Step 4**: Visualize predicted values.
+```{r Predplot, fig.show = 'hide'}
+pred_data %>% 
+  ggplot(aes(y = fit, x = nwspol_hrs)) +
+  geom_ribbon(aes(ymin = lwr, ymax = upr), alpha = 0.5) +
+  geom_line() +
+  labs(
+    title = "Predictions for immigrants perceived societal impact",
+    x = "By hours of political news consumption",
+    y = "Predicted perceived impact") +
+  theme_minimal()
+```
+]
+.push-right[
+```{r ref.label = "Predplot", out.width='100%', fig.height = 4, fig.width = 6, echo = FALSE}
+```
+]]]
+
+
+---
+# Model predictions .font60[Varying multiple predictors]
+
+.panelset[
+.panel[.panel-name[Predictions]
+.push-left[
+Generate a synthetic tibble with theoretically-informative values varying two predictors. `modelr::data_grid()` generates a tibble with all combinations of the provided variables.
+
+```{r}
+(pred_data <- ESS %>%
+   # Generate theoretically-informative 
+   # synthetic tibble for predictions.
+   data_grid(nwspol_hrs = seq_range(nwspol_hrs, 20), #<<
+             rtrd = names(table(ESS$rtrd)), #<<
+             gndr = names(sort(table(ESS$gndr), decreasing = TRUE))[1],
+             cntry = names(sort(table(ESS$cntry), decreasing = TRUE))[1])
+)
+```
+]
+.push-right[
+Compute predictions from model for synthetic data. Given data, what $\hat{y}$ does our model predict?
+
+```{r}
+(pred_data <- predict(
+  ols, newdata = pred_data,
+  interval = "confidence", level = 0.95)$fit %>%
+   as_tibble() %>% # Turn into a tibble, then
+   bind_cols(pred_data, .)) # Add to the synthetic data.
+```
+]]
+.panel[.panel-name[Visualization]
+.push-left[
+Visualize predicted values.
+```{r Predplot2, fig.show = 'hide'}
+pred_data %>% 
+  ggplot(aes(y = fit, x = nwspol_hrs,
+             color = rtrd, fill = rtrd)) +
+  geom_ribbon(aes(ymin = lwr, ymax = upr), alpha = 0.5) +
+  geom_line() +
+  labs(
+    title = "Predictions for immigrants perceived societal impact",
+    x = "By hours of political news consumption",
+    y = "Predicted perceived impact",
+    color = "Retirement\nstatus",
+    fill = "Retirement\nstatus") +
+  theme_minimal()
+```
+]
+.push-right[
+```{r ref.label = "Predplot2", out.width='100%', fig.height = 4, fig.width = 6, echo = FALSE}
+```
+]]]
+
 ---
 class: inverse
 # General lessons
 
 1. Multiple linear OLS models allow us to specify more complex theorized data generating processes. We specify additional predictors with `+` on the right-hand side of our model formula.
-2. R allows us to communicate our model results efficiently via regression tables (cf. `texreg` package) and coefficient plots.
+2. R allows us to communicate our model results efficiently via coefficient plots and prediction plots.
 3. Everything in R is an object and you can always further process it. For instance, regression results are also just data, which you can visualize, table, join to other data, etc.
 
 ---
@@ -548,5 +673,4 @@ class: inverse
 
 1. `estimatr::lm_robust()` estimates (bivariate and multiple) OLS regression with heteroscedasticity-robust standard errors (or cluster-robust standard errors if you wish).
 2. `broom::tidy()`: Turn model results into tibble for further processing.
-3. `textreg::texreg()`, `textreg::htmlreg()`, and `textreg::screenreg()`: Create nicely-formatted (html, Word, ASCII, or Latex) tables of (one or several) regression models.
 4. `dplyr::bind_rows()`: Add the rows of a data frames to another data frame that has equal columns/variables.
