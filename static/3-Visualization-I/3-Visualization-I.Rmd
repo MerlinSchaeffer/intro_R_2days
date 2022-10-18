@@ -297,7 +297,7 @@ layout:true
 
 ---
 
-If you want to map or connect an aesthetic to variable, you need to specify it _within_ `aes()`.
+If you want to map or connect an aesthetic to a variable, you need to specify it _within_ `aes()`.
 
 ```{r out.width='80%', fig.width = 9, fig.height = 4}
 ggplot(data = ESS) +

@@ -481,6 +481,8 @@ You will use the assignment operator a lot. Instead of typing it out every time,
 
 - Windows: `Alt` + `-`
 - Mac OS: `Option` + `-`
+--
+ - More useful shortcuts: Tools &gt; Keyboard Shortcuts Help
 
 --
 
@@ -706,7 +708,7 @@ my_character_vector[c(1,2,5)]
 
 Strings are at the heart of many digital data sources and we can work with them using string functions and regular expressions. 
 
-This is unfortunately beyond our scope, but if you are interested, check out [this tutorial](https://www.storybench.org/getting-started-stringr-textual-analysis-r/) and [this GESIS workshop](https://training.gesis.org/?site=pDetails&amp;child=full&amp;pID=0x31B571BACE1F4C769B22CE82CCDC615C).
+This is unfortunately beyond our scope, but if you are interested, check out [this tutorial](https://www.storybench.org/getting-started-stringr-textual-analysis-r/) and [upcoming GESIS workshops in Computational Social Science](https://www.gesis.org/en/gesis-training/what-we-offer/fall-seminar-in-computational-social-science).
 ]
 
 .push-right[
@@ -896,7 +898,7 @@ layout:false
 ```r
 # Get the computers current date
 Sys.Date() 
-# [1] "2022-10-17"
+# [1] "2022-10-18"
 # Check the data type using `typeof()`
 typeof(Sys.Date())
 # [1] "double"
@@ -907,8 +909,8 @@ typeof(Sys.Date())
 # Evaluate the logical statement that
 # today is smaller (i.e., before) 
 # than the end of the year
-Sys.Date() &lt; "2021-12-31"
-# [1] FALSE
+Sys.Date() &lt; "2022-12-31"
+# [1] TRUE
 ```
 
 Date vectors are complex, because time is not metric `\(\rightarrow\)` advanced R course.
@@ -939,7 +941,7 @@ Date vectors are complex, because time is not metric `\(\rightarrow\)` advanced 
 # [1] 1 2 3 4
 # Replace the third element with the string "test"
 another_numeric_vector[3] &lt;- "test" 
-another_numeric_vector # print x4
+another_numeric_vector # print
 # [1] "1"    "2"    "test" "4"
 # What type of object is another_numeric_vector?
 typeof(another_numeric_vector)
@@ -949,6 +951,7 @@ as.numeric(another_numeric_vector)
 # [1]  1  2 NA  4
 ```
 ]
+
 
 ---
 # NA: Not Available
@@ -1032,7 +1035,7 @@ Remember that, R's versatility comes from its support of different types and str
 
 ### Classes
 
-In general, functions expect specific classes of objects. If you pass them an object of a class it cannot handle, you will likely encounter en error:
+In general, functions expect specific classes of objects. If you pass them an object of a class it cannot handle, you will likely encounter an error:
 
 
 ```r
@@ -1047,6 +1050,10 @@ alphabet &lt;- seq(from = alphabet_limits[1],
                 to = alphabet_limits[2])
 # Error in seq.default(from = alphabet_limits[1], to = alphabet_limits[2]): 'from' must be a finite number
 ```
+
+--
+
+.center[.alert[Errors can be cryptic but are usually meant to be helpful - read them closely.]]
 
 ---
 # First steps with R .font60[Data types and structures, cntd.]
@@ -1066,19 +1073,19 @@ class(seq)
 
 --
 
-.center[.alert[Avoid naming your objects like existing functions.]]
+.center[.alert[Avoid naming your objects like existing functions - pay attention to RStudio's autocomplete.]]
 
 ---
 # Getting help
 
-R has a steep learning curve and which can, at times, be simply frustrating. You can access the documentation for a specific function by writing: `?&lt;NAME_OF_FUNCTION&gt;`.
+R has a steep learning curve which can, at times, get frustrating. But don't despair. Each function usually comes with documentation, which you can access by typing `?&lt;NAME_OF_FUNCTION&gt;` into the console.
 
 
 ```r
 ?seq()
 ```
 
-You can find further useful links under [Resources](https://merfriedo-intro-r-2days.netlify.app/resources/) on the course website.
+You can find further useful links under [Resources](https://merfriedo-intro-r-3days.netlify.app/resources/) on the course website.
 
 ---
 class: inverse
