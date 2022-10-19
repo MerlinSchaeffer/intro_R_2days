@@ -91,11 +91,10 @@ ESS <- read_spss("./../../assets/ESS10.sav")
 ```
 `r unhide()`
 
-6. Keep only a person and a country identifier, the post-stratification weights, `eduyrs`, `agea`, `dscrgrp`, and three variables indicating homophobia `freehms`, `hmsfmlsh`, `hmsacld.` The function that allows you to do that is called `r fitb("select()", width = "8")`.
+6. Keep only a person and a country identifier, `eduyrs`, `agea`, `dscrgrp`, and three variables indicating homophobia `freehms`, `hmsfmlsh`, `hmsacld.` The function that allows you to do that is called `r fitb("select()", width = "8")`.
 `r hide("R solution -> dont' peak to early ;) !")`
 ```{r}
-(ESS <- select(ESS, idno, cntry, pweight, dweight,
-               eduyrs, agea, dscrgrp, 
+(ESS <- select(ESS, idno, cntry, eduyrs, agea, dscrgrp, 
                freehms, hmsfmlsh, hmsacld))
 ```
 `r unhide()`
@@ -105,8 +104,7 @@ ESS <- read_spss("./../../assets/ESS10.sav")
 ```{r}
 ESS <- mutate(ESS,
               idno = zap_labels(idno),
-              cntry = as_factor(cntry) %>% fct_drop(),
-              pspwght = pweight*dweight,
+              cntry = as_factor(cntry),
               eduyrs = zap_labels(eduyrs),
               agea = zap_labels(agea),
               dscrgrp = as_factor(dscrgrp),
@@ -146,14 +144,14 @@ table(ESS$dscrgrp, ESS$cntry) # Israel, no surprise 20% are Arab in this contest
 ```
 `r unhide()`
 
-9. Now check out `prop.table()` and find out how to use it. In which country do most people report discrimination (apart from Germany and France, which we messed up ...)?
+9. Now check out `prop.table()` and find out how to use it. In which country is the share of people reporting that they belong to a discriminated minority the highest?
 
 `r mcq(c("Czechia followed by Croatia", "Croatia followed by Hungary", answer = "Bulgaria followed by Finland", "Hungary followed by Bulgaria"))`
 
 `r hide("R solution -> dont' peak to early ;) !")`
 ```{r}
 # Relative frequencies cross-table.
-prop.table(table(ESS$dscrgrp, ESS$cntry), margin = 1) # Relative frequencies. With 24.6% it is still Israel, followed by the UK.
+prop.table(table(ESS$dscrgrp, ESS$cntry), margin = 2) # Relative frequencies.
 ```
 `r unhide()`
 
