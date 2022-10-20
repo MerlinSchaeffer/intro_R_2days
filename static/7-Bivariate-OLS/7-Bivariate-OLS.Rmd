@@ -20,8 +20,6 @@ output:
 library(RefManageR)
 library(knitr)
 library(equatiomatic)
-library(dagitty) # Use the dagitty package
-library(ggdag) # Neat visualization of DAGs
 
 options(htmltools.dir.version = FALSE, servr.interval = 0.5, width = 115, digits = 3)
 knitr::opts_chunk$set(

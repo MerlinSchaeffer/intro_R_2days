@@ -22,7 +22,7 @@ output:
 library(RefManageR)
 library(knitr)
 library(tidyverse) # Add the tidyverse package to my current library.
-library(haven) #<< Handle labelled data.
+library(haven) # Handle labelled data.
 library(ggplot2) # Allows us to create nice figures.
 
 options(htmltools.dir.version = FALSE, servr.interval = 0.5, width = 115, digits = 3)
