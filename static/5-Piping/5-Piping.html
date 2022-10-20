@@ -4,7 +4,7 @@
     <title>Intro to R</title>
     <meta charset="utf-8" />
     <meta name="author" content="Merlin Schaeffer &amp; Friedolin Merhout   Department of Sociology" />
-    <meta name="date" content="2022-10-18" />
+    <meta name="date" content="2022-10-20" />
     <script src="libs/header-attrs/header-attrs.js"></script>
     <link href="libs/tile-view/tile-view.css" rel="stylesheet" />
     <script src="libs/tile-view/tile-view.js"></script>
@@ -27,7 +27,7 @@ class: center, middle, inverse, title-slide
 ### Merlin Schaeffer &amp; Friedolin Merhout <br> Department of Sociology
 ]
 .date[
-### 2022-10-18
+### 2022-10-20
 ]
 
 ---
@@ -150,8 +150,10 @@ ESS &lt;- read_spss("ESS10.sav")
       eduyrs &lt; 9 ~ 9, # Recode to min 9 years of edu.
       TRUE ~ zap_labels(eduyrs)) # Make it numeric.
 * ) %&gt;% # finish transmute, then (pipe result into)
-  dplyr::filter(# filter cases from three countries
-      (cntry %in% c("France", "Bulgaria", "Hungary")))
+  dplyr::filter( # filter cases from three countries,
+    (cntry %in% c("France", "Bulgaria", "Hungary"))
+* ) %&gt;% # finish filter, then
+  drop_na() # Casewise deletion.
 ```
 ]
 ---
@@ -160,20 +162,20 @@ ESS &lt;- read_spss("ESS10.sav")
 
 ```r
 ESS
-# # A tibble: 6,544 × 10
+# # A tibble: 6,272 × 10
 #    cntry    gndr   facntr mocntr dscrgrp dscrrlg    rel_discr pspwght  agea eduyrs
 #    &lt;fct&gt;    &lt;fct&gt;  &lt;fct&gt;  &lt;fct&gt;  &lt;fct&gt;   &lt;fct&gt;      &lt;fct&gt;       &lt;dbl&gt; &lt;dbl&gt;  &lt;dbl&gt;
 #  1 Bulgaria Female Yes    Yes    No      Not marked No          0.225    76     12
 #  2 Bulgaria Male   Yes    Yes    No      Not marked No          0.191    43     16
 #  3 Bulgaria Female Yes    Yes    No      Not marked No          0.219    50     16
-#  4 Bulgaria Female Yes    Yes    &lt;NA&gt;    Not marked &lt;NA&gt;        0.208    51     11
-#  5 Bulgaria Male   Yes    Yes    No      Not marked No          0.183    70     17
-#  6 Bulgaria Female Yes    Yes    No      Not marked No          0.206    31     12
-#  7 Bulgaria Male   Yes    Yes    No      Not marked No          0.221    40     12
-#  8 Bulgaria Male   Yes    Yes    No      Not marked No          0.225    48     12
-#  9 Bulgaria Male   Yes    Yes    No      Not marked No          0.216    71     11
-# 10 Bulgaria Male   Yes    Yes    No      Not marked No          0.228    71      9
-# # … with 6,534 more rows
+#  4 Bulgaria Male   Yes    Yes    No      Not marked No          0.183    70     17
+#  5 Bulgaria Female Yes    Yes    No      Not marked No          0.206    31     12
+#  6 Bulgaria Male   Yes    Yes    No      Not marked No          0.221    40     12
+#  7 Bulgaria Male   Yes    Yes    No      Not marked No          0.225    48     12
+#  8 Bulgaria Male   Yes    Yes    No      Not marked No          0.216    71     11
+#  9 Bulgaria Male   Yes    Yes    No      Not marked No          0.228    71      9
+# 10 Bulgaria Female Yes    Yes    No      Not marked No          0.218    71     12
+# # … with 6,262 more rows
 ```
 
 ---
@@ -234,13 +236,13 @@ ESS %&gt;% t.test(agea ~ gndr, data = .)
 # 	Welch Two Sample t-test
 # 
 # data:  agea by gndr
-# t = -5, df = 6277, p-value = 2e-07
+# t = -5, df = 6046, p-value = 5e-07
 # alternative hypothesis: true difference in means between group Male and group Female is not equal to 0
 # 95 percent confidence interval:
-#  -3.32 -1.51
+#  -3.28 -1.44
 # sample estimates:
 #   mean in group Male mean in group Female 
-#                 49.8                 52.2
+#                 49.7                 52.0
 ```
 ]
 
@@ -262,44 +264,49 @@ ESS %&gt;% t.test(agea ~ gndr, data = .)
 ---
 # Reminder .font70[Weights]
 
-*Weights* tell you the probability that an observation should be in the data. For a true random sample, each case of the population has an equal probability to be sampled, and thus weights are 1 for all observations. But for various reasons, some populations tend to be under-sampled. Post-stratification weights try to counterbalance this.
-
 .push-left[
+- A *weight* tells you the probability that an observation should be in the sample. .backgrnote[
+For a true random sample, each case of the population has an equal probability to be sampled. Thus the weight would be 1 for every observation of a sample.]
+-  Some populations tend to be over\under-sampled. Post-stratification weights try to counterbalance this.
+&lt;br&gt;
+
+.content-box-green[.center[
+Why would survey researchers assign lower weights to older people?
+]]]
+
+.push-right[
+.panelset[
+.panel[.panel-name[Plot]
+&lt;img src="5-Piping_files/figure-html/weights_fig-1.png" width="100%" style="display: block; margin: auto;" /&gt;
+]
+.panel[.panel-name[Code]
 
 ```r
 ggplot(data = ESS, 
        mapping = aes(y = pspwght, x = agea)) +
-  geom_smooth() # Smoothed average weight by age.
+  geom_smooth() + # Smoothed average weight by age.
+  labs(y = "Post-stratification weight", x = "Age in years",
+       caption = "Danish European Social Survey 2018") +
+  theme_minimal()
 ```
-
-&lt;img src="5-Piping_files/figure-html/unnamed-chunk-18-1.png" width="80%" style="display: block; margin: auto;" /&gt;
-]
-
-.push-right[
-
-```r
-ggplot(data = ESS, 
-       mapping = aes(y = pspwght, x = eduyrs)) +
-  geom_smooth() # Smoothed average weight by education.
-```
-
-&lt;img src="5-Piping_files/figure-html/unnamed-chunk-19-1.png" width="80%" style="display: block; margin: auto;" /&gt;
-]
+]]]
 
 ---
 # Reminder .font70[Working with weights]
 
-Statistically, we use weights by multiplication. Say in a small imagined patriarchal society, men's votes count twice as much. Here we have a ballot on whether women should be allowed to drive:
+- Statistically, we use weights by multiplication. 
 
 .push-left[
+- Imagine a patriarchal society, where men's votes count twice. Here we have a ballot on whether women should be allowed to drive:
+
 &lt;table&gt;
  &lt;thead&gt;
   &lt;tr&gt;
    &lt;th style="text-align:right;"&gt; i &lt;/th&gt;
-   &lt;th style="text-align:left;"&gt; gender &lt;/th&gt;
-   &lt;th style="text-align:left;"&gt; vote &lt;/th&gt;
-   &lt;th style="text-align:right;"&gt; voted_yes &lt;/th&gt;
-   &lt;th style="text-align:right;"&gt; weight &lt;/th&gt;
+   &lt;th style="text-align:left;"&gt; Gender &lt;/th&gt;
+   &lt;th style="text-align:left;"&gt; Vote &lt;/th&gt;
+   &lt;th style="text-align:right;"&gt; Voted yes &lt;/th&gt;
+   &lt;th style="text-align:right;"&gt; Weight &lt;/th&gt;
   &lt;/tr&gt;
  &lt;/thead&gt;
 &lt;tbody&gt;
@@ -342,9 +349,8 @@ Statistically, we use weights by multiplication. Say in a small imagined patriar
 &lt;/table&gt;
 
 .center[
-.content-box-blue[
-`$$\frac{3}{5} * 100 = 60$$`
-What is the patriarchy-weighted percent of "Yes" votes?
+.content-box-green[
+What is the patriarchy-weighted percent &lt;br&gt; of "Yes"-votes?
 ]
 ]
 ]
@@ -352,18 +358,42 @@ What is the patriarchy-weighted percent of "Yes" votes?
 --
 
 .push-right[
+- Three equivalent ways to the percent of patriarchy-weighted "Yes"-votes:
 
+.panelset[
+.panel[.panel-name[1.]
 
 ```r
-# Three ways to the percent of yes votes:
-
 ((0*2 + 1*2 + 1 + 1 + 0) / 7) * 100 # 1
 # [1] 57.1
-(sum(voted_yes * weight) / sum(weight)) * 100 # 2
-# [1] 57.1
-Hmisc::wtd.mean(x = voted_yes, weights = weight) * 100 # 3
+```
+]
+.panel[.panel-name[2.]
+
+```r
+(sum(`Voted yes` * Weight) / sum(Weight)) * 100 # 2
 # [1] 57.1
 ```
+]
+.panel[.panel-name[3.]
+
+```r
+weighted.mean(x = `Voted yes`, w = Weight) * 100 # 3
+# [1] 57.1
+```
+]]]
+
+---
+# Weights can be amazing!
+
+.push-left[
+&lt;img src="img/Wang1.png" width="100%" style="display: block; margin: auto;" /&gt;
+]
+
+--
+
+.push-right[
+&lt;img src="img/Wang2.png" width="100%" style="display: block; margin: auto;" /&gt;
 ]
 
 ---
@@ -376,21 +406,21 @@ Today, we want to compare countries. `group_by()` will transform your data into 
 # Group my data by country.
 (ESS_cntry &lt;- ESS %&gt;% 
 *  group_by(cntry))
-# # A tibble: 6,544 × 10
+# # A tibble: 6,272 × 10
 # # Groups:   cntry [3]
 #    cntry    gndr   facntr mocntr dscrgrp dscrrlg    rel_discr pspwght  agea eduyrs
 #    &lt;fct&gt;    &lt;fct&gt;  &lt;fct&gt;  &lt;fct&gt;  &lt;fct&gt;   &lt;fct&gt;      &lt;fct&gt;       &lt;dbl&gt; &lt;dbl&gt;  &lt;dbl&gt;
 #  1 Bulgaria Female Yes    Yes    No      Not marked No          0.225    76     12
 #  2 Bulgaria Male   Yes    Yes    No      Not marked No          0.191    43     16
 #  3 Bulgaria Female Yes    Yes    No      Not marked No          0.219    50     16
-#  4 Bulgaria Female Yes    Yes    &lt;NA&gt;    Not marked &lt;NA&gt;        0.208    51     11
-#  5 Bulgaria Male   Yes    Yes    No      Not marked No          0.183    70     17
-#  6 Bulgaria Female Yes    Yes    No      Not marked No          0.206    31     12
-#  7 Bulgaria Male   Yes    Yes    No      Not marked No          0.221    40     12
-#  8 Bulgaria Male   Yes    Yes    No      Not marked No          0.225    48     12
-#  9 Bulgaria Male   Yes    Yes    No      Not marked No          0.216    71     11
-# 10 Bulgaria Male   Yes    Yes    No      Not marked No          0.228    71      9
-# # … with 6,534 more rows
+#  4 Bulgaria Male   Yes    Yes    No      Not marked No          0.183    70     17
+#  5 Bulgaria Female Yes    Yes    No      Not marked No          0.206    31     12
+#  6 Bulgaria Male   Yes    Yes    No      Not marked No          0.221    40     12
+#  7 Bulgaria Male   Yes    Yes    No      Not marked No          0.225    48     12
+#  8 Bulgaria Male   Yes    Yes    No      Not marked No          0.216    71     11
+#  9 Bulgaria Male   Yes    Yes    No      Not marked No          0.228    71      9
+# 10 Bulgaria Female Yes    Yes    No      Not marked No          0.218    71     12
+# # … with 6,262 more rows
 ```
 
 ---
@@ -417,16 +447,16 @@ Today, we want to compare countries. `group_by()` will transform your data into 
 # # A tibble: 3 × 7
 #   cntry        n    wn  n_rd  wn_rd perc_rd wperc_rd
 #   &lt;fct&gt;    &lt;int&gt; &lt;dbl&gt; &lt;dbl&gt;  &lt;dbl&gt;   &lt;dbl&gt;    &lt;dbl&gt;
-# 1 Bulgaria  2718  592.    24   5.10   0.883    0.862
-# 2 France    1977 5570.    54 153.     2.73     2.74 
-# 3 Hungary   1849  831.     3   1.66   0.162    0.200
+# 1 Bulgaria  2595  565.    24   5.10   0.925    0.903
+# 2 France    1902 5358.    52 147.     2.73     2.74 
+# 3 Hungary   1775  799.     3   1.66   0.169    0.208
 ```
 
 ---
 # Reminder .font70[Standard errors &amp; confidence intervals]
 
 .push-left[
-The *standard error* tells you the standard deviation of your result (i.e., mean, percentage, `\(\beta\)` etc.), if we would conduct the same study (i.e., the ESS) over and over again.
+The *standard error* tells you the "standard deviation" of your estimate (i.e., mean, percentage, `\(\beta\)` etc.), if we conducted the same study (i.e., the ESS) over and over again.
 
 Standard error of the mean: `\(\text{SE}(\bar{x}) = \frac{ \text{SD(x)}}{\sqrt{n}}\)`
 
@@ -444,8 +474,6 @@ The *95% Confidence Interval* tries to capture the range in which the true value
 ---
 # Grouped operations .font60[**Summarize**]
 
-`summarize()` allows you to calculate *all kinds* of statistics on the level of the groups you have specified.
-
 
 ```r
 (ESS_cntry &lt;- ESS %&gt;% # use the ESS, then
@@ -455,20 +483,23 @@ The *95% Confidence Interval* tries to capture the range in which the true value
                                TRUE ~ as.numeric(NA))) %&gt;%
    group_by(cntry) %&gt;% # group ESS_minority by cntry, then
    dplyr::summarize( # Start summarize function.
+     n = n(), # Number of cases,
      wn = sum(pspwght, na.rm = TRUE), # weighted number of cases,
-*    df = (wn^2 / sum(pspwght^2, na.rm = TRUE)), # degrees of freedom,
+     n_rd = sum(rel_discr_num, na.rm = TRUE), # Cases reporting religious discrimination,
      wn_rd = sum(rel_discr_num * pspwght, na.rm = TRUE), # weighted number of cases who ...,
+     perc_rd = (n_rd / n) * 100, # % cases who ...,
      wperc_rd = (wn_rd / wn) * 100, # weighted % who ...,
+*    df = (wn^2 / sum(pspwght^2, na.rm = TRUE)), # degrees of freedom,
 *    wse_rd = sqrt(wperc_rd * (100 - wperc_rd) / wn), # Standard error of the percent,
 *    wmin95_rd = wperc_rd - qt(p = 0.975, df = df) * wse_rd, # Lower bound of 95% CI,
 *    wmax95_rd = wperc_rd + qt(p = 0.975, df = df) * wse_rd # Upper bound of 95% CI,
    )) # End of summarize.
-# # A tibble: 3 × 8
-#   cntry       wn    df  wn_rd wperc_rd wse_rd wmin95_rd wmax95_rd
-#   &lt;fct&gt;    &lt;dbl&gt; &lt;dbl&gt;  &lt;dbl&gt;    &lt;dbl&gt;  &lt;dbl&gt;     &lt;dbl&gt;     &lt;dbl&gt;
-# 1 Bulgaria  592. 2708.   5.10    0.862  0.380     0.117     1.61 
-# 2 France   5570. 1977. 153.      2.74   0.219     2.31      3.17 
-# 3 Hungary   831. 1739.   1.66    0.200  0.155    -0.104     0.503
+# # A tibble: 3 × 11
+#   cntry        n    wn  n_rd  wn_rd perc_rd wperc_rd    df wse_rd wmin95_rd wmax95_rd
+#   &lt;fct&gt;    &lt;int&gt; &lt;dbl&gt; &lt;dbl&gt;  &lt;dbl&gt;   &lt;dbl&gt;    &lt;dbl&gt; &lt;dbl&gt;  &lt;dbl&gt;     &lt;dbl&gt;     &lt;dbl&gt;
+# 1 Bulgaria  2595  565.    24   5.10   0.925    0.903 2586.  0.398     0.122     1.68 
+# 2 France    1902 5358.    52 147.     2.73     2.74  1902.  0.223     2.30      3.18 
+# 3 Hungary   1775  799.     3   1.66   0.169    0.208 1670.  0.161    -0.108     0.523
 ```
 
 ---

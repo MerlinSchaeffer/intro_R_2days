@@ -159,8 +159,10 @@ ESS <- ESS %>% # Import the ESS, then (pipe result into) #<<
       eduyrs < 9 ~ 9, # Recode to min 9 years of edu.
       TRUE ~ zap_labels(eduyrs)) # Make it numeric.
   ) %>% # finish transmute, then (pipe result into) #<<
-  dplyr::filter(# filter cases from three countries
-      (cntry %in% c("France", "Bulgaria", "Hungary")))
+  dplyr::filter( # filter cases from three countries,
+    (cntry %in% c("France", "Bulgaria", "Hungary"))
+  ) %>% # finish filter, then #<<
+  drop_na() # Casewise deletion.
 ```
 ]
 ---
@@ -232,46 +234,56 @@ ESS %>% t.test(agea ~ gndr, data = .)
 ---
 # Reminder .font70[Weights]
 
-*Weights* tell you the probability that an observation should be in the data. For a true random sample, each case of the population has an equal probability to be sampled, and thus weights are 1 for all observations. But for various reasons, some populations tend to be under-sampled. Post-stratification weights try to counterbalance this.
-
 .push-left[
-```{r out.width='80%', fig.width = 6, fig.height = 3.5}
-ggplot(data = ESS, 
-       mapping = aes(y = pspwght, x = agea)) +
-  geom_smooth() # Smoothed average weight by age.
-```
-]
+- A *weight* tells you the probability that an observation should be in the sample. .backgrnote[
+For a true random sample, each case of the population has an equal probability to be sampled. Thus the weight would be 1 for every observation of a sample.]
+-  Some populations tend to be over\under-sampled. Post-stratification weights try to counterbalance this.
+<br>
+
+.content-box-green[.center[
+Why would survey researchers assign lower weights to older people?
+]]]
 
 .push-right[
-```{r out.width='80%', fig.width = 6, fig.height = 3.5}
+.panelset[
+.panel[.panel-name[Plot]
+```{r weights_fig, out.width='100%', fig.height = 4, fig.width = 5, results = FALSE, echo = FALSE}
 ggplot(data = ESS, 
-       mapping = aes(y = pspwght, x = eduyrs)) +
-  geom_smooth() # Smoothed average weight by education.
+       mapping = aes(y = pspwght, x = agea)) +
+  geom_smooth() + # Smoothed average weight by age.
+  labs(y = "Post-stratification weight", x = "Age in years",
+       caption = "Danish European Social Survey 2018") +
+  theme_minimal()
 ```
 ]
+.panel[.panel-name[Code]
+```{r ref.label="weights_fig", results = FALSE, fig.show = "hide"}
+```
+]]]
 
 ---
 # Reminder .font70[Working with weights]
 
-Statistically, we use weights by multiplication. Say in a small imagined patriarchal society, men's votes count twice as much. Here we have a ballot on whether women should be allowed to drive:
+- Statistically, we use weights by multiplication. 
 
 .push-left[
+- Imagine a patriarchal society, where men's votes count twice. Here we have a ballot on whether women should be allowed to drive:
+
 ```{r results = 'asis', echo = FALSE}
 library(knitr)
 i <- 1:5
-gender <- c("man", "man", "woman", "woman", "woman")
-vote <- c("No", "Yes", "Yes", "Yes", "No")
-voted_yes <- c(0, 1, 1, 1, 0)
-weight <- c(2, 2, 1, 1, 1)
+Gender <- c("man", "man", "woman", "woman", "woman")
+Vote <- c("No", "Yes", "Yes", "Yes", "No")
+`Voted yes` <- c(0, 1, 1, 1, 0)
+Weight <- c(2, 2, 1, 1, 1)
 
-dat <- tibble(i, gender, vote, voted_yes, weight)
+dat <- tibble(i, Gender, Vote, `Voted yes`, Weight)
 kable(dat, format = "html")
 ```
 
 .center[
-.content-box-blue[
-$$\frac{3}{5} * 100 = 60$$
-What is the patriarchy-weighted percent of "Yes" votes?
+.content-box-green[
+What is the patriarchy-weighted percent <br> of "Yes"-votes?
 ]
 ]
 ]
@@ -279,15 +291,39 @@ What is the patriarchy-weighted percent of "Yes" votes?
 --
 
 .push-right[
+- Three equivalent ways to the percent of patriarchy-weighted "Yes"-votes:
 
+.panelset[
+.panel[.panel-name[1.]
 ```{r}
-# Three ways to the percent of yes votes:
-
 ((0*2 + 1*2 + 1 + 1 + 0) / 7) * 100 # 1
+```
+]
+.panel[.panel-name[2.]
+```{r}
+(sum(`Voted yes` * Weight) / sum(Weight)) * 100 # 2
+```
+]
+.panel[.panel-name[3.]
+```{r}
+weighted.mean(x = `Voted yes`, w = Weight) * 100 # 3
+```
+]]]
 
-(sum(voted_yes * weight) / sum(weight)) * 100 # 2
+---
+# Weights can be amazing!
 
-Hmisc::wtd.mean(x = voted_yes, weights = weight) * 100 # 3
+.push-left[
+```{r, echo = FALSE, out.width='100%', fig.align='center'}
+knitr::include_graphics('img/Wang1.png')
+```
+]
+
+--
+
+.push-right[
+```{r, echo = FALSE, out.width='100%', fig.align='center'}
+knitr::include_graphics('img/Wang2.png')
 ```
 ]
 
@@ -328,7 +364,7 @@ Today, we want to compare countries. `group_by()` will transform your data into 
 # Reminder .font70[Standard errors & confidence intervals]
 
 .push-left[
-The *standard error* tells you the standard deviation of your result (i.e., mean, percentage, $\beta$ etc.), if we would conduct the same study (i.e., the ESS) over and over again.
+The *standard error* tells you the "standard deviation" of your estimate (i.e., mean, percentage, $\beta$ etc.), if we conducted the same study (i.e., the ESS) over and over again.
 
 Standard error of the mean: $\text{SE}(\bar{x}) = \frac{ \text{SD(x)}}{\sqrt{n}}$
 
@@ -346,8 +382,6 @@ $$\text{CI}_{95} = p \pm \text{Critical Value} * \text{SE}(p)$$
 ---
 # Grouped operations .font60[**Summarize**]
 
-`summarize()` allows you to calculate *all kinds* of statistics on the level of the groups you have specified.
-
 ```{r}
 (ESS_cntry <- ESS %>% # use the ESS, then
    mutate( # Generate a numeric 0/1 indicator of perceived discrimination.
@@ -356,10 +390,13 @@ $$\text{CI}_{95} = p \pm \text{Critical Value} * \text{SE}(p)$$
                                TRUE ~ as.numeric(NA))) %>%
    group_by(cntry) %>% # group ESS_minority by cntry, then
    dplyr::summarize( # Start summarize function.
+     n = n(), # Number of cases,
      wn = sum(pspwght, na.rm = TRUE), # weighted number of cases,
-     df = (wn^2 / sum(pspwght^2, na.rm = TRUE)), # degrees of freedom, #<<
+     n_rd = sum(rel_discr_num, na.rm = TRUE), # Cases reporting religious discrimination,
      wn_rd = sum(rel_discr_num * pspwght, na.rm = TRUE), # weighted number of cases who ...,
+     perc_rd = (n_rd / n) * 100, # % cases who ...,
      wperc_rd = (wn_rd / wn) * 100, # weighted % who ...,
+     df = (wn^2 / sum(pspwght^2, na.rm = TRUE)), # degrees of freedom, #<<
      wse_rd = sqrt(wperc_rd * (100 - wperc_rd) / wn), # Standard error of the percent, #<<
      wmin95_rd = wperc_rd - qt(p = 0.975, df = df) * wse_rd, # Lower bound of 95% CI, #<<
      wmax95_rd = wperc_rd + qt(p = 0.975, df = df) * wse_rd # Upper bound of 95% CI, #<<
