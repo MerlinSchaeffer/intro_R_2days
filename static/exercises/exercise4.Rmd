@@ -71,7 +71,7 @@ ESS <- dplyr::filter(ESS,
 ESS <- drop_na(ESS)
 ```
 
-1. Are women more or less in favor of adoption rights for gay men and women? Make a plot that answers this question. Women are `r mcq(c("Less", answer = "More"))` in favor of adoption rights for gay men and women.
+1. Compared to men, are women more or less in favor of adoption rights for gay men and women? Make a plot that answers this question. Women are `r mcq(c("Less", answer = "More"))` in favor of adoption rights for gay men and women.
 `r hide("R solution -> dont' peek to early ;) !")`
 ```{r out.width='85%', fig.width = 6, fig.height = 3}
 ggplot(data = ESS, mapping = aes(x = hmsacld, weight = pspwght)) +
