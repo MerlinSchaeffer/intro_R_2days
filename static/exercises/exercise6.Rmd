@@ -110,4 +110,4 @@ ESS %>% # Use the ESS, then
 ```
 `r unhide()`
 
-3. Polish your favorite figure and share it in the chat.
+3. Polish your favorite figure and share it with [Merlin](mailto:mesc@soc.ku.dk) and [Friedolin](mailto:fmerhout@soc.ku.dk).
