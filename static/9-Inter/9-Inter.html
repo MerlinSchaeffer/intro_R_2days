@@ -4,7 +4,7 @@
     <title>Intro to R</title>
     <meta charset="utf-8" />
     <meta name="author" content="Merlin Schaeffer &amp; Friedolin Merhout   Department of Sociology" />
-    <meta name="date" content="2022-10-18" />
+    <meta name="date" content="2022-10-20" />
     <script src="libs/header-attrs/header-attrs.js"></script>
     <link href="libs/tile-view/tile-view.css" rel="stylesheet" />
     <script src="libs/tile-view/tile-view.js"></script>
@@ -27,7 +27,7 @@ class: center, middle, inverse, title-slide
 ### Merlin Schaeffer &amp; Friedolin Merhout <br> Department of Sociology
 ]
 .date[
-### 2022-10-18
+### 2022-10-20
 ]
 
 ---
@@ -55,35 +55,33 @@ class: clear
 
 ```r
 ESS &lt;- ESS %&gt;% transmute( # Create new variables and keep only those
-*   cntry = as_factor(cntry) %&gt;% fct_relevel("France"), # Country of interview
-    gndr = as_factor(gndr), # Gender
-*   agea = zap_labels(agea), # Age
-    facntr = as_factor(facntr), # Father born in cntry
-    mocntr = as_factor(mocntr), # Mother born in cntry
-    imwbcnt = max(imwbcnt, na.rm = TRUE) - zap_labels(imwbcnt),
-    pspwght = zap_labels(pspwght),
-    # Parental education (ISCED)
-    eiscedf = zap_labels(eiscedf),
-    eiscedm = zap_labels(eiscedm),
-    par_edu = case_when(
-      # If father's edu is missing but not mother's, take mother's
-      (eiscedf == 55 | is.na(eiscedf)) &amp; eiscedm != 55 &amp; !is.na(eiscedm) ~ eiscedm,
-      # If mother's edu is missing but not father's, take father's
-      (eiscedm == 55 | is.na(eiscedm)) &amp; eiscedf != 55 &amp; !is.na(eiscedf)  ~ eiscedf,
-      # If both are missing, its missing
-      eiscedf == 55 &amp; eiscedm == 55 ~ as.numeric(NA),
-      # For all others, take the average of both parents
-      TRUE ~ (eiscedm + eiscedf) / 2),
-    eduyrs = case_when( # Education
-      eduyrs &gt; 21 ~ 21, # Recode to max 21 years of edu.
-      eduyrs &lt; 9 ~ 9, # Recode to min 9 years of edu.
-      TRUE ~ zap_labels(eduyrs))) %&gt;% # Make it numeric, then
+* cntry = as_factor(cntry) %&gt;% fct_relevel("France"), # Country of interview
+  gndr = as_factor(gndr), # Gender
+* agea = zap_labels(agea), # Age
+  facntr = as_factor(facntr), # Father born in cntry
+  mocntr = as_factor(mocntr), # Mother born in cntry
+  imwbcnt = max(imwbcnt, na.rm = TRUE) - zap_labels(imwbcnt),
+  pspwght = dweight*pweight, # Post-stratification weights.
+  # Parental education (ISCED)
+  eiscedf = zap_labels(eiscedf),
+  eiscedm = zap_labels(eiscedm),
+  par_edu = case_when(
+    # If father's edu is missing but not mother's, take mother's
+    (eiscedf == 55 | is.na(eiscedf)) &amp; eiscedm != 55 &amp; !is.na(eiscedm) ~ eiscedm,
+    # If mother's edu is missing but not father's, take father's
+    (eiscedm == 55 | is.na(eiscedm)) &amp; eiscedf != 55 &amp; !is.na(eiscedf)  ~ eiscedf,
+    # If both are missing, its missing
+    eiscedf == 55 &amp; eiscedm == 55 ~ as.numeric(NA),
+    # For all others, take the average of both parents
+    TRUE ~ (eiscedm + eiscedf) / 2),
+  eduyrs = case_when( # Education
+    eduyrs &gt; 21 ~ 21, # Recode to max 21 years of edu.
+    eduyrs &lt; 9 ~ 9, # Recode to min 9 years of edu.
+    TRUE ~ zap_labels(eduyrs))) %&gt;% # Make it numeric, then
   dplyr::filter(
-    facntr == "Yes" &amp; mocntr == "Yes")
-# Error in `transmute()`:
-# ! Problem while computing `pspwght = zap_labels(pspwght)`.
-# Caused by error in `zap_labels()`:
-# ! object 'pspwght' not found
+    facntr == "Yes" &amp; mocntr == "Yes" &amp;
+      # filter cases from three countries,
+      (cntry %in% c("France", "Bulgaria", "Hungary")))
 ```
 
 ---
@@ -96,13 +94,10 @@ ESS &lt;- ESS %&gt;%
   select(cntry, imwbcnt, eduyrs, par_edu, gndr, agea, pspwght) %&gt;%
   mutate(cntry = fct_drop(cntry)) %&gt;% # Drop unused cntry factor levels, then
   drop_na() # Casewise deletion.
-# Error in `select()`:
-# ! Can't subset columns that don't exist.
-# ✖ Column `par_edu` doesn't exist.
 ```
 
 ---
-# OLS I `\(\rightarrow\)` OLS II
+# OLS II `\(\rightarrow\)` OLS III
 
 .left-column[
 **OLS I**: OLS allows us to express a continuous outcome as *linear* function of continuous or categorical predictors. We can adjust/control for multiple confounding variables. The estimated linear association is *not conditional* on the level of the control/confounding variables.
@@ -116,14 +111,33 @@ ESS &lt;- ESS %&gt;%
 ```r
 # Run a series of three post-stratification weighted linear OLS models.
 ols1 &lt;- lm_robust(formula = imwbcnt ~ eduyrs, data = ESS, weights = pspwght)
-# Error in eval_tidy(mfargs[[da]], data = data): object 'pspwght' not found
 ols2 &lt;- lm_robust(formula = imwbcnt ~ eduyrs + par_edu, data = ESS, weights = pspwght)
-# Error in eval_tidy(mfargs[[da]], data = data): object 'pspwght' not found
 ols3 &lt;- lm_robust(formula = imwbcnt ~ eduyrs + par_edu + gndr + cntry, data = ESS, weights = pspwght)
-# Error in eval_tidy(mfargs[[da]], data = data): object 'pspwght' not found
 # Report results in a regression table.
 screenreg(list(ols1, ols2, ols3), include.ci = FALSE) 
-# Error in "list" %in% class(l)[1]: object 'ols1' not found
+# 
+# ====================================================
+#                Model 1      Model 2      Model 3    
+# ----------------------------------------------------
+# (Intercept)       7.21 ***     7.17 ***     6.85 ***
+#                  (0.20)       (0.20)       (0.22)   
+# eduyrs           -0.16 ***    -0.12 ***    -0.10 ***
+#                  (0.01)       (0.02)       (0.02)   
+# par_edu                       -0.13 ***    -0.16 ***
+#                               (0.03)       (0.03)   
+# gndrFemale                                 -0.12    
+#                                            (0.09)   
+# cntryBulgaria                               0.33 ***
+#                                            (0.08)   
+# cntryHungary                                0.88 ***
+#                                            (0.08)   
+# ----------------------------------------------------
+# R^2               0.05         0.06         0.08    
+# Adj. R^2          0.05         0.06         0.08    
+# Num. obs.      5443         5443         5443       
+# RMSE              2.04         2.03         2.01    
+# ====================================================
+# *** p &lt; 0.001; ** p &lt; 0.01; * p &lt; 0.05
 ```
 ]]
 
@@ -132,10 +146,7 @@ screenreg(list(ols1, ols2, ols3), include.ci = FALSE)
 
 .panelset[
 .panel[.panel-name[Plot]
-
-```
-# Error in FUN(X[[i]], ...): object 'pspwght' not found
-```
+&lt;img src="9-Inter_files/figure-html/unnamed-chunk-6-1.png" width="60%" style="display: block; margin: auto;" /&gt;
 ]
 
 .panel[.panel-name[Code]
@@ -147,7 +158,6 @@ ggplot(data = ESS,
   geom_smooth(aes(weight = pspwght), method = "lm", se = FALSE) +
   labs(x = "Years of education", y = "Xenophobia", size = "Survey \n weight", color = "Country") +
   theme_minimal()
-# Error in FUN(X[[i]], ...): object 'pspwght' not found
 ```
 ]]
 
@@ -162,9 +172,34 @@ class: clear
 ols4 &lt;- lm_robust(formula = imwbcnt ~ par_edu + gndr +
 *                   eduyrs*cntry,
                   data = ESS, weights = pspwght)
-# Error in eval_tidy(mfargs[[da]], data = data): object 'pspwght' not found
 screenreg(ols4, include.ci = FALSE) 
-# Error in "list" %in% class(l)[1]: object 'ols4' not found
+# 
+# =================================
+#                       Model 1    
+# ---------------------------------
+# (Intercept)              7.06 ***
+#                         (0.26)   
+# par_edu                 -0.16 ***
+#                         (0.03)   
+# gndrFemale              -0.12    
+#                         (0.09)   
+# eduyrs                  -0.12 ***
+#                         (0.02)   
+# cntryBulgaria           -1.26 ***
+#                         (0.34)   
+# cntryHungary             0.40    
+#                         (0.35)   
+# eduyrs:cntryBulgaria     0.12 ***
+#                         (0.02)   
+# eduyrs:cntryHungary      0.04    
+#                         (0.03)   
+# ---------------------------------
+# R^2                      0.08    
+# Adj. R^2                 0.08    
+# Num. obs.             5443       
+# RMSE                     2.01    
+# =================================
+# *** p &lt; 0.001; ** p &lt; 0.01; * p &lt; 0.05
 ```
 ]]
 
@@ -184,10 +219,7 @@ screenreg(ols4, include.ci = FALSE)
 
 .panelset[
 .panel[.panel-name[Plot]
-
-```
-# Error in FUN(X[[i]], ...): object 'pspwght' not found
-```
+&lt;img src="9-Inter_files/figure-html/unnamed-chunk-9-1.png" width="60%" style="display: block; margin: auto;" /&gt;
 ]
 .panel[.panel-name[Code]
 
@@ -201,7 +233,6 @@ ggplot(data = ESS,
 * xlim(c(0, 21)) + # Extend range of x-axis.
   labs(x = "Years of education", y = "Xenophobia", size = "Survey \n weight", color = "Country") +
   theme_minimal()
-# Error in FUN(X[[i]], ...): object 'pspwght' not found
 ```
 ]]
 
@@ -228,14 +259,10 @@ ggplot(data = ESS,
               method = "lm", se = FALSE) +
   labs(x = "Years of education \n (z-standardized)", y = "Xenophobia", size = "Survey \n weight", color = "Country") +
   theme_minimal()
-# Error in FUN(X[[i]], ...): object 'pspwght' not found
 ```
 ]
 .panel[.panel-name[Plot]
-
-```
-# Error in FUN(X[[i]], ...): object 'pspwght' not found
-```
+&lt;img src="9-Inter_files/figure-html/unnamed-chunk-12-1.png" width="60%" style="display: block; margin: auto;" /&gt;
 ]]
 
 ---
@@ -248,17 +275,39 @@ ggplot(data = ESS,
 ols4 &lt;- lm_robust(formula = imwbcnt ~ par_edu + gndr +
                     I(scale(eduyrs))*cntry, ##&lt;
                   data = ESS, weights = pspwght)
-# Error in eval_tidy(mfargs[[da]], data = data): object 'pspwght' not found
 screenreg(ols4, include.ci = FALSE) 
-# Error in "list" %in% class(l)[1]: object 'ols4' not found
+# 
+# ========================================
+#                              Model 1    
+# ----------------------------------------
+# (Intercept)                     5.55 ***
+#                                (0.11)   
+# par_edu                        -0.16 ***
+#                                (0.03)   
+# gndrFemale                     -0.12    
+#                                (0.09)   
+# scale(eduyrs)                  -0.35 ***
+#                                (0.06)   
+# cntryBulgaria                   0.32 ***
+#                                (0.08)   
+# cntryHungary                    0.88 ***
+#                                (0.08)   
+# scale(eduyrs):cntryBulgaria     0.36 ***
+#                                (0.07)   
+# scale(eduyrs):cntryHungary      0.11    
+#                                (0.08)   
+# ----------------------------------------
+# R^2                             0.08    
+# Adj. R^2                        0.08    
+# Num. obs.                    5443       
+# RMSE                            2.01    
+# ========================================
+# *** p &lt; 0.001; ** p &lt; 0.01; * p &lt; 0.05
 ```
 ]]
 
 .push-left[
-
-```
-# Error in FUN(X[[i]], ...): object 'pspwght' not found
-```
+&lt;img src="9-Inter_files/figure-html/unnamed-chunk-14-1.png" width="100%" style="display: block; margin: auto;" /&gt;
 ]
 
 ---
@@ -277,7 +326,6 @@ ols6 &lt;- lm_robust(
 *   poly(agea, 2, raw = TRUE) +
 *   I(log(par_edu)),
   data = ESS, weights = pspwght)
-# Error in eval_tidy(mfargs[[da]], data = data): object 'pspwght' not found
 ```
 ]
 
@@ -286,7 +334,33 @@ ols6 &lt;- lm_robust(
 
 ```r
 screenreg(ols6, include.ci = FALSE, digits = 4) 
-# Error in "list" %in% class(l)[1]: object 'ols6' not found
+# 
+# =========================================
+#                             Model 1      
+# -----------------------------------------
+# (Intercept)                    6.0126 ***
+#                               (0.3334)   
+# gndrFemale                    -0.1168    
+#                               (0.0861)   
+# cntryBulgaria                  0.2825 ***
+#                               (0.0843)   
+# cntryHungary                   0.8867 ***
+#                               (0.0829)   
+# eduyrs                        -0.1114 ***
+#                               (0.0178)   
+# poly(agea, 2, raw = TRUE)1     0.0288 *  
+#                               (0.0123)   
+# poly(agea, 2, raw = TRUE)2    -0.0002    
+#                               (0.0001)   
+# log(par_edu)                  -0.3094 ** 
+#                               (0.0958)   
+# -----------------------------------------
+# R^2                            0.0803    
+# Adj. R^2                       0.0791    
+# Num. obs.                   5443         
+# RMSE                           2.0095    
+# =========================================
+# *** p &lt; 0.001; ** p &lt; 0.01; * p &lt; 0.05
 ```
 ]]
 
@@ -302,7 +376,20 @@ screenreg(ols6, include.ci = FALSE, digits = 4)
    # Generate theoretically-informative 
    # but artificial tibble for predictions.
 *  data_grid(eduyrs, par_edu, gndr, agea, cntry))
-# Error in eval_tidy(dot, data = mask): object 'par_edu' not found
+# # A tibble: 115,596 × 5
+#    eduyrs par_edu gndr   agea cntry   
+#     &lt;dbl&gt;   &lt;dbl&gt; &lt;fct&gt; &lt;dbl&gt; &lt;fct&gt;   
+#  1      9       1 Male     15 France  
+#  2      9       1 Male     15 Bulgaria
+#  3      9       1 Male     15 Hungary 
+#  4      9       1 Male     16 France  
+#  5      9       1 Male     16 Bulgaria
+#  6      9       1 Male     16 Hungary 
+#  7      9       1 Male     17 France  
+#  8      9       1 Male     17 Bulgaria
+#  9      9       1 Male     17 Hungary 
+# 10      9       1 Male     18 France  
+# # … with 115,586 more rows
 ```
 ]]
 
@@ -318,9 +405,22 @@ screenreg(ols6, include.ci = FALSE, digits = 4)
      eduyrs = mean(ESS$eduyrs, na.rm = TRUE),
      par_edu = mean(ESS$par_edu, na.rm = TRUE),
      gndr = "Female",
-     cntry = "Denmark") %&gt;% # then
+     cntry = "France") %&gt;% # then
    unique()) # Drop duplicates.
-# Error in mutate(., eduyrs = mean(ESS$eduyrs, na.rm = TRUE), par_edu = mean(ESS$par_edu, : object 'synth_data' not found
+# # A tibble: 76 × 5
+#    eduyrs par_edu gndr    agea cntry 
+#     &lt;dbl&gt;   &lt;dbl&gt; &lt;chr&gt;  &lt;dbl&gt; &lt;chr&gt; 
+#  1   12.9    3.04 Female    15 France
+#  2   12.9    3.04 Female    16 France
+#  3   12.9    3.04 Female    17 France
+#  4   12.9    3.04 Female    18 France
+#  5   12.9    3.04 Female    19 France
+#  6   12.9    3.04 Female    20 France
+#  7   12.9    3.04 Female    21 France
+#  8   12.9    3.04 Female    22 France
+#  9   12.9    3.04 Female    23 France
+# 10   12.9    3.04 Female    24 France
+# # … with 66 more rows
 ```
 ]]
 
@@ -345,7 +445,20 @@ screenreg(ols6, include.ci = FALSE, digits = 4)
 .font80[
 
 ```
-# Error in list2(...): object 'synth_data' not found
+# # A tibble: 76 × 8
+#    eduyrs par_edu gndr    agea cntry    fit   lwr   upr
+#     &lt;dbl&gt;   &lt;dbl&gt; &lt;chr&gt;  &lt;dbl&gt; &lt;chr&gt;  &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;
+#  1   12.9    3.04 Female    15 France  4.49  4.20  4.78
+#  2   12.9    3.04 Female    16 France  4.51  4.24  4.79
+#  3   12.9    3.04 Female    17 France  4.53  4.27  4.79
+#  4   12.9    3.04 Female    18 France  4.55  4.30  4.80
+#  5   12.9    3.04 Female    19 France  4.57  4.34  4.81
+#  6   12.9    3.04 Female    20 France  4.59  4.37  4.82
+#  7   12.9    3.04 Female    21 France  4.61  4.39  4.83
+#  8   12.9    3.04 Female    22 France  4.63  4.42  4.84
+#  9   12.9    3.04 Female    23 France  4.65  4.45  4.85
+# 10   12.9    3.04 Female    24 France  4.67  4.47  4.86
+# # … with 66 more rows
 ```
 ]]
 
@@ -355,10 +468,7 @@ screenreg(ols6, include.ci = FALSE, digits = 4)
 .push-left[
 .panelset[
 .panel[.panel-name[Plot]
-
-```
-# Error in ggplot(data = synth_data, aes(y = fit, x = agea)): object 'synth_data' not found
-```
+&lt;img src="9-Inter_files/figure-html/unnamed-chunk-20-1.png" width="90%" style="display: block; margin: auto;" /&gt;
 ]
 .panel[.panel-name[Code]
 
@@ -370,9 +480,8 @@ ggplot(data = synth_data,
   geom_line() +
   labs(x = "Age",
   y = "Xenophobia",
-  caption = "(Covariates set to: Women in Denmark \n at mean levels of (parental) education)") + 
+  caption = "Note: OLS estimates. Covariates set to: Women in France at mean levels of (parental) education.") + 
   theme_minimal()
-# Error in ggplot(data = synth_data, aes(y = fit, x = agea)): object 'synth_data' not found
 ```
 ]]]
 .push-right[
@@ -380,7 +489,33 @@ ggplot(data = synth_data,
 
 ```r
 screenreg(ols6, include.ci = FALSE, digits = 4) 
-# Error in "list" %in% class(l)[1]: object 'ols6' not found
+# 
+# =========================================
+#                             Model 1      
+# -----------------------------------------
+# (Intercept)                    6.0126 ***
+#                               (0.3334)   
+# gndrFemale                    -0.1168    
+#                               (0.0861)   
+# cntryBulgaria                  0.2825 ***
+#                               (0.0843)   
+# cntryHungary                   0.8867 ***
+#                               (0.0829)   
+# eduyrs                        -0.1114 ***
+#                               (0.0178)   
+# poly(agea, 2, raw = TRUE)1     0.0288 *  
+#                               (0.0123)   
+# poly(agea, 2, raw = TRUE)2    -0.0002    
+#                               (0.0001)   
+# log(par_edu)                  -0.3094 ** 
+#                               (0.0958)   
+# -----------------------------------------
+# R^2                            0.0803    
+# Adj. R^2                       0.0791    
+# Num. obs.                   5443         
+# RMSE                           2.0095    
+# =========================================
+# *** p &lt; 0.001; ** p &lt; 0.01; * p &lt; 0.05
 ```
 ]]
 
@@ -400,26 +535,22 @@ synth_data &lt;- ESS %&gt;%
      eduyrs = mean(ESS$eduyrs, na.rm = TRUE),
      agea = mean(ESS$agea, na.rm = TRUE),
      gndr = "Female",
-     cntry = "Denmark") %&gt;% # then
+     cntry = "France") %&gt;% # then
    unique() # Drop duplicates.
-# Error in eval_tidy(dot, data = mask): object 'par_edu' not found
+
 # Generate predictions and 95% confidence intervals, then
 synth_data &lt;- predict(ols6, newdata = synth_data,
                       interval = "confidence",
                       level=0.95)$fit %&gt;%
   as_tibble() %&gt;% # Turn into a tibble, then
   bind_cols(synth_data, .) # Add to the synthetic data.
-# Error in list2(...): object 'synth_data' not found
 ```
 ]]
 
 .push-right[
 .panelset[
 .panel[.panel-name[Plot]
-
-```
-# Error in ggplot(data = synth_data, aes(y = fit, x = par_edu)): object 'synth_data' not found
-```
+&lt;img src="9-Inter_files/figure-html/unnamed-chunk-24-1.png" width="90%" style="display: block; margin: auto;" /&gt;
 ]
 .panel[.panel-name[Code]
 .font90[
@@ -429,9 +560,8 @@ ggplot(data = synth_data, aes(y = fit, x = par_edu)) +
   geom_ribbon(aes(ymin = lwr, ymax = upr), alpha = 0.5) +
   geom_line() +
   labs(x = "Parental education", y = "Xenophobia", 
-       caption = "(Covariates set to: Women at mean levels of parental education)") + 
+       caption = "Note: OLS estimates. Covariates set to: Women at mean levels of age and education.") + 
   theme_minimal()
-# Error in ggplot(data = synth_data, aes(y = fit, x = par_edu)): object 'synth_data' not found
 ```
 ]]]]
 ---
@@ -443,10 +573,11 @@ ggplot(data = synth_data, aes(y = fit, x = par_edu)) +
 ```r
 # Estimate linear OLS with interaction effect;
 # no z-standardization if you visualize.
-ols7 &lt;- lm_robust(formula = imwbcnt ~ log(par_edu) + gndr + poly(agea, 2) +
+ols7 &lt;- lm_robust(formula = imwbcnt ~ log(par_edu) + 
+                    gndr + poly(agea, 2) +
 *                   eduyrs*cntry,
                   data = ESS, weights = pspwght)
-# Error in eval_tidy(mfargs[[da]], data = data): object 'pspwght' not found
+
 # Generate synthetic data to 
 # visualize parental education
 synth_data &lt;- ESS %&gt;%
@@ -459,14 +590,13 @@ synth_data &lt;- ESS %&gt;%
      agea = mean(ESS$agea, na.rm = TRUE),
      gndr = "Female") %&gt;% # then
    unique() # Drop duplicates.
-# Error in eval_tidy(dot, data = mask): object 'par_edu' not found
+
 # Generate predictions and 95% confidence intervals, then
 synth_data &lt;- predict(ols7, newdata = synth_data,
                       interval = "confidence",
                       level=0.95)$fit %&gt;%
   as_tibble() %&gt;% # Turn into a tibble, then
   bind_cols(synth_data, .) # Add to the synthetic data.
-# Error in list2(...): object 'synth_data' not found
 ```
 ]]
 
@@ -474,7 +604,38 @@ synth_data &lt;- predict(ols7, newdata = synth_data,
 .font80[
 
 ```
-# Error in print(synth_data, n = 28): object 'synth_data' not found
+# # A tibble: 39 × 8
+#    par_edu gndr   cntry    eduyrs  agea   fit   lwr   upr
+#      &lt;dbl&gt; &lt;chr&gt;  &lt;fct&gt;     &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;
+#  1    3.04 Female France        9  51.2  5.47  5.18  5.77
+#  2    3.04 Female France       10  51.2  5.35  5.08  5.61
+#  3    3.04 Female France       11  51.2  5.22  4.99  5.46
+#  4    3.04 Female France       12  51.2  5.10  4.89  5.31
+#  5    3.04 Female France       13  51.2  4.97  4.78  5.16
+#  6    3.04 Female France       14  51.2  4.85  4.67  5.02
+#  7    3.04 Female France       15  51.2  4.72  4.55  4.89
+#  8    3.04 Female France       16  51.2  4.59  4.42  4.77
+#  9    3.04 Female France       17  51.2  4.47  4.28  4.66
+# 10    3.04 Female France       18  51.2  4.34  4.13  4.55
+# 11    3.04 Female France       19  51.2  4.22  3.98  4.45
+# 12    3.04 Female France       20  51.2  4.09  3.83  4.36
+# 13    3.04 Female France       21  51.2  3.97  3.67  4.26
+# 14    3.04 Female Bulgaria      9  51.2  5.31  5.08  5.54
+# 15    3.04 Female Bulgaria     10  51.2  5.29  5.09  5.50
+# 16    3.04 Female Bulgaria     11  51.2  5.28  5.10  5.46
+# 17    3.04 Female Bulgaria     12  51.2  5.27  5.10  5.43
+# 18    3.04 Female Bulgaria     13  51.2  5.25  5.10  5.40
+# 19    3.04 Female Bulgaria     14  51.2  5.24  5.09  5.39
+# 20    3.04 Female Bulgaria     15  51.2  5.22  5.07  5.38
+# 21    3.04 Female Bulgaria     16  51.2  5.21  5.04  5.38
+# 22    3.04 Female Bulgaria     17  51.2  5.20  5.01  5.39
+# 23    3.04 Female Bulgaria     18  51.2  5.18  4.97  5.40
+# 24    3.04 Female Bulgaria     19  51.2  5.17  4.93  5.41
+# 25    3.04 Female Bulgaria     20  51.2  5.16  4.88  5.43
+# 26    3.04 Female Bulgaria     21  51.2  5.14  4.84  5.45
+# 27    3.04 Female Hungary       9  51.2  6.23  6.01  6.45
+# 28    3.04 Female Hungary      10  51.2  6.14  5.95  6.33
+# # … with 11 more rows
 ```
 ]]
 
@@ -483,10 +644,7 @@ synth_data &lt;- predict(ols7, newdata = synth_data,
 
 .panelset[
 .panel[.panel-name[Plot]
-
-```
-# Error in ggplot(data = synth_data, aes(y = fit, x = eduyrs)): object 'synth_data' not found
-```
+&lt;img src="9-Inter_files/figure-html/unnamed-chunk-28-1.png" width="65%" style="display: block; margin: auto;" /&gt;
 ]
 .panel[.panel-name[Code]
 
@@ -497,9 +655,9 @@ ggplot(data = synth_data, aes(y = fit, x = eduyrs)) +
               alpha = 0.5) +
 * geom_line(aes(color = cntry)) +
   labs(x = "Years of education", y = "Xenophobia", 
-       caption = "(Covariates set to: Women at mean levels of parental education)") + 
+       caption = "Note: OLS estimates. Covariates set to: 
+       Women at mean levels of age and parental education.") + 
   theme_minimal()
-# Error in ggplot(data = synth_data, aes(y = fit, x = eduyrs)): object 'synth_data' not found
 ```
 ]]
 
