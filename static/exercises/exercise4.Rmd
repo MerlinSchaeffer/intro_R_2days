@@ -63,8 +63,6 @@ ESS_keep <- ESS
 
 ```{r}
 ESS <- dplyr::filter(ESS,
-                     # Now keep respondents of immigrant origin!
-                     # facntr == "Yes" & mocntr == "Yes" & # Keep respondents of immigrant origin #<<
                        # Only respondents from direct neighbors of Denmark:
                        (cntry %in% c("Slovakia", "Hungary", "Czechia", "Slovenia"))
 )
