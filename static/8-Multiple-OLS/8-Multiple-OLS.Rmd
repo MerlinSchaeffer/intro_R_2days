@@ -373,6 +373,7 @@ tidy(ols5)
 ```
 
 ---
+class: clear
 # Remember: regression results are data too.
 
 And then process the data in our tibble to make it presentable.
