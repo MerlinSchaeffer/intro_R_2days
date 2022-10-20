@@ -37,7 +37,7 @@ c(100, 32, 45) %>% scale() %>% as.numeric()
 ```
 `r unhide()`
 
-2. In which among **all** ESS countries is perceived *racial* discrimination among persons of immigrant origin (i.e., persons born abroad or with at least one parent who was born abroad) most prevalent? `r fitb("Slovakia", width = "14")`
+2. In which among **all** ESS countries is perceived *racial* discrimination among persons of immigrant origin (i.e., persons born abroad or with at least one parent who was born abroad) most prevalent? `r fitb("France", width = "14")`
     + That is, give a country-level summary of the percent of immigrant minority respondents who experienced discrimination explicitly based on their group's race. 
 `r hide("R solution -> dont' peek to early ;) !")`
 ```{r}
@@ -45,6 +45,7 @@ ESS %>% # Use the ESS, then
   transmute( # Create new variables and only keep these new ones
     # Make the following variables factors:
     cntry = as_factor(cntry) %>% fct_drop(), 
+    brncntr = as_factor(brncntr),
     facntr = as_factor(facntr),
     mocntr = as_factor(mocntr),
     # Make the following variables numeric:
@@ -60,7 +61,7 @@ ESS %>% # Use the ESS, then
     ) 
   ) %>% # then
   dplyr::filter( # Keep only respondents of immigrant origin,
-    facntr == "No" & mocntr == "No") %>% # then
+    brncntr == "No" | facntr == "No" | mocntr == "No") %>% # then
   group_by(cntry) %>% # Group data by country, then
   dplyr::summarize(
     # Weighted number of cases.

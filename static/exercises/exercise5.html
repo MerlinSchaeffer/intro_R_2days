@@ -358,8 +358,8 @@ pre code {
   border-radius: 4px;
 }
 
-.tabset-dropdown > .nav-tabs > li.active:before {
-  content: "";
+.tabset-dropdown > .nav-tabs > li.active:before, .tabset-dropdown > .nav-tabs.nav-tabs-open:before {
+  content: "\e259";
   font-family: 'Glyphicons Halflings';
   display: inline-block;
   padding: 10px;
@@ -367,16 +367,9 @@ pre code {
 }
 
 .tabset-dropdown > .nav-tabs.nav-tabs-open > li.active:before {
-  content: "";
-  border: none;
-}
-
-.tabset-dropdown > .nav-tabs.nav-tabs-open:before {
-  content: "";
+  content: "\e258";
   font-family: 'Glyphicons Halflings';
-  display: inline-block;
-  padding: 10px;
-  border-right: 1px solid #ddd;
+  border: none;
 }
 
 .tabset-dropdown > .nav-tabs > li.active {
@@ -454,7 +447,7 @@ c(100, 32, 45) %&gt;% scale() %&gt;% as.numeric()
 <em>racial</em> discrimination among persons of immigrant origin (i.e.,
 persons born abroad or with at least one parent who was born abroad)
 most prevalent?
-<input class="webex-solveme nospaces" size="14" data-answer="[&quot;Slovakia&quot;]"></input>
+<input class="webex-solveme nospaces" size="14" data-answer="[&quot;France&quot;]"></input>
 <ul>
 <li>That is, give a country-level summary of the percent of immigrant
 minority respondents who experienced discrimination explicitly based on
@@ -469,6 +462,7 @@ R solution -&gt; dont&#39; peek to early ;) !
   transmute( # Create new variables and only keep these new ones
     # Make the following variables factors:
     cntry = as_factor(cntry) %&gt;% fct_drop(), 
+    brncntr = as_factor(brncntr),
     facntr = as_factor(facntr),
     mocntr = as_factor(mocntr),
     # Make the following variables numeric:
@@ -484,7 +478,7 @@ R solution -&gt; dont&#39; peek to early ;) !
     ) 
   ) %&gt;% # then
   dplyr::filter( # Keep only respondents of immigrant origin,
-    facntr == &quot;No&quot; &amp; mocntr == &quot;No&quot;) %&gt;% # then
+    brncntr == &quot;No&quot; | facntr == &quot;No&quot; | mocntr == &quot;No&quot;) %&gt;% # then
   group_by(cntry) %&gt;% # Group data by country, then
   dplyr::summarize(
     # Weighted number of cases.
@@ -497,16 +491,16 @@ R solution -&gt; dont&#39; peek to early ;) !
 # # A tibble: 10 × 4
 #    cntry         wn   wn_rd wperc_rd
 #    &lt;fct&gt;      &lt;dbl&gt;   &lt;dbl&gt;    &lt;dbl&gt;
-#  1 Slovakia    3.67   1.20    32.7  
-#  2 France    828.   152.      18.3  
-#  3 Czechia    29.5    3.18    10.8  
-#  4 Estonia    21.2    0.144    0.680
-#  5 Bulgaria    5.73   0        0    
-#  6 Finland    11.0    0        0    
-#  7 Croatia    40.7    0        0    
-#  8 Hungary    11.6    0        0    
-#  9 Lithuania   5.73   0        0    
-# 10 Slovenia   19.6    0        0</code></pre>
+#  1 France    1330.  180.      13.5  
+#  2 Slovakia    21.5   1.48     6.87 
+#  3 Czechia     85.5   4.31     5.04 
+#  4 Bulgaria    15.8   0.667    4.22 
+#  5 Finland     27.9   0.593    2.13 
+#  6 Hungary     32.1   0.350    1.09 
+#  7 Estonia     34.9   0.144    0.413
+#  8 Slovenia    34.8   0.143    0.412
+#  9 Croatia     74.3   0        0    
+# 10 Lithuania   22.2   0        0</code></pre>
 </div>
 <ol start="3" style="list-style-type: decimal">
 <li>In which among all ESS countries do people on average show the
