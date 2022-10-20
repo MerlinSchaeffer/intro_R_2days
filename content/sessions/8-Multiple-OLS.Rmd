@@ -3,7 +3,7 @@ title: "8 Multiple OLS Regression"
 summary: "In this session you will learn how estimate multiple OLS models and communicate their results as visualizations of the model."
 author: Merlin Schaeffer & Friedolin Merhout
 date: 2022-10-21
-publishdate: 2022-10-21
+publishdate: 2022-10-20
 ---
 
 ```{r setup, include = FALSE}

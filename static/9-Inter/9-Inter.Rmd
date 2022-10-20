@@ -62,31 +62,33 @@ class: clear
 
 ```{r}
 ESS <- ESS %>% transmute( # Create new variables and keep only those
-    cntry = as_factor(cntry) %>% fct_relevel("France"), # Country of interview #<<
-    gndr = as_factor(gndr), # Gender
-    agea = zap_labels(agea), # Age #<<
-    facntr = as_factor(facntr), # Father born in cntry
-    mocntr = as_factor(mocntr), # Mother born in cntry
-    imwbcnt = max(imwbcnt, na.rm = TRUE) - zap_labels(imwbcnt),
-    pspwght = zap_labels(pspwght),
-    # Parental education (ISCED)
-    eiscedf = zap_labels(eiscedf),
-    eiscedm = zap_labels(eiscedm),
-    par_edu = case_when(
-      # If father's edu is missing but not mother's, take mother's
-      (eiscedf == 55 | is.na(eiscedf)) & eiscedm != 55 & !is.na(eiscedm) ~ eiscedm,
-      # If mother's edu is missing but not father's, take father's
-      (eiscedm == 55 | is.na(eiscedm)) & eiscedf != 55 & !is.na(eiscedf)  ~ eiscedf,
-      # If both are missing, its missing
-      eiscedf == 55 & eiscedm == 55 ~ as.numeric(NA),
-      # For all others, take the average of both parents
-      TRUE ~ (eiscedm + eiscedf) / 2),
-    eduyrs = case_when( # Education
-      eduyrs > 21 ~ 21, # Recode to max 21 years of edu.
-      eduyrs < 9 ~ 9, # Recode to min 9 years of edu.
-      TRUE ~ zap_labels(eduyrs))) %>% # Make it numeric, then
+  cntry = as_factor(cntry) %>% fct_relevel("France"), # Country of interview #<<
+  gndr = as_factor(gndr), # Gender
+  agea = zap_labels(agea), # Age #<<
+  facntr = as_factor(facntr), # Father born in cntry
+  mocntr = as_factor(mocntr), # Mother born in cntry
+  imwbcnt = max(imwbcnt, na.rm = TRUE) - zap_labels(imwbcnt),
+  pspwght = dweight*pweight, # Post-stratification weights.
+  # Parental education (ISCED)
+  eiscedf = zap_labels(eiscedf),
+  eiscedm = zap_labels(eiscedm),
+  par_edu = case_when(
+    # If father's edu is missing but not mother's, take mother's
+    (eiscedf == 55 | is.na(eiscedf)) & eiscedm != 55 & !is.na(eiscedm) ~ eiscedm,
+    # If mother's edu is missing but not father's, take father's
+    (eiscedm == 55 | is.na(eiscedm)) & eiscedf != 55 & !is.na(eiscedf)  ~ eiscedf,
+    # If both are missing, its missing
+    eiscedf == 55 & eiscedm == 55 ~ as.numeric(NA),
+    # For all others, take the average of both parents
+    TRUE ~ (eiscedm + eiscedf) / 2),
+  eduyrs = case_when( # Education
+    eduyrs > 21 ~ 21, # Recode to max 21 years of edu.
+    eduyrs < 9 ~ 9, # Recode to min 9 years of edu.
+    TRUE ~ zap_labels(eduyrs))) %>% # Make it numeric, then
   dplyr::filter(
-    facntr == "Yes" & mocntr == "Yes")
+    facntr == "Yes" & mocntr == "Yes" &
+      # filter cases from three countries,
+      (cntry %in% c("France", "Bulgaria", "Hungary")))
 ```
 
 ---
@@ -101,7 +103,7 @@ ESS <- ESS %>%
 ```
 
 ---
-# OLS I $\rightarrow$ OLS II
+# OLS II $\rightarrow$ OLS III
 
 .left-column[
 **OLS I**: OLS allows us to express a continuous outcome as *linear* function of continuous or categorical predictors. We can adjust/control for multiple confounding variables. The estimated linear association is *not conditional* on the level of the control/confounding variables.
@@ -311,7 +313,7 @@ screenreg(ols6, include.ci = FALSE, digits = 4)
      eduyrs = mean(ESS$eduyrs, na.rm = TRUE),
      par_edu = mean(ESS$par_edu, na.rm = TRUE),
      gndr = "Female",
-     cntry = "Denmark") %>% # then
+     cntry = "France") %>% # then
    unique()) # Drop duplicates.
 ```
 ]]
@@ -352,7 +354,7 @@ ggplot(data = synth_data,
   geom_line() +
   labs(x = "Age",
   y = "Xenophobia",
-  caption = "(Covariates set to: Women in Denmark \n at mean levels of (parental) education)") + 
+  caption = "Note: OLS estimates. Covariates set to: Women in France at mean levels of (parental) education.") + 
   theme_minimal()
 ```
 ]
@@ -365,7 +367,7 @@ ggplot(data = synth_data,
   geom_line() +
   labs(x = "Age",
   y = "Xenophobia",
-  caption = "(Covariates set to: Women in Denmark \n at mean levels of (parental) education)") + 
+  caption = "Note: OLS estimates. Covariates set to: Women in France at mean levels of (parental) education.") + 
   theme_minimal()
 ```
 ]]]
@@ -391,7 +393,7 @@ synth_data <- ESS %>%
      eduyrs = mean(ESS$eduyrs, na.rm = TRUE),
      agea = mean(ESS$agea, na.rm = TRUE),
      gndr = "Female",
-     cntry = "Denmark") %>% # then
+     cntry = "France") %>% # then
    unique() # Drop duplicates.
 
 # Generate predictions and 95% confidence intervals, then
@@ -414,7 +416,7 @@ ggplot(data = synth_data,
   geom_line() +
   labs(x = "Parental education",
   y = "Xenophobia",
-  caption = "(Covariates set to: Women at mean levels of parental education)") + 
+  caption = "Note: OLS estimates. Covariates set to: Women in France at mean levels of age and education.") + 
   theme_minimal()
 ```
 ]
@@ -425,7 +427,7 @@ ggplot(data = synth_data, aes(y = fit, x = par_edu)) +
   geom_ribbon(aes(ymin = lwr, ymax = upr), alpha = 0.5) +
   geom_line() +
   labs(x = "Parental education", y = "Xenophobia", 
-       caption = "(Covariates set to: Women at mean levels of parental education)") + 
+       caption = "Note: OLS estimates. Covariates set to: Women at mean levels of age and education.") + 
   theme_minimal()
 ```
 ]]]]
@@ -437,7 +439,8 @@ ggplot(data = synth_data, aes(y = fit, x = par_edu)) +
 ```{r}
 # Estimate linear OLS with interaction effect;
 # no z-standardization if you visualize.
-ols7 <- lm_robust(formula = imwbcnt ~ log(par_edu) + gndr + poly(agea, 2) +
+ols7 <- lm_robust(formula = imwbcnt ~ log(par_edu) + 
+                    gndr + poly(agea, 2) +
                     eduyrs*cntry, #<<
                   data = ESS, weights = pspwght)
 
@@ -484,7 +487,8 @@ ggplot(data = synth_data,
   geom_line(aes(color = cntry)) + #<<
   labs(x = "Years of education",
   y = "Xenophobia",
-  caption = "(Covariates set to: Women at mean levels of parental education)") + 
+  caption = "Note: OLS estimates. Covariates set to: 
+  Women at mean levels of age and parental education.") + 
   theme_minimal()
 ```
 ]
@@ -496,7 +500,8 @@ ggplot(data = synth_data, aes(y = fit, x = eduyrs)) +
               alpha = 0.5) +
   geom_line(aes(color = cntry)) + #<<
   labs(x = "Years of education", y = "Xenophobia", 
-       caption = "(Covariates set to: Women at mean levels of parental education)") + 
+       caption = "Note: OLS estimates. Covariates set to: 
+       Women at mean levels of age and parental education.") + 
   theme_minimal()
 ```
 ]]
