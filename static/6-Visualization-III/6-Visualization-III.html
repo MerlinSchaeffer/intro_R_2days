@@ -106,12 +106,13 @@ ESS &lt;- read_spss("ESS10.sav")
 Scatter plots are rather unique, in that they show the "raw" data.
 
 ```r
-ggplot(data = ESS, mapping = aes(y = atchctr, x = eduyrs)) +
+ggplot(data = ESS, mapping = aes(y = eduyrs, x = agea)) +
   geom_point(alpha = 1/20) +
-  labs(y = "Emotionally attached to country",
-       x = "Years of education")
-# Error in FUN(X[[i]], ...): object 'atchctr' not found
+  labs(y = "Years of education",
+       x = "Age in years")
 ```
+
+&lt;img src="6-Visualization-III_files/figure-html/unnamed-chunk-5-1.png" width="60%" style="display: block; margin: auto;" /&gt;
 
 ---
 # **Statistical transformations**

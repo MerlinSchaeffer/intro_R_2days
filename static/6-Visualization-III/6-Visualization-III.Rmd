@@ -110,10 +110,10 @@ ESS <- ESS %>% # Import the ESS, then (pipe result into) #<<
 
 Scatter plots are rather unique, in that they show the "raw" data.
 ```{r out.width='60%', fig.height = 3.6, fig.width = 7.2}
-ggplot(data = ESS, mapping = aes(y = atchctr, x = eduyrs)) +
+ggplot(data = ESS, mapping = aes(y = eduyrs, x = agea)) +
   geom_point(alpha = 1/20) +
-  labs(y = "Emotionally attached to country",
-       x = "Years of education")
+  labs(y = "Years of education",
+       x = "Age in years")
 ```
 
 ---
