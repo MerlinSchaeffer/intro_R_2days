@@ -16,7 +16,7 @@ library(webexercises)
 library(essentials)
 ```
 
-1) Use the set-up from our OLS I slides but instead of `imwbcnt` and `eduyrs`, add the following variables: `agea`, `gndr`, `rlgdgr`. Check whether larger values on `rlgdgr` indicate higher religiosity. Only keep complete cases by using `drop_na()`. The tibble has `r fitb("5968", width = "4")` observations.
+1) Use the set-up from our OLS I slides but instead of `imwbcnt` and `eduyrs`, add the following variables: `agea`, `gndr`, `rlgdgr`. Check whether larger values on `rlgdgr` indicate higher religiosity. Only keep complete cases by using `drop_na()`. The tibble has `r fitb("6185", width = "4")` observations.
 `r hide("R solution -> dont' peek to early ;) !")`
 ```{r}
 # Add packages to library
@@ -39,7 +39,6 @@ ESS <- ESS %>% transmute( # Create new variables and keep only those
   cntry = as_factor(cntry) %>% fct_drop(), # Country of interview
   facntr = as_factor(facntr), # Father born in cntry
   mocntr = as_factor(mocntr), # Mother born in cntry
-  imwbcnt = max(imwbcnt, na.rm = TRUE) - zap_labels(imwbcnt),
   pspwght = dweight*pweight,
   gndr = as_factor(gndr), # Gender
   agea = zap_labels(agea), # Age
