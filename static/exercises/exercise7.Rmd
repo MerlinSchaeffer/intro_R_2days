@@ -13,6 +13,7 @@ knitr::opts_chunk$set(
   comment = "#", strip.white = TRUE)
 
 library(webexercises)
+library(essentials)
 ```
 
 1) Use the set-up from our OLS I slides but instead of `imwbcnt` and `eduyrs`, add the following variables: `agea`, `gndr`, `rlgdgr`. Check whether larger values on `rlgdgr` indicate higher religiosity. Only keep complete cases by using `drop_na()`. The tibble has `r fitb("5968", width = "4")` observations.
@@ -57,9 +58,11 @@ nrow(ESS)
 ```{r ols1, include = FALSE}
 ols1 <- lm_robust(rlgdgr ~ agea, weights = pspwght, data = ESS)
 screenreg(ols1, digits = 3, include.ci = FALSE)
+
+coeffer <- as.scalar(coef(ols1)["agea"])
 ```
 
-2) Regress religiosity on age and make a regression table that displays 3 digits and standard errors in parentheses using `texreg::screenreg()`; $\beta$ = `r fitb(coef(ols1)["agea"], width = "4")` and the relation is statistically `r mcq(c("Insignificant", "Interesting", "Important", answer = "Significant"))`.
+2) Regress religiosity on age and make a regression table that displays 3 digits and standard errors in parentheses using `texreg::screenreg()`; $\beta$ = `r fitb(0.050, width = "5")` and the relation is statistically `r mcq(c("Insignificant", "Interesting", "Important", answer = "Significant"))`.
 `r hide("R solution -> dont' peek to early ;) !")`
 ```{r ref.label = "ols1"}
 ```
@@ -95,7 +98,7 @@ ols2 <- lm_robust(rlgdgr ~ gndr, weights = pspwght, data = ESS)
 screenreg(ols2, digits = 3, include.ci = FALSE)
 ```
 
-4) Regress religiosity on gender and make a regression table that displays 3 digits and standard errors in parentheses using `texreg::screenreg()`; $\beta$ = `r fitb(coef(ols2)["gndr"], width = "4")` and the relation is statistically `r mcq(c("Insignificant", "Interesting", "Important", answer = "Significant"))`.
+4) Regress religiosity on gender and make a regression table that displays 3 digits and standard errors in parentheses using `texreg::screenreg()`; $\beta$ = `r fitb(0.789, width = "5")` and the relation is statistically `r mcq(c("Insignificant", "Interesting", "Important", answer = "Significant"))`.
 `r hide("R solution -> dont' peek to early ;) !")`
 ```{r ref.label = "ols2"}
 ```
