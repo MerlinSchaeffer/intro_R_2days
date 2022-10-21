@@ -346,8 +346,8 @@ ols_trick <- lm(data = ESS, formula = imwbcnt ~ eduyrs, weights = pspwght)
 .push-right[
 `r extract_eq(ols_trick, use_coefs = TRUE)` $\rightarrow$ the best-fitting line that $\min \sum_{i=1}^{n} e_{i}^{2}$.
 
-- Among countries without a socialist past, poverty is on average `r round(coef(ols)[1], 2)`.
-  + $(\hat{y}|\text{Eduyrs = 0}) = `r round(coef(ols)[1], 2)`$.
+- For respondents with no formal education (.alert[Note: Unsupported extrapolation!]), the predicted average level of xenophobia is `r round(coef(ols)[1], 2)`. 
+  + $(\hat{y}|\text{Eduyrs = 0}) = `r round(coef(ols)[1], 2)`$. 
   
 - With every year of education, the average level of xenophobia is `r round(coef(ols)[2], 2)` lower.
 
@@ -362,7 +362,7 @@ ols_trick <- lm(data = ESS, formula = imwbcnt ~ eduyrs, weights = pspwght)
 
 With every additional year of education, xenophobia is expected to decline on average by `r round(coef(ols)[2], 2)`%.
 
-.alert[Beware, this interpretation only holds if X was (as good as) randomly assigneds!]
+.alert[Beware, this interpretation only holds if X was (as good as) randomly assigned!]
 ]
 
 --
@@ -398,15 +398,15 @@ summary(ols) # Give a summary of the main results.
 ]
 
 ---
-# Categorical predicators
+# Categorical predictors
 
 .panelset[
 .panel[.panel-name[Scatter plot]
 
 .left-column[
 .content-box-green[
-1. At which $\hat{Y}$ does the regression line pass through the cloud of countries colonized by Britain?
-2. At which $\hat{Y}$ does the regression line pass through the cloud of countries colonized by Belgium?
+1. At which $\hat{Y}$ does the regression line pass through the cloud of respondents from Czechia?
+2. At which $\hat{Y}$ does the regression line pass through the cloud of respondents from Slovenia?
 3. What does this suggest about the slope $\hat{\beta}$?
 ]]
 .right-column[
@@ -503,9 +503,9 @@ ols_2a <- lm(imwbcnt ~ cntry, data = ESS, weights = pspwght)
 
 `r extract_eq(ols_2a, wrap = TRUE, terms_per_line = 2, use_coefs = TRUE)`
 
-- When Hungary = 0, Slovenia == 0, and Slovakia = 0, then poverty is on average `r round(coef(ols_2)[1], 2)`%.<br> $\rightarrow$ Average xenophobia in Czechia is: `r round(coef(ols_2)[1], 2)`%.
+- When Hungary = 0, Slovenia = 0, and Slovakia = 0, we predict xenophobia of `r round(coef(ols_2)[1], 2)`.<br> $\rightarrow$ Average level of xenophobia in Czechia is: `r round(coef(ols_2)[1], 2)`.
 
-- In Hungary, xenophobia is on average `r round(coef(ols_2)[2], 2)` units lower than among the Czech; and this difference is statistically significant/systematic.
+- In Hungary, xenophobia is on average `r round(coef(ols_2)[2], 2)` units lower than among the Czech population; and this difference is statistically significant/systematic.
   + In Hungary, xenophobia is thus: $`r round(coef(ols_2)[1], 2)` + `r round(coef(ols_2)[2], 2)` = `r round(coef(ols_2)[1], 2) + round(coef(ols_2)[2], 2)`$.
 ]]]
 

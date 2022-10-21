@@ -4,7 +4,7 @@
     <title>Intro to R</title>
     <meta charset="utf-8" />
     <meta name="author" content="Merlin Schaeffer &amp; Friedolin Merhout   Department of Sociology" />
-    <meta name="date" content="2022-10-20" />
+    <meta name="date" content="2022-10-21" />
     <script src="libs/header-attrs/header-attrs.js"></script>
     <link href="libs/tile-view/tile-view.css" rel="stylesheet" />
     <script src="libs/tile-view/tile-view.js"></script>
@@ -27,7 +27,7 @@ class: center, middle, inverse, title-slide
 ### Merlin Schaeffer &amp; Friedolin Merhout <br> Department of Sociology
 ]
 .date[
-### 2022-10-20
+### 2022-10-21
 ]
 
 ---
@@ -269,8 +269,8 @@ $$
 $$
  `\(\rightarrow\)` the best-fitting line that `\(\min \sum_{i=1}^{n} e_{i}^{2}\)`.
 
-- Among countries without a socialist past, poverty is on average 7.46.
-  + `\((\hat{y}|\text{Eduyrs = 0}) = 7.46\)`.
+- For respondents with no formal education (.alert[Note: Unsupported extrapolation!]), the predicted average level of xenophobia is 7.46. 
+  + `\((\hat{y}|\text{Eduyrs = 0}) = 7.46\)`. 
   
 - With every year of education, the average level of xenophobia is -0.11 lower.
 
@@ -285,7 +285,7 @@ $$
 
 With every additional year of education, xenophobia is expected to decline on average by -0.11%.
 
-.alert[Beware, this interpretation only holds if X was (as good as) randomly assigneds!]
+.alert[Beware, this interpretation only holds if X was (as good as) randomly assigned!]
 ]
 
 --
@@ -335,15 +335,15 @@ summary(ols) # Give a summary of the main results.
 ]
 
 ---
-# Categorical predicators
+# Categorical predictors
 
 .panelset[
 .panel[.panel-name[Scatter plot]
 
 .left-column[
 .content-box-green[
-1. At which `\(\hat{Y}\)` does the regression line pass through the cloud of countries colonized by Britain?
-2. At which `\(\hat{Y}\)` does the regression line pass through the cloud of countries colonized by Belgium?
+1. At which `\(\hat{Y}\)` does the regression line pass through the cloud of respondents from Czechia?
+2. At which `\(\hat{Y}\)` does the regression line pass through the cloud of respondents from Slovenia?
 3. What does this suggest about the slope `\(\hat{\beta}\)`?
 ]]
 .right-column[
@@ -443,9 +443,9 @@ $$
 $$
 
 
-- When Hungary = 0, Slovenia == 0, and Slovakia = 0, then poverty is on average 6.16%.&lt;br&gt; `\(\rightarrow\)` Average xenophobia in Czechia is: 6.16%.
+- When Hungary = 0, Slovenia = 0, and Slovakia = 0, we predict xenophobia of 6.16.&lt;br&gt; `\(\rightarrow\)` Average level of xenophobia in Czechia is: 6.16.
 
-- In Hungary, xenophobia is on average -0.23 units lower than among the Czech; and this difference is statistically significant/systematic.
+- In Hungary, xenophobia is on average -0.23 units lower than among the Czech population; and this difference is statistically significant/systematic.
   + In Hungary, xenophobia is thus: `\(6.16 + -0.23 = 5.93\)`.
 ]]]
 
