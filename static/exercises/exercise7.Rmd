@@ -54,7 +54,7 @@ nrow(ESS)
 ```
 `r unhide()`
 
-```{r ols1, inlcude = FALSE}
+```{r ols1, include = FALSE}
 ols1 <- lm_robust(rlgdgr ~ agea, weights = pspwght, data = ESS)
 screenreg(ols1, digits = 3, include.ci = FALSE)
 ```
@@ -90,7 +90,7 @@ ggplot(data = fict_dat, aes(y = fit, x = agea)) +
 ```
 `r unhide()`
 
-```{r ols2, inlcude = FALSE}
+```{r ols2, include = FALSE}
 ols2 <- lm_robust(rlgdgr ~ gndr, weights = pspwght, data = ESS)
 screenreg(ols2, digits = 3, include.ci = FALSE)
 ```
