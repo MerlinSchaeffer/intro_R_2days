@@ -97,7 +97,7 @@ ols2 <- lm_robust(rlgdgr ~ gndr, weights = pspwght, data = ESS)
 screenreg(ols2, digits = 3, include.ci = FALSE)
 ```
 
-4) Regress religiosity on gender and make a regression table that displays 3 digits and standard errors in parentheses using `texreg::screenreg()`; $\beta$ = `r fitb(0.789, width = "5")` and the relation is statistically `r mcq(c("Insignificant", "Interesting", "Important", answer = "Significant"))`.
+4) Regress religiosity on gender and make a regression table that displays 3 digits and standard errors in parentheses using `texreg::screenreg()`; $\beta$ = `r fitb(0.792, width = "5")` and the relation is statistically `r mcq(c("Insignificant", "Interesting", "Important", answer = "Significant"))`.
 `r hide("R solution -> dont' peek to early ;) !")`
 ```{r ref.label = "ols2"}
 ```

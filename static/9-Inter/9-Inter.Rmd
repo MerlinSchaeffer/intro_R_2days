@@ -64,23 +64,23 @@ class: clear
 ESS <- ESS %>% transmute( # Create new variables and keep only those
   cntry = as_factor(cntry) %>% fct_relevel("France"), # Country of interview #<<
   gndr = as_factor(gndr), # Gender
-  agea = zap_labels(agea), # Age #<<
+  agea = zap_labels(agea), # Age
   facntr = as_factor(facntr), # Father born in cntry
   mocntr = as_factor(mocntr), # Mother born in cntry
   imwbcnt = max(imwbcnt, na.rm = TRUE) - zap_labels(imwbcnt),
   pspwght = dweight*pweight, # Post-stratification weights.
-  # Parental education (ISCED)
-  eiscedf = zap_labels(eiscedf),
-  eiscedm = zap_labels(eiscedm),
-  par_edu = case_when(
-    # If father's edu is missing but not mother's, take mother's
-    (eiscedf == 55 | is.na(eiscedf)) & eiscedm != 55 & !is.na(eiscedm) ~ eiscedm,
-    # If mother's edu is missing but not father's, take father's
-    (eiscedm == 55 | is.na(eiscedm)) & eiscedf != 55 & !is.na(eiscedf)  ~ eiscedf,
-    # If both are missing, its missing
-    eiscedf == 55 & eiscedm == 55 ~ as.numeric(NA),
-    # For all others, take the average of both parents
-    TRUE ~ (eiscedm + eiscedf) / 2),
+  # Parental education (ISCED) #<<
+  eiscedf = zap_labels(eiscedf), #<<
+  eiscedm = zap_labels(eiscedm), #<<
+  par_edu = case_when( #<<
+    # If father's edu is missing but not mother's, take mother's #<<
+    (eiscedf == 55 | is.na(eiscedf)) & eiscedm != 55 & !is.na(eiscedm) ~ eiscedm, #<<
+    # If mother's edu is missing but not father's, take father's #<<
+    (eiscedm == 55 | is.na(eiscedm)) & eiscedf != 55 & !is.na(eiscedf)  ~ eiscedf, #<<
+    # If both are missing, its missing #<<
+    eiscedf == 55 & eiscedm == 55 ~ as.numeric(NA), #<<
+    # For all others, take the average of both parents #<<
+    TRUE ~ (eiscedm + eiscedf) / 2), #<<
   eduyrs = case_when( # Education
     eduyrs > 21 ~ 21, # Recode to max 21 years of edu.
     eduyrs < 9 ~ 9, # Recode to min 9 years of edu.
@@ -173,9 +173,9 @@ screenreg(ols4, include.ci = FALSE)
 
 .left-column[.content-box-green[
 
-1. How do we interpret the estimate `eduyrs:cntrySweden` correctly?
+1. How do we interpret the estimate `eduyrs:cntryBulgaria` correctly?
 
-2. Why is $\beta_{\text{eduyrs}}$ more negative than in model 3?
+2. What does $\beta_{\text{eduyrs}}$ refer to?
 
 3. Why do Bulgarians suddenly seem to have *lower* levels of xenophobia, whereas before they had higher ones?
 ]]
