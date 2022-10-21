@@ -105,7 +105,7 @@ screenreg(ols2, digits = 3, include.ci = FALSE)
 
 5) Make a cofficient plot of the result.
 `r hide("R solution -> dont' peek to early ;) !")`
-```{r Coefplot2, out.width='100%', fig.height = 4, fig.width = 6, echo = FALSE}
+```{r Coefplot2, out.width='100%', fig.height = 4, fig.width = 6}
 plotdata2 <- ols2 %>%
   tidy() %>% # Turn results into a tibble,
   mutate( # Rename variables for the plot.
